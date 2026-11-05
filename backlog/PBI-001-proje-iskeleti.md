@@ -1,21 +1,24 @@
 ---
 id: PBI-001
 title: Monorepo iskeleti, lint/test ve CI
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P1
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
+
 Tüm geliştiricilerin (insan ve agent) aynı komutlarla kurup, test edip, build alabildiği boş ama çalışan bir proje iskeleti.
 
 ## Kapsam
+
 **Dahil:** Bun workspaces monorepo (`apps/server`, `apps/web`, `packages/core`), TypeScript strict, Biome (lint+format), `bun test`, GitHub Actions CI (lint + typecheck + test), `.gitignore`, `README` kurulum bölümü, `AGENTS.md` (agent'lar için repo kuralları; `CLAUDE.md` bunu import eder).
 **Hariç:** İş mantığı, UI ekranları, release paketleme (PBI-010).
 
 ## Bağlam
+
 - Mimari: `docs/architecture.md` ("Repo yapısı" ve "Teknoloji seçimleri").
 - Bun 1.3+ kullan. Node'a bağımlılık olmasın.
 - `apps/server/src/main.ts` sadece `GET /api/v1/health` → `{ "ok": true, "version": "<package.json version>" }` dönsün.
@@ -25,15 +28,22 @@ Tüm geliştiricilerin (insan ve agent) aynı komutlarla kurup, test edip, build
 - Commit mesajları Türkçe, teknik terimler İngilizce (bkz. `AGENTS.md`'ye bu kuralı da yaz).
 
 ## Kabul kriterleri
-- [ ] Temiz klonda `bun install && bun run test && bun run lint && bun run typecheck` hatasız geçer.
-- [ ] `bun run dev` ile `http://localhost:7777/api/v1/health` `{"ok":true,...}` döner ve web dev server açılır.
+
+- [x] Temiz klonda `bun install && bun run test && bun run lint && bun run typecheck` hatasız geçer.
+- [x] `bun run dev` ile `http://localhost:7777/api/v1/health` `{"ok":true,...}` döner ve web dev server açılır.
 - [ ] GitHub Actions CI push ve PR'da çalışır, yeşildir.
-- [ ] `AGENTS.md` repo yapısını, komutları ve commit kuralını anlatır.
+- [x] `AGENTS.md` repo yapısını, komutları ve commit kuralını anlatır.
 
 ## Test planı
+
 1. Repoyu yeni bir klasöre klonla → `bun install` → `bun run dev`.
 2. Tarayıcıda web sayfasını ve health endpoint'ini aç → ikisi de çalışmalı.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) verdi.
+- 2026-11-06 codex iskeleti yazdı; sandbox Bun'ın geçici klasörüne izin vermediği için kurulum ve kontrolleri çalıştıramadı.
+- 2026-11-06 claude:po `bun install` yaptı, lockfile oluştu. Biome markdown dosyalarını da biçimlendirip PBI başlık bloğunu bozuyordu; sadece kod klasörlerine sınırlandı. check: lint temiz · typecheck temiz · test 2/2 geçti · build geçti · dev'de `/api/v1/health` → `{"ok":true,"version":"0.1.0"}`, Vite proxy üzerinden de çalışıyor.
+- Açık: GitHub Actions CI ancak push'tan sonra doğrulanabilir (push Mert'in onayında).
 
 ## Done notu

@@ -1,0 +1,12 @@
+{
+  "name": "@pano/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "build": "bun build src/main.ts --target=bun --outdir=dist"
+  },
+  "dependencies": {
+    "hono": "^4.10.0"
+  }
+}

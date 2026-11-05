@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+.env*
+*.db
+*.db-*
+coverage/
+.DS_Store
+scratch/
+scratch.*
