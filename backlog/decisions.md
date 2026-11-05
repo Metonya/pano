@@ -9,3 +9,4 @@
 | 2026-11-05 | Repo: `Metonya/pano`, private, MIT; v0.1'de public | — |
 | 2026-11-05 | v0.1'de 4 sabit statü: Backlog, In Progress, Test, Done | Basit başla; özel kolonlar sonra |
 | 2026-11-05 | Pano kendini yönetebilene kadar backlog `backlog/*.md` + `board.html` | PBI-009 ile pano'ya taşınacak |
+| 2026-11-05 | Tasarım: ferah yoğunluk, sol sidebar navigasyon, PBI detayı ortada sheet, accent Apple mavisi (#0071e3 / #0a84ff), light + dark sistemi takip eder | Mert ile birlikte seçildi (PBI-004) |

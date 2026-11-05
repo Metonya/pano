@@ -20,7 +20,7 @@ Pano'nun Apple tarzı, sade ve akıcı görünümünü kodlamadan önce birlikte
 - Veri alanları: `docs/architecture.md` → Veri modeli (kartta: key, başlık, öncelik, assignee, kriter ilerlemesi).
 
 ## Kabul kriterleri
-- [ ] Tasarım kararları Mert ile birlikte verildi ve `backlog/decisions.md`'ye yazıldı.
+- [x] Tasarım kararları Mert ile birlikte verildi ve `backlog/decisions.md`'ye yazıldı.
 - [ ] Claude Design'da proje listesi, board ve PBI detay ekranları light + dark hazır, Mert onayladı.
 - [ ] `docs/DESIGN.md` token'ları ve component kurallarını içerir; bir geliştirici agent sadece bu dosyayla UI'ı tutarlı kurabilir.
 
@@ -29,5 +29,6 @@ Mert tasarımları Claude Design'da inceler, yorumlar; onaylanınca Done.
 
 ## Notlar / log
 - 2026-11-05 claude:po tasarım kararları için çalışmaya başladı.
+- 2026-11-05 Kararlar alındı (ferah, sol sidebar, ortada sheet, Apple mavisi). İlk 5 ekran Claude Design'da: https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK (Projeler, Board, Board mobil, PBI detayı, Board dark). Mert'in yorumu bekleniyor.
 
 ## Done notu
