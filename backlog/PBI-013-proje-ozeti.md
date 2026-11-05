@@ -12,7 +12,7 @@ updated: 2026-11-05
 Kullanıcı Pano'yu açtığında "ne zaman başladım, kaç iş bitti, kaç iş kaldı, şu an ne yapılıyor, benden ne bekleniyor" sorularına tek ekranda cevap alsın.
 
 ## Kapsam
-**Dahil:** Board toolbar'ının altında **tek ince satır**: ilerleme çubuğu (tamamlanan/toplam) + kısa metin (ör. "13 kaldı · 5 Kas'ta başladı · P1: 6"). Ayrıntı (iptal sayısı, son 7 gün, burn-up) satıra tıklayınca açılan küçük bir popover'da. "Seni bekliyor" sidebar'da, görülmemiş Done sayısı burada tekrar edilmez (2026-11-05 kararı).
+**Dahil:** Board toolbar'ının altında **tek ince satır**: ilerleme çubuğu (tamamlanan/toplam) + kısa metin (ör. "13 kaldı · 5 Kas'ta başladı · 6 yüksek öncelikli"). Ayrıntı (iptal sayısı, son 7 gün, burn-up) satıra tıklayınca açılan küçük bir popover'da. "Seni bekliyor" sidebar'da, görülmemiş Done sayısı burada tekrar edilmez (2026-11-05 kararı).
 **Hariç:** Tahmini bitiş tarihi, sprint/velocity.
 
 ## Bağlam
