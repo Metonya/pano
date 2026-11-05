@@ -7,6 +7,9 @@
     "build": "bun build src/main.ts --target=bun --outdir=dist"
   },
   "dependencies": {
-    "hono": "^4.10.0"
+    "@hono/zod-openapi": "^1.6.3",
+    "@pano/core": "workspace:*",
+    "hono": "^4.10.0",
+    "zod": "^4.6.7"
   }
 }

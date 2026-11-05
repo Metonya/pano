@@ -1,11 +1,11 @@
 ---
 id: PBI-003
 title: REST API v1, OpenAPI, token auth ve canlı güncelleme (SSE)
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P1
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -40,5 +40,6 @@ Web arayüzü, CLI ve agent'lar tek ve belgelenmiş bir API üzerinden çalışs
 2. Bir terminalde `curl -N .../events` açıkken diğerinde PBI taşı → olay düşmeli.
 
 ## Notlar / log
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) verdi; @hono/zod-openapi, zod ve @pano/core önceden eklendi.
 
 ## Done notu
