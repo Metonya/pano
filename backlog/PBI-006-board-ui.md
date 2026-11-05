@@ -13,9 +13,10 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 
 ## Kapsam
 **Dahil:** Board ekranı (4 kolon), kart (key, başlık, öncelik, assignee rozeti, kriter ilerleme çubuğu), dnd-kit ile sürükle-bırak (kolon arası + kolon içi sıra, klavye desteği), PBI detay paneli (markdown body görüntüle/düzenle, kabul kriterleri ekle/işaretle, assignee/öncelik değiştir, aktivite geçmişi), yeni PBI oluşturma, arama/filtre (assignee, öncelik), SSE ile canlı güncelleme.
-**Hariç:** Özel kolonlar, çoklu seçim.
+**Hariç:** Özel kolonlar, çoklu seçim. Test akışı ve aktivite geçmişi ekranları PBI-012 ve PBI-011'de.
 
 ## Bağlam
+- Ürün kuralları: `docs/product.md`.
 - Tasarım: `docs/DESIGN.md` + Claude Design board ve detay ekranları. Motion kuralları: spring, kesilebilir geçiş (`apple-design-sistemi` skill'i).
 - API: PBI-003. Taşıma `POST /items/:key/move {status, position}`; optimistic update, hata olursa geri al + toast.
 - Markdown render: `react-markdown` + `remark-gfm`; düzenleme basit textarea (v0.1).
@@ -26,6 +27,9 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - [ ] Kart klavyeyle (Space ile tut, ok tuşlarıyla taşı) taşınabilir.
 - [ ] Detay panelinde kriter işaretlenince karttaki ilerleme çubuğu güncellenir.
 - [ ] Assignee filtresi ile "codex" seçilince sadece Codex'e atanmış kartlar görünür.
+- [ ] Proje ayarında Test kolonu kapalıysa board 3 kolon gösterir.
+- [ ] "İptal edilenler" filtresi iptal edilen PBI'ları gösterir.
+- [ ] Kullanıcının açmadığı Done kartlarında "görülmedi" işareti var; kart açılınca kalkar.
 - [ ] Mobilde kolonlar yatay kaydırılabilir sekmeler/şerit olarak çalışır, sayfa yatay taşmaz.
 - [ ] Playwright testi: PBI oluştur → kriter ekle → sürükle → test → done akışı geçer.
 

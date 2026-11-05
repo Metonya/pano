@@ -16,6 +16,7 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 **Hariç:** Board ekranı (PBI-006).
 
 ## Bağlam
+- Ürün kuralları: `docs/product.md`.
 - Tasarım: `docs/DESIGN.md` ve Claude Design ekranları (PBI-004 Done olmadan başlama).
 - API: PBI-003 (`/api/v1/projects...`). Veri çekme için TanStack Query; SSE ile `project.updated` gelince listeyi yenile.
 - shadcn component'leri, ikonlar `lucide-react`.

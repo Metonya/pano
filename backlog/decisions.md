@@ -10,3 +10,11 @@
 | 2026-11-05 | v0.1'de 4 sabit statü: Backlog, In Progress, Test, Done | Basit başla; özel kolonlar sonra |
 | 2026-11-05 | Pano kendini yönetebilene kadar backlog `backlog/*.md` + `board.html` | PBI-009 ile pano'ya taşınacak |
 | 2026-11-05 | Tasarım: ferah yoğunluk, sol sidebar navigasyon, PBI detayı ortada sheet, accent Apple mavisi (#0071e3 / #0a84ff), light + dark sistemi takip eder | Mert ile birlikte seçildi (PBI-004) |
+| 2026-11-05 | İsim "Pano" kalıyor; domain alınmayacak | GitHub'da aynı adla küçük bir kişisel proje var, ticari bir ürün yok; risk düşük |
+| 2026-11-05 | Pano agent çalıştırmaz, sadece takip eder | Hafif kalsın, her agent'la çalışsın; UI'dan atama orkestratöre talep olarak gider |
+| 2026-11-05 | AI basit/insan testi gerektirmeyen işleri kendisi Done'a çeker; gerekenleri test senaryolarıyla kullanıcıya atar | Kullanıcı AI atamadıkça karta dokunmak zorunda kalmasın |
+| 2026-11-05 | AI kendi testlerini In Progress içinde yapar, sonuçları "check" kaydı olarak yazar; Test kolonu sadece insan doğrulaması için | Başarısız her testte kart kolonlar arasında gidip gelmesin |
+| 2026-11-05 | Test kolonu ve "AI Done'a çekebilir" proje ayarı; Definition of Done projeye göre serbest metin | Her projenin test gereksinimi farklı (unit, pipeline, Sonar...) |
+| 2026-11-05 | Hiçbir şey silinmez: iptal bir statü, her değişiklik eski/yeni haliyle kayıtlı | Kullanıcı işin nasıl büyüdüğünü/değiştiğini görebilsin; agent'a varsayılan olarak sadece özet gider |
+| 2026-11-05 | Açık konu: geri gönderilen kartta AI'ı anında tetikleme (watch/webhook) | Şimdilik gereksiz karmaşıklık; orkestratör bir sonraki kontrolde görür |
+| 2026-11-05 | Açık konu: proje karar/dokümanlarının Pano'daki yeri; ürün tanıtım sayfası | Sonraya bırakıldı |

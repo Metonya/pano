@@ -12,7 +12,7 @@ updated: 2026-11-05
 Pano'nun Apple tarzı, sade ve akıcı görünümünü kodlamadan önce birlikte karar vererek belirlemek; UI PBI'ları (005, 006) bu tasarıma göre yapılacak.
 
 ## Kapsam
-**Dahil:** Tasarım kararları (yoğunluk, renk, tema, navigasyon), Claude Design üzerinde ekran tasarımları: proje listesi (yıldız/arşiv), board (4 kolon), PBI detay paneli, boş durumlar, light/dark, mobil. Sonuçların `docs/DESIGN.md`'ye token'larla (renk, font, radius, spacing, motion) yazılması.
+**Dahil:** Tasarım kararları (yoğunluk, renk, tema, navigasyon), Claude Design üzerinde ekran tasarımları: proje listesi (yıldız/arşiv), board (4 kolon), PBI detay paneli, boş durumlar, light/dark, mobil. Ek ekranlar (2026-11-05 ürün kararlarıyla): Test'teki kartın detayı (senaryolar, onayla / geri gönder + ekran görüntüsü), "Seni bekliyor" listesi, aktivite geçmişi ve değişiklik farkı, proje özeti şeridi, proje ayarları, "görülmedi" işareti, iptal edilenler filtresi. Sonuçların `docs/DESIGN.md`'ye token'larla (renk, font, radius, spacing, motion) yazılması.
 **Hariç:** React kodu.
 
 ## Bağlam
@@ -30,5 +30,6 @@ Mert tasarımları Claude Design'da inceler, yorumlar; onaylanınca Done.
 ## Notlar / log
 - 2026-11-05 claude:po tasarım kararları için çalışmaya başladı.
 - 2026-11-05 Kararlar alındı (ferah, sol sidebar, ortada sheet, Apple mavisi). İlk 5 ekran Claude Design'da: https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK (Projeler, Board, Board mobil, PBI detayı, Board dark). Mert'in yorumu bekleniyor.
+- 2026-11-05 Ürün kararları değişti (`docs/product.md`): detay sheet'indeki "Codex'e ata" butonu kaldırılacak; ek ekranlar kapsama alındı.
 
 ## Done notu

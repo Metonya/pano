@@ -68,7 +68,9 @@ Ortam değişkenleri: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `
 erDiagram
   PROJECT ||--o{ ITEM : içerir
   ITEM ||--o{ CRITERION : "kabul kriteri"
+  ITEM ||--o{ TEST_SCENARIO : "insan testi"
   ITEM ||--o{ ACTIVITY : "geçmiş"
+  ITEM ||--o{ ATTACHMENT : "ekran görüntüsü"
   PROJECT {
     text id PK "ulid"
     text key UK "PANO"
@@ -76,8 +78,11 @@ erDiagram
     text description
     int starred "0/1"
     text archived_at "null = aktif"
+    int test_column "1 = Test kolonu açık"
+    int ai_can_close "1 = AI Done'a çekebilir"
+    text dod_md "Definition of Done"
     int next_number
-    text created_at
+    text created_at "projenin başlangıcı"
     text updated_at
   }
   ITEM {
@@ -86,10 +91,11 @@ erDiagram
     int number "PANO-12 -> 12"
     text title
     text body_md "amaç, kapsam, bağlam, test planı"
-    text status "backlog|in_progress|test|done"
+    text status "backlog|in_progress|test|done|cancelled"
     text priority "P1|P2|P3"
     text assignee "claude:pbi-12-dev | codex | mert | null"
     real position "kolon içi sıra"
+    text seen_at "kullanıcı son baktığında"
     text created_at
     text updated_at
     text done_at
@@ -101,20 +107,41 @@ erDiagram
     int done
     real position
   }
+  TEST_SCENARIO {
+    text id PK
+    text item_id FK
+    text steps_md "ne yap"
+    text expected_md "ne görmelisin"
+    text result "pending|passed|failed"
+    text author "AI veya kullanıcı"
+    real position
+  }
+  ATTACHMENT {
+    text id PK
+    text item_id FK
+    text activity_id FK "geri gönderme notuna bağlı"
+    text file_name
+    text mime
+    int size
+  }
   ACTIVITY {
     text id PK
     text project_id FK
     text item_id FK "nullable"
     text actor "mert | claude:... | codex"
-    text action "created|moved|assigned|checked|commented|..."
-    text payload_json
+    text kind "created|moved|assigned|edited|check|note|sent_back|cancelled|..."
+    text before_json "değişen alanların eski hali"
+    text after_json "yeni hali"
+    text message "insan okuyacak tek satır"
     text created_at
   }
 ```
 
 - PBI'nın görünen anahtarı: `<PROJECT.key>-<number>` (ör. `PANO-12`). Agent'lar ve commit mesajları bu anahtarı kullanır.
 - Kabul kriterleri ayrı tablo: agent'lar tek tek `check` edebilir, board ilerleme çubuğu gösterir.
-- Statüler v0.1'de sabit 4 tane. Özelleştirilebilir kolonlar sonraki sürüm.
+- Statüler sabit: `backlog`, `in_progress`, `test`, `done`, `cancelled`. Test kolonu proje ayarıyla kapatılabilir; `cancelled` kolon değil, filtredir. Akış kuralları: [product.md](product.md#akış).
+- **Hiçbir şey silinmez, her değişiklik `activity`'de eski/yeni haliyle durur.** Bu kayıtlar UI'da insan için gösterilir; agent'lar varsayılan olarak sadece kartın güncel hali + son birkaç kaydı alır, geçmişin tamamını istediğinde ister. Böylece kayıt tutmak agent'ın token maliyetini büyütmez.
+- Ekler (`ATTACHMENT`) dosya olarak `PANO_DATA_DIR/attachments/` altında, DB'de sadece metadata.
 
 ## MCP tool'ları (bilerek az)
 
@@ -122,13 +149,13 @@ Her MCP tool'u agent'ın her konuşmasında token harcar; bu yüzden 7 tool ile 
 
 | Tool | Amaç |
 |---|---|
-| `list_projects` | Aktif projeler (yıldızlılar önce) |
-| `get_board` | Bir projenin 4 kolonu, kart özetleri |
-| `get_item` | PBI'nın tamamı (body, kriterler, son aktiviteler) |
+| `list_projects` | Aktif projeler (yıldızlılar önce) ve proje ayarları |
+| `get_board` | Bir projenin kolonları, kart özetleri, kullanıcıyı bekleyenler |
+| `get_item` | PBI'nın güncel hali (body, kriterler, test senaryoları, son 5 kayıt); `history: true` ile tamamı |
 | `create_item` | Yeni PBI (başlık, body, kriterler, öncelik) |
-| `update_item` | Statü, assignee, başlık, body, öncelik değişikliği |
+| `update_item` | Statü, assignee, başlık, body, öncelik, test senaryoları; `reason` alanı geçmişe yazılır |
 | `check_criterion` | Kabul kriterini işaretle / kaldır |
-| `add_note` | PBI'ya log/not düş (ör. "testler geçti") |
+| `add_record` | Karta kayıt düş: `note`, `check` (ör. "unit test 42/42 geçti") veya `decision` |
 
 ## Repo yapısı
 
@@ -159,4 +186,4 @@ pano/
 
 ## Sürüm 0.1 kapsamı dışında (bilinçli)
 
-Çok kullanıcı / hesaplar, özelleştirilebilir kolonlar, sprint/takvim, bildirimler, dosya ekleri, GitHub senkronizasyonu.
+Çok kullanıcı / hesaplar, özelleştirilebilir kolonlar, sprint/takvim, bildirimler, agent'ı anında tetikleme (`pano watch`, webhook), GitHub senkronizasyonu. Bkz. [product.md → Açık konular](product.md#açık-konular-bilerek-sonraya-bırakıldı).
