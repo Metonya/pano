@@ -10,6 +10,7 @@
     "dev": "concurrently --kill-others \"bun run --cwd apps/server dev\" \"bun run --cwd apps/web dev\"",
     "build": "bun run --cwd apps/server build && bun run --cwd apps/web build",
     "test": "bun test",
+    "seed": "bun packages/core/src/seed.ts",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit -p apps/server && tsc --noEmit -p apps/web && tsc --noEmit -p packages/core"
   },
