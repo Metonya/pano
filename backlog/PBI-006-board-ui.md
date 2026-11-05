@@ -28,8 +28,9 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - [ ] Detay panelinde kriter işaretlenince karttaki ilerleme çubuğu güncellenir.
 - [ ] Assignee filtresi ile "codex" seçilince sadece Codex'e atanmış kartlar görünür.
 - [ ] Proje ayarında Test kolonu kapalıysa board 3 kolon gösterir.
-- [ ] "İptal edilenler" filtresi iptal edilen PBI'ları gösterir.
-- [ ] Kullanıcının açmadığı Done kartlarında "görülmedi" işareti var; kart açılınca kalkar.
+- [ ] Toolbar'daki filtre menüsünde "İptal edilenleri göster" seçeneği iptal edilen PBI'ları gösterir.
+- [ ] Kullanıcının açmadığı Done kartlarında küçük bir nokta var (metin yok, erişilebilir etiketi "Görülmedi"); kart açılınca kalkar.
+- [ ] Kartlar klavyeyle odaklanıp Enter ile açılır; tüm etkileşimli öğelerde görünür focus halkası var; metin kontrastı AA (≥ 4.5:1).
 - [ ] Mobilde kolonlar yatay kaydırılabilir sekmeler/şerit olarak çalışır, sayfa yatay taşmaz.
 - [ ] Playwright testi: PBI oluştur → kriter ekle → sürükle → test → done akışı geçer.
 

@@ -12,7 +12,7 @@ updated: 2026-11-05
 Pano'nun Apple tarzı, sade ve akıcı görünümünü kodlamadan önce birlikte karar vererek belirlemek; UI PBI'ları (005, 006) bu tasarıma göre yapılacak.
 
 ## Kapsam
-**Dahil:** Tasarım kararları (yoğunluk, renk, tema, navigasyon), Claude Design üzerinde ekran tasarımları: proje listesi (yıldız/arşiv), board (4 kolon), PBI detay paneli, boş durumlar, light/dark, mobil. Ek ekranlar (2026-11-05 ürün kararlarıyla): Test'teki kartın detayı (senaryolar, onayla / geri gönder + ekran görüntüsü), "Seni bekliyor" listesi, aktivite geçmişi ve değişiklik farkı, proje özeti şeridi, proje ayarları, "görülmedi" işareti, iptal edilenler filtresi. Sonuçların `docs/DESIGN.md`'ye token'larla (renk, font, radius, spacing, motion) yazılması.
+**Dahil:** Tasarım kararları (yoğunluk, renk, tema, navigasyon), Claude Design üzerinde ekran tasarımları: proje listesi (yıldız/arşiv), board (4 kolon), PBI detay paneli, boş durumlar, light/dark, mobil. Ek ekranlar (2026-11-05 ürün kararlarıyla): Test'teki kartın detayı (senaryolar, onayla / geri gönder + ekran görüntüsü), "Seni bekliyor" listesi, aktivite geçmişi ve değişiklik farkı, proje özeti şeridi, proje ayarları, "görülmedi" işareti, iptal edilenler filtresi. Uygulama ayarları ekranı (dil, görünüm, sürüm/güncelleme; PBI-014). Sonuçların `docs/DESIGN.md`'ye token'larla (renk, font, radius, spacing, motion) yazılması.
 **Hariç:** React kodu.
 
 ## Bağlam

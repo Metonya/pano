@@ -12,7 +12,7 @@ updated: 2026-11-05
 Kullanıcı Pano'yu açtığında "ne zaman başladım, kaç iş bitti, kaç iş kaldı, şu an ne yapılıyor, benden ne bekleniyor" sorularına tek ekranda cevap alsın.
 
 ## Kapsam
-**Dahil:** Board'un üstünde (veya proje sayfasında) özet şeridi: başlangıç tarihi ve geçen gün; toplam / tamamlanan / kalan / iptal; önceliğe göre kalan işler (P1–P3); şu an çalışan agent'lar ve kartları; "Seni bekliyor" sayısı; görülmemiş Done sayısı; son 7 günde tamamlanan iş sayısı ve basit bir burn-up çizgisi (toplam vs tamamlanan, günlük).
+**Dahil:** Board toolbar'ının altında **tek ince satır**: ilerleme çubuğu (tamamlanan/toplam) + kısa metin (ör. "13 kaldı · 5 Kas'ta başladı · P1: 6"). Ayrıntı (iptal sayısı, son 7 gün, burn-up) satıra tıklayınca açılan küçük bir popover'da. "Seni bekliyor" sidebar'da, görülmemiş Done sayısı burada tekrar edilmez (2026-11-05 kararı).
 **Hariç:** Tahmini bitiş tarihi, sprint/velocity.
 
 ## Bağlam

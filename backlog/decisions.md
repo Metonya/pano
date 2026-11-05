@@ -18,3 +18,8 @@
 | 2026-11-05 | Hiçbir şey silinmez: iptal bir statü, her değişiklik eski/yeni haliyle kayıtlı | Kullanıcı işin nasıl büyüdüğünü/değiştiğini görebilsin; agent'a varsayılan olarak sadece özet gider |
 | 2026-11-05 | Açık konu: geri gönderilen kartta AI'ı anında tetikleme (watch/webhook) | Şimdilik gereksiz karmaşıklık; orkestratör bir sonraki kontrolde görür |
 | 2026-11-05 | Açık konu: proje karar/dokümanlarının Pano'daki yeri; ürün tanıtım sayfası | Sonraya bırakıldı |
+| 2026-11-05 | Uygulama ayarları: dil (TR/EN, varsayılan sistem dili), görünüm (Açık/Koyu/Otomatik, varsayılan Otomatik), sürüm bilgisi ve güncelleme kontrolü; güncelleme kullanıcı onayıyla `pano update` | Kullanıcı ayar ekranında bunları bekliyor; otomatik güncelleme güven kaybı riski |
+| 2026-11-05 | Board'da özet kutuları yok; sadece kritik bilgi ince tek satırda. "Seni bekliyor" sidebar'da, görülmemiş tamamlanan iş kartta küçük bir nokta (metin yok), iptal edilenler filtre menüsünde | Sürekli bakılmayan bilgi ekranı kalabalıklaştırmasın (tasarım denetimi + Mert) |
+| 2026-11-05 | macOS tarzı birleşik toolbar: solda proje adı, sağda ikonlu aksiyonlar | Apple HIG; karta daha çok alan |
+| 2026-11-05 | PBI detayı ortada sheet olarak kalıyor | Mert mevcut halini beğendi |
+| 2026-11-05 | Bilinen teknik terimler (Backlog, In Progress, Test, Done, PBI...) tüm dillerde İngilizce kalır | Zorlama çeviri olmasın |
