@@ -31,5 +31,7 @@ Mert tasarımları Claude Design'da inceler, yorumlar; onaylanınca Done.
 - 2026-11-05 claude:po tasarım kararları için çalışmaya başladı.
 - 2026-11-05 Kararlar alındı (ferah, sol sidebar, ortada sheet, Apple mavisi). İlk 5 ekran Claude Design'da: https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK (Projeler, Board, Board mobil, PBI detayı, Board dark). Mert'in yorumu bekleniyor.
 - 2026-11-05 Ürün kararları değişti (`docs/product.md`): detay sheet'indeki "Codex'e ata" butonu kaldırılacak; ek ekranlar kapsama alındı.
+- 2026-11-05 claude:design canvas'ı güncelledi: "Codex'e ata" kaldırıldı; board'a proje özeti şeridi, "Seni bekliyor" (sidebar + Test kartı), "görülmedi" işaretli Done kartı, "İptal edilenler" filtresi eklendi; yeni ekranlar: PBI detayı (Test — seni bekliyor), PBI geçmişi (diff'li), Proje ayarları; mobil güncellendi. Render ile kontrol edilmedi.
+- 2026-11-05 Açık: Projeler ekranındaki Pano kartı eski sayıları gösteriyor (7/1/0/0 → 11/1/1/1 olmalı); yayın izni reddedildiği için düzeltilemedi.
 
 ## Done notu
