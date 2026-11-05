@@ -1,9 +1,164 @@
-import { expect, test } from "bun:test";
-import { version } from "../../../package.json";
-import { app } from "./app";
+import { afterEach, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createApp, createCore } from "./app";
+import { serverConfig } from "./main";
 
-test("health returns the root package version", async () => {
-  const response = await app.request("/api/v1/health");
+const core = createCore(":memory:");
+const dirs: string[] = [];
+afterEach(async () => {
+  for (const dir of dirs.splice(0))
+    await rm(dir, { recursive: true, force: true });
+});
+const request = (
+  app: ReturnType<typeof createApp>,
+  path: string,
+  method = "GET",
+  body?: unknown,
+  headers: Record<string, string> = {},
+) =>
+  app.request(`/api/v1${path}`, {
+    method,
+    headers: {
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      ...headers,
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+
+test("project, item, actor, validation, conflicts and OpenAPI", async () => {
+  const app = createApp({ core, dataDir: "test" });
+  expect(
+    (await request(app, "/projects", "POST", { key: "API", name: "API" }))
+      .status,
+  ).toBe(200);
+  expect(
+    (
+      await request(app, "/projects/API/items", "POST", {
+        title: "Work",
+        priority: "high",
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await request(
+        app,
+        "/items/API-1/move",
+        "POST",
+        { status: "test" },
+        { "X-Pano-Actor": "codex:test" },
+      )
+    ).status,
+  ).toBe(200);
+  const activity = await (await request(app, "/items/API-1/activity")).json();
+  expect(activity[0]).toMatchObject({ actor: "codex:test", kind: "moved" });
+  expect(
+    (await request(app, "/items/API-1/move", "POST", { status: "unknown" }))
+      .status,
+  ).toBe(400);
+  expect((await request(app, "/items/API-99")).status).toBe(404);
+  expect(
+    (await request(app, "/projects", "POST", { key: "API", name: "Duplicate" }))
+      .status,
+  ).toBe(409);
+  const spec = await (await request(app, "/openapi.json")).json();
+  expect(spec.openapi).toBe("3.1.0");
+  expect(spec.paths["/api/v1/items/{key}/move"].post).toBeDefined();
+  expect(spec.paths["/api/v1/openapi.json"].get).toBeDefined();
+});
+
+test("host security and bearer authentication", async () => {
+  expect(() => serverConfig({ PANO_HOST: "0.0.0.0" })).toThrow("PANO_TOKEN");
+  expect(
+    serverConfig({ PANO_HOST: "0.0.0.0", PANO_TOKEN: "secret" }).token,
+  ).toBe("secret");
+  const app = createApp({ core, dataDir: "test", token: "secret" });
+  expect((await request(app, "/health")).status).toBe(200);
+  expect((await request(app, "/system")).status).toBe(401);
+  expect(
+    (
+      await request(app, "/system", "GET", undefined, {
+        Authorization: "Bearer secret",
+      })
+    ).status,
+  ).toBe(200);
+});
+
+test("SSE sends moves promptly and releases the listener", async () => {
+  const app = createApp({ core, dataDir: "test" });
+  await request(app, "/projects", "POST", { key: "SSE", name: "SSE" });
+  await request(app, "/projects/SSE/items", "POST", { title: "Stream" });
+  const before = core.events.listenerCount("change");
+  const response = await request(app, "/events?project=SSE");
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("Missing event stream");
+  await reader.read();
+  const next = reader.read();
+  await request(app, "/items/SSE-1/move", "POST", { status: "test" });
+  const result = await Promise.race([
+    next,
+    Bun.sleep(1000).then(() => {
+      throw new Error("SSE timeout");
+    }),
+  ]);
+  expect(new TextDecoder().decode(result.value)).toContain("event: item.moved");
+  await reader.cancel();
+  expect(core.events.listenerCount("change")).toBe(before);
+});
+
+test("multipart attachments and child services", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "pano-api-"));
+  dirs.push(dir);
+  const app = createApp({ core, dataDir: dir });
+  await request(app, "/projects", "POST", { key: "FILE", name: "Files" });
+  await request(app, "/projects/FILE/items", "POST", { title: "Item" });
+  const form = new FormData();
+  form.set("file", new File(["png"], "test.png", { type: "image/png" }));
+  const response = await app.request("/api/v1/items/FILE-1/attachments", {
+    method: "POST",
+    body: form,
+  });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true, version });
+  const attachment = await response.json();
+  expect(await Bun.file(join(dir, "attachments", attachment.id)).text()).toBe(
+    "png",
+  );
+  const criterion = await (
+    await request(app, "/items/FILE-1/criteria", "POST", { text: "Check" })
+  ).json();
+  expect(
+    (
+      await request(app, `/items/FILE-1/criteria/${criterion.id}`, "PATCH", {
+        done: true,
+      })
+    ).status,
+  ).toBe(200);
+  const scenario = await (
+    await request(app, "/items/FILE-1/scenarios", "POST", {
+      steps_md: "Do",
+      expected_md: "See",
+      author: "mert",
+    })
+  ).json();
+  expect(
+    (
+      await request(app, `/items/FILE-1/scenarios/${scenario.id}`, "PATCH", {
+        result: "passed",
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (await request(app, `/items/FILE-1/scenarios/${scenario.id}`, "DELETE"))
+      .status,
+  ).toBe(200);
+  expect(
+    (
+      await request(app, "/items/FILE-1/records", "POST", {
+        kind: "check",
+        message: "OK",
+      })
+    ).status,
+  ).toBe(200);
 });

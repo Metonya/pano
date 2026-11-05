@@ -1,7 +1,7 @@
 ---
 id: PBI-003
 title: REST API v1, OpenAPI, token auth ve canlı güncelleme (SSE)
-status: in-progress
+status: done
 assignee: codex
 priority: P1
 created: 2026-11-05
@@ -29,11 +29,11 @@ Web arayüzü, CLI ve agent'lar tek ve belgelenmiş bir API üzerinden çalışs
 - Auth: mimari dokümandaki "Güvenlik (v0.1)" bölümü. `0.0.0.0` + token yoksa sunucu açıklayıcı hata ile başlamaz.
 
 ## Kabul kriterleri
-- [ ] Tüm endpoint'ler OpenAPI şemasında görünür; `openapi.json` geçerli bir OpenAPI 3.1 belgesidir.
-- [ ] `curl` ile proje oluşturup PBI ekleyip `test`'e taşımak mümkün ve `activity`'de actor görünür.
-- [ ] SSE'ye bağlı bir istemci, başka bir istemcinin yaptığı taşımayı 1 sn içinde alır.
-- [ ] `PANO_HOST=0.0.0.0` ve token yokken sunucu başlamaz; token varken tokensız istek 401 alır.
-- [ ] Entegrasyon testleri `bun test` ile geçer.
+- [x] Tüm endpoint'ler OpenAPI şemasında görünür; `openapi.json` geçerli bir OpenAPI 3.1 belgesidir.
+- [x] `curl` ile proje oluşturup PBI ekleyip `test`'e taşımak mümkün ve `activity`'de actor görünür.
+- [x] SSE'ye bağlı bir istemci, başka bir istemcinin yaptığı taşımayı 1 sn içinde alır.
+- [x] `PANO_HOST=0.0.0.0` ve token yokken sunucu başlamaz; token varken tokensız istek 401 alır.
+- [x] Entegrasyon testleri `bun test` ile geçer.
 
 ## Test planı
 1. `bun run dev` → README'deki örnek `curl` komutlarıyla proje + PBI oluştur, taşı.
@@ -41,5 +41,7 @@ Web arayüzü, CLI ve agent'lar tek ve belgelenmiş bir API üzerinden çalışs
 
 ## Notlar / log
 - 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) verdi; @hono/zod-openapi, zod ve @pano/core önceden eklendi.
+- 2026-11-06 codex bitirdi (13 test). check (claude:po): lint · typecheck temiz · test 13/13 · gerçek portta curl ile proje oluştur → PBI ekle (Türkçe karakterler doğru) → Test'e taşı → aktivitede actor ve eski/yeni durum görünüyor · SSE'de item.created ve item.moved anında geldi · geçersiz key 400 + standart hata · openapi.json 3.1.0.
 
 ## Done notu
+27 endpoint (projeler, PBI'lar, kriterler, senaryolar, kayıtlar, ekler, aktivite, SSE, OpenAPI, health/system), token koruması ve README'de curl örnekleri. Açık kalanlar (PBI-012'ye taşındı): ek yüklemede dosya taşıma başarısız olursa metadata dosyasız kalabiliyor; kalıcı proje silmede ek dosyaları diskten temizlenmiyor. OpenAPI belgesi ayrı bir doğrulayıcıyla kontrol edilmedi.

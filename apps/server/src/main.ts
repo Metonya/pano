@@ -1,7 +1,18 @@
-import { app } from "./app";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { createApp, createCore, defaultDataDir } from "./app";
 
-export default {
-  hostname: "127.0.0.1",
-  port: Number(process.env.PANO_PORT ?? 7777),
-  fetch: app.fetch,
-};
+export function serverConfig(env: NodeJS.ProcessEnv) {
+  const hostname = env.PANO_HOST || "127.0.0.1";
+  const token = env.PANO_TOKEN || undefined;
+  if (hostname !== "127.0.0.1" && !token)
+    throw new Error("PANO_TOKEN is required when PANO_HOST is not 127.0.0.1");
+  return { hostname, token, port: Number(env.PANO_PORT ?? 7777) };
+}
+if (import.meta.main) {
+  const config = serverConfig(process.env);
+  mkdirSync(defaultDataDir, { recursive: true });
+  const core = createCore(join(defaultDataDir, "pano.db"));
+  const app = createApp({ core, dataDir: defaultDataDir, token: config.token });
+  Bun.serve({ hostname: config.hostname, port: config.port, fetch: app.fetch });
+}

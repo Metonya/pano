@@ -42,6 +42,8 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 - [ ] Senaryo kaldırılabilir (geçmişte kalır); ek dosya seçici ile de eklenir ve kaldırılabilir; 10 MB üstü veya desteklenmeyen dosya açıklayıcı hata verir; yükleme hatasında not kaybolmaz.
 - [ ] Proje ayarlarında Test kolonu kapatılırken Test'te kart varsa kullanıcıya sorulur: kartlar In Progress'e mi dönsün, Done'a mı alınsın; seçim geçmişe yazılır. Test kolonu kapalı ve "AI Done'a çekebilir" kapalı birlikte seçilemez (açıklama gösterilir).
 - [ ] "Seni bekliyor" listesi tüm projelerdeki kullanıcıya atanmış Test kartlarını proje gruplu gösterir; Projeler ekranında her projede bekleyen test sayısı görünür.
+- [ ] Ek yükleme atomik: dosya kaydı başarısız olursa metadata da oluşmaz (PBI-003'ten devralındı).
+- [ ] Arşivdeki proje kalıcı silinince ek dosyaları da diskten temizlenir (PBI-003'ten devralındı).
 - [ ] Playwright testi: senaryolu kart → kullanıcı geri gönderir (ekranla) → agent düzeltir → kullanıcı onaylar akışı geçer.
 
 ## Test planı
