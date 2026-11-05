@@ -1,11 +1,11 @@
 ---
 id: PBI-002
 title: Veri modeli, SQLite migration'ları ve core servisleri
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P1
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -44,5 +44,6 @@ Projeler, PBI'lar, kabul kriterleri ve aktivite geçmişi güvenilir şekilde sa
 Otomatik testler yeterli; PO incelemesi için örnek bir seed script'i (`bun run seed`) 2 proje ve 8 PBI oluştursun.
 
 ## Notlar / log
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) verdi; zod ve ulid önceden kuruldu.
 
 ## Done notu

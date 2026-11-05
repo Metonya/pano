@@ -1,7 +1,7 @@
 ---
 id: PBI-001
 title: Monorepo iskeleti, lint/test ve CI
-status: in-progress
+status: done
 assignee: codex
 priority: P1
 created: 2026-11-05
@@ -31,7 +31,7 @@ Tüm geliştiricilerin (insan ve agent) aynı komutlarla kurup, test edip, build
 
 - [x] Temiz klonda `bun install && bun run test && bun run lint && bun run typecheck` hatasız geçer.
 - [x] `bun run dev` ile `http://localhost:7777/api/v1/health` `{"ok":true,...}` döner ve web dev server açılır.
-- [ ] GitHub Actions CI push ve PR'da çalışır, yeşildir.
+- [x] GitHub Actions CI push ve PR'da çalışır, yeşildir.
 - [x] `AGENTS.md` repo yapısını, komutları ve commit kuralını anlatır.
 
 ## Test planı
@@ -44,6 +44,7 @@ Tüm geliştiricilerin (insan ve agent) aynı komutlarla kurup, test edip, build
 - 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) verdi.
 - 2026-11-06 codex iskeleti yazdı; sandbox Bun'ın geçici klasörüne izin vermediği için kurulum ve kontrolleri çalıştıramadı.
 - 2026-11-06 claude:po `bun install` yaptı, lockfile oluştu. Biome markdown dosyalarını da biçimlendirip PBI başlık bloğunu bozuyordu; sadece kod klasörlerine sınırlandı. check: lint temiz · typecheck temiz · test 2/2 geçti · build geçti · dev'de `/api/v1/health` → `{"ok":true,"version":"0.1.0"}`, Vite proxy üzerinden de çalışıyor.
-- Açık: GitHub Actions CI ancak push'tan sonra doğrulanabilir (push Mert'in onayında).
+- 2026-11-06 Mert push'u onayladı. check: CI yeşil — ubuntu 16 sn, windows 44 sn (run 42113071724). checkout action'ı Node 20 uyarısı için v5'e yükseltildi.
 
 ## Done notu
+Bun monorepo (server/web/core), Biome, TypeScript strict, bun test ve Windows+Ubuntu CI çalışıyor; health endpoint'i var. İnsan testi gerektirmediği için AI kapattı. Bilinen kısıt: shadcn/ui CLI ile değil elle yapılandırıldı; ilk UI PBI'ında `shadcn add` ile doğrulanacak.

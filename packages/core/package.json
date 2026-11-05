@@ -2,5 +2,9 @@
   "name": "@pano/core",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts"
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "ulid": "^3.0.2",
+    "zod": "^4.6.7"
+  }
 }
