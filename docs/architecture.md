@@ -92,7 +92,7 @@ erDiagram
     text title
     text body_md "amaç, kapsam, bağlam, test planı"
     text status "backlog|in_progress|test|done|cancelled"
-    text priority "P1|P2|P3"
+    text priority "high|medium|low"
     text assignee "claude:pbi-12-dev | codex | mert | null"
     real position "kolon içi sıra"
     text seen_at "kullanıcı son baktığında"
@@ -137,7 +137,8 @@ erDiagram
   }
 ```
 
-- PBI'nın görünen anahtarı: `<PROJECT.key>-<number>` (ör. `PANO-12`). Agent'lar ve commit mesajları bu anahtarı kullanır.
+- PBI'nın anahtarı: `<PROJECT.key>-<number>` (ör. `PANO-12`). Agent'lar, commit mesajları ve projeler arası listeler bu anahtarı kullanır; proje içindeki arayüzde sadece `#12` görünür.
+- Öncelik `high|medium|low`; arayüzde Yüksek / Orta / Düşük.
 - Kabul kriterleri ayrı tablo: agent'lar tek tek `check` edebilir, board ilerleme çubuğu gösterir.
 - Statüler sabit: `backlog`, `in_progress`, `test`, `done`, `cancelled`. Test kolonu proje ayarıyla kapatılabilir; `cancelled` kolon değil, filtredir. Akış kuralları: [product.md](product.md#akış).
 - **Hiçbir şey silinmez, her değişiklik `activity`'de eski/yeni haliyle durur.** Bu kayıtlar UI'da insan için gösterilir; agent'lar varsayılan olarak sadece kartın güncel hali + son birkaç kaydı alır, geçmişin tamamını istediğinde ister. Böylece kayıt tutmak agent'ın token maliyetini büyütmez.
