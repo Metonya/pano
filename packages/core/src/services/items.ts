@@ -44,10 +44,38 @@ export function createItems(
             str(p.id),
           );
     },
+    board(projectKey: string) {
+      const project = context.project(projectKey);
+      const items = this.list(projectKey);
+      const columns = Object.fromEntries(
+        ["backlog", "in_progress", "test", "done"].map((status) => [
+          status,
+          items.filter((item) => item.status === status),
+        ]),
+      );
+      return {
+        project,
+        columns,
+        waiting: items.filter((item) => item.status === "test"),
+      };
+    },
     get(key: string, options: { history?: boolean } = {}) {
       const row = item(key);
       const id = str(row.id);
+      const sentBack = activity.list(key).find((entry) => {
+        if (
+          entry.kind !== "moved" ||
+          typeof entry.before_json !== "string" ||
+          typeof entry.after_json !== "string"
+        )
+          return false;
+        return (
+          JSON.parse(entry.before_json).status === "test" &&
+          JSON.parse(entry.after_json).status === "in_progress"
+        );
+      });
       return {
+        return_note: sentBack?.message ?? null,
         ...row,
         key,
         criteria: all(

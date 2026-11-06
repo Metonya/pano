@@ -28,3 +28,4 @@
 | 2026-11-06 | PBI numarası proje içinde `#4`; projeler arası yerlerde (Seni bekliyor, commit, agent komutları) `PANO-4` | Board'da proje zaten belli, tekrar etmesin |
 | 2026-11-06 | Proje işlemleri kart üzerindeki … butonu ve sağ tık menüsünde; kalıcı silme sadece arşivdeki projede, proje adını yazarak | Yanlışlıkla geçmiş kaybolmasın |
 | 2026-11-06 | Agent'lar arayüzde okunaklı ad + rol ile görünür (Claude · PO, Claude · Tasarım, Codex, Mert); teknik kimlik (`claude:po`) API'de ve geçmiş ayrıntısında | Küçük harfli teknik kimlik kullanıcıya garip geliyor |
+| 2026-11-06 | Codex, Pano'yu MCP yerine terminal üzerinden (CLI/REST) kullanır; işler Codex'e terminal sekmesinden verilir ki Mert izleyebilsin | Bu makinede Codex'in MCP'si politika ile kapalı; CLI yolu çalışıyor |

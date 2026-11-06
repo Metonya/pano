@@ -28,3 +28,16 @@ curl http://127.0.0.1:7777/api/v1/items/DEMO-1/activity
 ```
 
 Olayları dinlemek için taşıma komutundan önce başka bir terminalde `curl -N 'http://127.0.0.1:7777/api/v1/events?project=DEMO'` çalıştırın. `PANO_TOKEN` ayarlıysa health dışındaki isteklere `-H 'Authorization: Bearer TOKEN'` ekleyin. OpenAPI belgesi `/api/v1/openapi.json` adresindedir.
+
+## MCP istemcileri
+
+Claude Code: `claude mcp add --transport http pano http://localhost:7777/mcp`
+
+Codex i?in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.pano]
+url = "http://localhost:7777/mcp"
+```
+
+`PANO_TOKEN` ayarl?ysa istemci isteklerine `Authorization: Bearer TOKEN` ba?l???n? ekleyin. REST ve curl rehberi sunucunun `/agents.md` adresindedir.

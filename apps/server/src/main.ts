@@ -14,5 +14,12 @@ if (import.meta.main) {
   mkdirSync(defaultDataDir, { recursive: true });
   const core = createCore(join(defaultDataDir, "pano.db"));
   const app = createApp({ core, dataDir: defaultDataDir, token: config.token });
-  Bun.serve({ hostname: config.hostname, port: config.port, fetch: app.fetch });
+  // SSE and MCP streams stay open; Bun's default 10s idle timeout would cut them
+  // before the 15s heartbeat. 255s is Bun's maximum.
+  Bun.serve({
+    hostname: config.hostname,
+    port: config.port,
+    idleTimeout: 255,
+    fetch: app.fetch,
+  });
 }

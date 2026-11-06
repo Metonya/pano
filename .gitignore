@@ -8,3 +8,6 @@ coverage/
 .DS_Store
 scratch/
 scratch.*
+
+# Local editor/agent launch settings
+.claude/launch.json

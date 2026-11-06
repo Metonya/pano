@@ -12,10 +12,15 @@ import { createScenarios } from "./services/scenarios";
 export type { ChangeEvent } from "./events";
 export { positionBetween } from "./position";
 export {
+  actorSchema,
+  itemCreate,
   itemKeySchema,
+  itemPatch,
   prioritySchema,
   projectKeySchema,
+  scenarioCreate,
   statusSchema,
+  text,
 } from "./schemas";
 export function createCore(path?: string) {
   const db = openDatabase(path);
