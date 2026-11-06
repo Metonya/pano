@@ -19,6 +19,7 @@ export function ProjectSettings({
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState(project.name);
+  const [description, setDescription] = useState(project.description);
   const [test, setTest] = useState(Boolean(project.test_column));
   const [ai, setAi] = useState(Boolean(project.ai_can_close));
   const [dod, setDod] = useState(project.dod_md);
@@ -47,6 +48,7 @@ export function ProjectSettings({
       }}
       dirty={
         name !== project.name ||
+        description !== project.description ||
         test !== Boolean(project.test_column) ||
         ai !== Boolean(project.ai_can_close) ||
         dod !== project.dod_md
@@ -61,6 +63,7 @@ export function ProjectSettings({
             `/projects/${project.key}`,
             {
               name: name.trim(),
+              description: description.trim(),
               test_column: test,
               ai_can_close: ai,
               dod_md: dod,
@@ -101,6 +104,15 @@ export function ProjectSettings({
               />
               <small id="project-key-help">{t("projectKeyHelp")}</small>
             </div>
+          </div>
+          <div className="project-settings-field">
+            <label htmlFor="project-description">{t("description")}</label>
+            <textarea
+              id="project-description"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <div className="project-settings-box">
             <div className="project-settings-row">

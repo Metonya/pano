@@ -363,9 +363,7 @@ export function ItemDialog({
             </button>
           )}
         </>
-      ) : (
-        <p className="sheet-muted">{t("noDescription")}</p>
-      )}
+      ) : null}
     </section>
   );
   return (

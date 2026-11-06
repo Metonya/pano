@@ -277,6 +277,13 @@ test("cancellation is filtered and invalid inputs rejected", () => {
   ).toThrow(ZodError);
   expect("delete" in c.items).toBe(false);
 });
+test("project description can be written and cleared", () => {
+  const c = setup();
+  c.projects.update("PANO", { description: "Takım panosu" }, "mert");
+  expect(c.projects.get("PANO").description).toBe("Takım panosu");
+  c.projects.update("PANO", { description: "" }, "mert");
+  expect(c.projects.get("PANO").description).toBe("");
+});
 test("test settings, approval, return note, done and seen", () => {
   const c = setup();
   c.items.create("PANO", { title: "Task" }, "mert");

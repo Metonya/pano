@@ -175,12 +175,12 @@
   overflow-wrap: anywhere;
 }
 .test-expected {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
   color: var(--muted);
+  margin-top: 6px;
+}
+.test-expected .markdown {
   font-size: 13px;
-  margin-top: 4px;
+  line-height: 1.45;
 }
 .test-panel .test-result button {
   min-height: 32px;

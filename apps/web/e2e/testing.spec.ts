@@ -35,6 +35,21 @@ test("insan testi geri gönderme ve onay", async ({ page, request }) => {
   await expect(
     page.getByRole("heading", { name: "AI'ın kendi testleri" }),
   ).toHaveCount(0);
+  // The card shows the expected text alone; only screen readers get the label.
+  const firstCard = page.locator(".test-scenario").first();
+  const expectedRow = firstCard.locator(".test-expected");
+  await expect(expectedRow).toContainText("Görünür");
+  await expect(expectedRow.locator(".sr-only")).toHaveText("Beklenen sonuç:");
+  const label = await expectedRow.locator(".sr-only").boundingBox();
+  expect(label?.width).toBeLessThanOrEqual(1);
+  await expect(expectedRow.locator(".markdown")).toHaveCSS("font-size", "13px");
+  const stepsBox = await firstCard
+    .getByText("Sayfayı aç", { exact: true })
+    .boundingBox();
+  const expectedBox = await expectedRow.getByText("Görünür").boundingBox();
+  expect(expectedBox?.y ?? 0).toBeGreaterThanOrEqual(
+    (stepsBox?.y ?? 0) + (stepsBox?.height ?? 0),
+  );
   await page.getByRole("button", { name: "Senaryo ekle", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Ekle", exact: true }).first(),

@@ -9,15 +9,21 @@ import type { Project, ProjectAction } from "@/lib/api";
 import { t } from "@/lib/i18n";
 export function ProjectMenu({
   p,
+  open,
+  onOpenChange,
   act,
   onDelete,
+  onSettings,
 }: {
   p: Project;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   act: ProjectAction;
   onDelete: (p: Project) => void;
+  onSettings: () => void;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -28,9 +34,11 @@ export function ProjectMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="menu-content">
-        <DropdownMenuItem onSelect={() => act(p, "star", !p.starred)}>
-          {t(p.starred ? "unstar" : "star")}
-        </DropdownMenuItem>
+        {!p.archived_at && (
+          <DropdownMenuItem onSelect={onSettings}>
+            {t("projectSettings")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={() => act(p, "archive", !p.archived_at)}>
           {t(p.archived_at ? "restore" : "archiveAction")}
         </DropdownMenuItem>

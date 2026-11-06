@@ -108,6 +108,140 @@ test("proje ayarları adı kaydeder, kuralları uygular ve satır içi onayla ar
   await expect(page.locator("aside")).not.toContainText("Yeni ayar adı");
 });
 
+test("proje açıklaması yazılır ve silinir, boş kartta metin çıkmaz", async ({
+  page,
+}) => {
+  await page.request.post("/api/v1/projects", {
+    data: { key: "ACIK", name: "Açıklama denemesi" },
+  });
+  await page.request.post("/api/v1/projects/ACIK/star", {
+    data: { starred: true },
+  });
+  await page.goto("/");
+  const card = page.locator("article").filter({ hasText: "Açıklama denemesi" });
+  const description = card.locator(".description");
+  const settings = async () => {
+    await card
+      .getByRole("button", { name: "Diğer işlemler Açıklama denemesi" })
+      .click();
+    await page.getByRole("menuitem", { name: "Proje ayarları" }).click();
+  };
+  const dialog = page.getByRole("dialog");
+  const field = dialog.getByLabel("Açıklama", { exact: true });
+  const save = dialog.getByRole("button", { name: "Kaydet", exact: true });
+
+  await expect(card).toBeVisible();
+  await expect(description).toHaveCount(0);
+  await expect(card).not.toContainText("Açıklama yok");
+  const emptyHeight = (await card.boundingBox())?.height ?? 0;
+
+  await settings();
+  await expect(field).toHaveValue("");
+  await field.fill("Takımın ortak panosu");
+  // An unsaved description counts as a change.
+  await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+  await expect(
+    page.getByText("Kaydedilmemiş değişikliklerin var", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Düzenlemeye devam et" }).click();
+  await save.click();
+  await expect(dialog).toHaveCount(0);
+  await expect(description).toHaveText("Takımın ortak panosu");
+  expect((await card.boundingBox())?.height ?? 0).toBeGreaterThan(emptyHeight);
+
+  await settings();
+  await expect(field).toHaveValue("Takımın ortak panosu");
+  await field.fill("");
+  await save.click();
+  await expect(dialog).toHaveCount(0);
+  await expect(description).toHaveCount(0);
+  await expect(card).not.toContainText("Açıklama yok");
+  expect((await card.boundingBox())?.height).toBe(emptyHeight);
+  const saved = await page.request.get("/api/v1/projects/ACIK");
+  expect((await saved.json()).description).toBe("");
+});
+
+test("açıklaması olmayan PBI'da başlık ve Düzenle kalır, boş metin çıkmaz", async ({
+  page,
+}) => {
+  await page.request.post("/api/v1/projects", {
+    data: { key: "BOSPBI", name: "Boş PBI" },
+  });
+  await page.request.post("/api/v1/projects/BOSPBI/items", {
+    data: { title: "Açıklamasız iş" },
+  });
+  await page.goto("/projects/BOSPBI");
+  await page
+    .locator(".board-card")
+    .filter({ hasText: "Açıklamasız iş" })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("heading", { name: "Açıklama", exact: true }),
+  ).toBeVisible();
+  await expect(dialog).not.toContainText("Açıklama yok");
+  await expect(
+    dialog
+      .locator(".sheet-section")
+      .filter({ has: page.getByRole("heading", { name: "Açıklama" }) })
+      .getByRole("button", { name: "Düzenle" }),
+  ).toBeVisible();
+});
+
+test("kart menüsü ayarları aynı sayfada açar, yıldız kartta kalır", async ({
+  page,
+}) => {
+  await page.request.post("/api/v1/projects", {
+    data: { key: "MENU", name: "Menü denemesi" },
+  });
+  await page.goto("/");
+  const card = page.locator("article").filter({ hasText: "Menü denemesi" });
+  const menu = page.getByRole("menu");
+  const trigger = card.getByRole("button", {
+    name: "Diğer işlemler Menü denemesi",
+  });
+
+  await trigger.click();
+  await expect(menu.getByRole("menuitem").first()).toHaveText("Proje ayarları");
+  await expect(menu.getByRole("menuitem", { name: /Yıldız/ })).toHaveCount(0);
+  await expect(menu.getByRole("menuitem", { name: "Arşivle" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+
+  // The right-click menu has the same content.
+  await card.click({ button: "right", position: { x: 30, y: 30 } });
+  await expect(menu.getByRole("menuitem").first()).toHaveText("Proje ayarları");
+  await expect(menu.getByRole("menuitem", { name: /Yıldız/ })).toHaveCount(0);
+
+  await menu.getByRole("menuitem", { name: "Proje ayarları" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Anahtar")).toHaveValue("MENU");
+  await expect(page).toHaveURL("/");
+  await dialog.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL("/");
+  await expect(page.locator("body")).not.toHaveCSS("pointer-events", "none");
+
+  // The star button on the card still works.
+  await card.getByRole("button", { name: "Yıldızla Menü denemesi" }).click();
+  await expect(
+    card.getByRole("button", { name: "Yıldızı kaldır Menü denemesi" }),
+  ).toBeVisible();
+
+  // An archived project has no settings entry.
+  await trigger.click();
+  await menu.getByRole("menuitem", { name: "Arşivle", exact: true }).click();
+  await expect(card).toHaveCount(0);
+  await page.getByRole("button", { name: /^Arşiv/ }).click();
+  await trigger.click();
+  await expect(
+    menu.getByRole("menuitem", { name: "Arşivden çıkar" }),
+  ).toBeVisible();
+  await expect(
+    menu.getByRole("menuitem", { name: "Proje ayarları" }),
+  ).toHaveCount(0);
+});
+
 test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu gösterir", async ({
   page,
 }) => {

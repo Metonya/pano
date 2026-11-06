@@ -462,7 +462,7 @@ export function TestPanel({
                       <Markdown>{s.steps_md}</Markdown>
                     </div>
                     <div className="test-expected">
-                      <span>{t("scenarioExpected")}:</span>
+                      <span className="sr-only">{t("scenarioExpected")}:</span>
                       <Markdown>{s.expected_md}</Markdown>
                     </div>
                   </div>
