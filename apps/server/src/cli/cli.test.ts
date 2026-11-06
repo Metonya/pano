@@ -187,3 +187,21 @@ test("status alias, cancellation reason and default URL are sent correctly", asy
     expect(result.code).toBe(0);
   }
 });
+
+test("healthcheck exits 0 only when the local server answers", async () => {
+  const ok = await runCli(["healthcheck"], {
+    env: { PANO_PORT: "1234" },
+    fetch: (async (url: string) => {
+      expect(url).toBe("http://127.0.0.1:1234/api/v1/health");
+      return new Response("{}");
+    }) as never,
+  });
+  expect(ok).toBe(0);
+  const down = await runCli(["healthcheck"], {
+    env: {},
+    fetch: (async () => {
+      throw new Error("offline");
+    }) as never,
+  });
+  expect(down).toBe(1);
+});

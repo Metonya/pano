@@ -48,6 +48,14 @@ export async function runCli(
     ((text) => {
       process.stderr.write(text, "utf8");
     });
+  // Used by the Docker HEALTHCHECK: the runtime image has no shell or curl.
+  if (args[0] === "healthcheck") {
+    const port = env.PANO_PORT ?? "7777";
+    const response = await (options.fetch ?? fetch)(
+      `http://127.0.0.1:${port}/api/v1/health`,
+    ).catch(() => null);
+    return response?.ok ? 0 : 1;
+  }
   let json = false;
   try {
     // Parse only universal flags here; command parsers validate their own options.

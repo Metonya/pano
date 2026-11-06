@@ -85,14 +85,14 @@ Olayları dinlemek için taşıma komutundan önce başka bir terminalde `curl -
 
 Claude Code: `claude mcp add --transport http pano http://localhost:7777/mcp`
 
-Codex i?in `~/.codex/config.toml`:
+Codex için `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.pano]
 url = "http://localhost:7777/mcp"
 ```
 
-`PANO_TOKEN` ayarl?ysa istemci isteklerine `Authorization: Bearer TOKEN` ba?l???n? ekleyin. REST ve curl rehberi sunucunun `/agents.md` adresindedir.
+`PANO_TOKEN` ayarlıysa istemci isteklerine `Authorization: Bearer TOKEN` başlığın? ekleyin. REST ve curl rehberi sunucunun `/agents.md` adresindedir.
 
 ## Markdown backlog'u aktarma
 
