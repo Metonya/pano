@@ -112,10 +112,49 @@
 .dialog .sheet-title {
   margin: 0;
   font-size: 24px;
-  line-height: 1.2;
+  /* A whole-pixel line: the textarea height (scrollHeight) is always rounded. */
+  line-height: 1.25;
   font-weight: 700;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
+}
+.dialog .sheet-title-text {
+  font: inherit;
+  letter-spacing: inherit;
+}
+/* Button and textarea share one box, so editing does not move the layout. */
+.sheet-title-button,
+.dialog .sheet-title-input {
+  --title-pad-y: 2px;
+  display: block;
+  box-sizing: border-box;
+  width: calc(100% + 16px);
+  margin: calc(var(--title-pad-y) * -1) -8px;
+  padding: var(--title-pad-y) 8px;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sheet-title-button {
+  background: transparent;
+  cursor: text;
+}
+.sheet-title-button:disabled {
+  cursor: default;
+}
+.sheet-title-button:hover:not(:disabled) {
+  background: var(--field);
+  opacity: 1;
+}
+.dialog .sheet-title-input {
+  background: var(--field);
+  overflow: hidden;
+  resize: none;
 }
 .sheet-properties {
   display: grid;
@@ -490,6 +529,11 @@
   }
   .dialog .sheet-title {
     font-size: 20px;
+  }
+  /* 25px line + 20px padding clears the 44px touch target without taking room. */
+  .sheet-title-button,
+  .dialog .sheet-title-input {
+    --title-pad-y: 10px;
   }
   .sheet-properties {
     grid-template-columns: repeat(2, minmax(0, 1fr));

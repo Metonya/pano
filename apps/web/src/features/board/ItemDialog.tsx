@@ -7,7 +7,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ManagedDialog } from "@/components/ManagedDialog";
@@ -148,6 +148,74 @@ export function ItemDialog({
   const [composing, setComposing] = useState(false);
   const pendingCriteria = useRef(new Set<string>());
   const [pending, setPending] = useState<string[]>([]);
+  const [titleEditing, setTitleEditing] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [titleError, setTitleError] = useState(false);
+  // Enter and Esc remove the focused field, which can fire one more blur.
+  const titleOpen = useRef(false);
+  const titleInput = useRef<HTMLTextAreaElement>(null);
+  const titleButton = useRef<HTMLButtonElement>(null);
+  const restoreTitleFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (titleEditing) {
+      const input = titleInput.current;
+      input?.focus();
+      input?.setSelectionRange(input.value.length, input.value.length);
+    } else if (restoreTitleFocus.current) {
+      restoreTitleFocus.current = false;
+      titleButton.current?.focus();
+    }
+  }, [titleEditing]);
+  // No dependency list: the height follows every change of the text.
+  useLayoutEffect(() => {
+    const input = titleInput.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+  });
+  function openTitle(draft: string) {
+    titleOpen.current = true;
+    setTitleDraft(draft);
+    setTitleEditing(true);
+  }
+  async function closeTitle(save: boolean, refocus = false) {
+    if (!titleOpen.current) return;
+    titleOpen.current = false;
+    restoreTitleFocus.current = refocus;
+    setTitleEditing(false);
+    setTitleError(false);
+    const title = titleDraft.trim();
+    const detailKey = ["item", key];
+    const boardKey = ["board", projectKey];
+    const previous = qc.getQueryData<Detail>(detailKey)?.title;
+    if (!save || !title || title === previous) return;
+    const setTitle = (value: string | undefined) => {
+      if (value === undefined) return;
+      qc.setQueryData<Detail>(detailKey, (old) =>
+        old ? { ...old, title: value } : old,
+      );
+      qc.setQueryData<BoardItem[]>(boardKey, (old) =>
+        old?.map((i) => (i.id === item?.id ? { ...i, title: value } : i)),
+      );
+    };
+    const cancellations = Promise.all([
+      qc.cancelQueries({ queryKey: detailKey }),
+      qc.cancelQueries({ queryKey: boardKey }),
+    ]);
+    setTitle(title);
+    try {
+      await cancellations;
+      await request(`/items/${key}`, { title }, "PATCH");
+    } catch {
+      setTitle(previous);
+      setTitleError(true);
+      // The text stays in the field so it can be retried.
+      if (!titleOpen.current) openTitle(title);
+    } finally {
+      void qc.invalidateQueries({ queryKey: boardKey });
+      void qc.invalidateQueries({ queryKey: detailKey });
+    }
+  }
   async function checkCriterion(id: string, done: boolean) {
     if (pendingCriteria.current.has(id)) return;
     const detailKey = ["item", key];
@@ -283,6 +351,13 @@ export function ItemDialog({
     }
   }
   const d = detail.data;
+  // The board's copy only stands in until the item itself has loaded.
+  const title = d?.title ?? item?.title;
+  const titleText = (
+    <DialogTitle asChild className="sheet-title-text">
+      <span className={titleEditing ? "sr-only" : undefined}>{title}</span>
+    </DialogTitle>
+  );
   const actors = [
     ...new Set([
       ...knownActors,
@@ -373,8 +448,14 @@ export function ItemDialog({
       onOpenChange={(v) => {
         if (!v) close();
       }}
+      onEscapeKeyDown={(event) => {
+        if (!titleOpen.current) return;
+        event.preventDefault();
+        if (!event.isComposing) void closeTitle(false, true);
+      }}
       dirty={
         testDirty ||
+        (titleEditing && titleDraft !== d?.title) ||
         (editing && body !== d?.body_md) ||
         !!criterion ||
         !!reason ||
@@ -473,7 +554,53 @@ export function ItemDialog({
             </button>
           </DialogClose>
         </div>
-        <DialogTitle className="sheet-title">{item?.title}</DialogTitle>
+        <h2 className="sheet-title">
+          {titleEditing ? (
+            <>
+              {titleText}
+              <textarea
+                ref={titleInput}
+                className="sheet-title-input"
+                aria-label={t("editTitle")}
+                rows={1}
+                value={titleDraft}
+                onChange={(e) => {
+                  setTitleError(false);
+                  setTitleDraft(e.target.value.replace(/\r?\n/g, " "));
+                }}
+                // After a failed save the text waits here, so closing still asks.
+                onBlur={() => {
+                  if (!titleError) void closeTitle(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    void closeTitle(true, true);
+                  }
+                }}
+              />
+            </>
+          ) : (
+            <button
+              type="button"
+              ref={titleButton}
+              className="sheet-title-button"
+              // Keeps the visible title in the name, like the criterion buttons.
+              aria-label={`${t("editTitle")}: ${title}`}
+              disabled={!d}
+              onClick={() => {
+                if (d) openTitle(d.title);
+              }}
+            >
+              {titleText}
+            </button>
+          )}
+        </h2>
+        {titleError && (
+          <p role="alert" className="error">
+            {t("failed")}
+          </p>
+        )}
         {d && (
           <div className="sheet-properties">
             <Property

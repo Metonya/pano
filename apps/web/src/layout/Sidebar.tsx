@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Archive, FolderKanban, Inbox, Settings, Star } from "lucide-react";
+import { Archive, Inbox, Settings, Star } from "lucide-react";
 import { useEffect, useReducer } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { PanoLogo } from "@/components/PanoLogo";
 import { relativeTime } from "@/features/board/format";
 import type { BoardItem } from "@/features/board/types";
 import type { Project } from "@/lib/api";
@@ -68,9 +69,7 @@ export function Sidebar({
             to="/"
             onClick={() => showArchive(false)}
           >
-            <span className="brand-icon">
-              <FolderKanban size={18} />
-            </span>
+            <PanoLogo />
             {t("brand")}
           </Link>
           <button

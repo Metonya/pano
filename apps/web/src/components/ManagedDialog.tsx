@@ -14,6 +14,7 @@ export function ManagedDialog({
   className = "",
   hideClose,
   focusContent = false,
+  onEscapeKeyDown,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,6 +27,8 @@ export function ManagedDialog({
   hideClose?: boolean;
   // Settings windows open on the window itself; forms focus their first field.
   focusContent?: boolean;
+  // Radix sees Esc on the document first; preventDefault keeps the dialog open.
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
 }) {
   const [confirmClose, setConfirmClose] = useState(false);
   const continueButton = useRef<HTMLButtonElement>(null);
@@ -61,6 +64,7 @@ export function ManagedDialog({
         showCloseButton={false}
         className={`dialog ${className}`}
         aria-describedby={describedBy}
+        onEscapeKeyDown={onEscapeKeyDown}
         onOpenAutoFocus={
           focusContent
             ? (event) => {

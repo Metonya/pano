@@ -17,6 +17,10 @@ Use Bun 1.3 or newer. Run `bun install`, `bun run dev`, `bun run build`, `bun ru
 
 Read the relevant PBI in `backlog/` and the applicable decisions in `docs/` before starting. Implement its scope and verify its acceptance criteria; record progress in the relevant PBI when authorized.
 
+## Writing
+
+Never use the em dash character (U+2014) anywhere in this project: UI text, docs, code, comments, tests, commit messages or PBIs. Use a period, colon or comma instead.
+
 ## Commits
 
 Write commit messages in Turkish, retain English technical terms, and use simple language a product owner can understand. Start the title with the PBI number and describe the outcome, for example `PBI-012: İnsan testi akışı eklendi`. The body lists 2–5 user-facing changes. Before committing, check `git status` and `git diff --staged`: no scratch files, build output, secrets or personal paths. Agents working on a PBI do not commit or push; the orchestrator does.

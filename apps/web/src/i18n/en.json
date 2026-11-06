@@ -115,6 +115,7 @@
   "activityChecked": "updated criterion",
   "activityCriterionAdded": "added criterion",
   "activityCriterionRemoved": "deleted criterion",
+  "editTitle": "Edit title",
   "editCriterion": "Edit criterion",
   "deleteCriterion": "Delete criterion",
   "activityCriterionUpdated": "edited criterion",

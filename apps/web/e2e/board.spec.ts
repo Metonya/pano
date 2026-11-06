@@ -367,3 +367,198 @@ test("açıklama alanı panel genişliğinde; iptal etiketi ile alan arasında b
     }),
   ).toBeGreaterThanOrEqual(8);
 });
+
+test("PBI başlığı yerinde düzenlenir, panelde ve kartta güncel kalır", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "TITLE", name: "Başlık" },
+  });
+  await request.post("/api/v1/projects/TITLE/items", {
+    data: { title: "Eski başlık" },
+  });
+  await page.goto("/projects/TITLE");
+  const cards = page.locator(".board-card");
+  await cards.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toHaveAccessibleName("Eski başlık");
+  const open = dialog.getByRole("button", { name: "Başlığı düzenle" });
+  const field = dialog.getByRole("textbox", { name: "Başlığı düzenle" });
+
+  // Same size and weight as the title; the layout stays where it was.
+  await expect(open).toHaveCSS("font-size", "24px");
+  await expect(open).toHaveCSS("font-weight", "700");
+  // The opening animation scales the sheet: measure after it has settled.
+  await dialog.locator(".sheet-properties").waitFor();
+  await dialog.evaluate((el) =>
+    Promise.all(el.getAnimations().map((a) => a.finished)),
+  );
+  const shown = await open.boundingBox();
+  const next = await dialog.locator(".sheet-properties").boundingBox();
+  await open.click();
+  await expect(field).toBeFocused();
+  await expect(field).toHaveCSS("font-size", "24px");
+  await expect(field).toHaveCSS("font-weight", "700");
+  expect(await field.boundingBox()).toEqual(shown);
+  expect(await dialog.locator(".sheet-properties").boundingBox()).toEqual(next);
+
+  // Esc only leaves the editor: nothing is saved and the panel stays open.
+  await field.fill("Vazgeçilen başlık");
+  await field.press("Escape");
+  await expect(field).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(open).toBeFocused();
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText(
+    "Eski başlık",
+  );
+  await expect(cards).toContainText("Eski başlık");
+  await expect
+    .poll(
+      async () =>
+        (await (await request.get("/api/v1/items/TITLE-1")).json()).title,
+    )
+    .toBe("Eski başlık");
+
+  // An empty title is never sent; the old text returns.
+  await open.press("Enter");
+  await expect(field).toBeFocused();
+  await field.fill("   ");
+  await field.press("Enter");
+  await expect(field).toHaveCount(0);
+  await expect(open).toContainText("Eski başlık");
+
+  // Enter saves; the panel and the card both show the new title at once.
+  await open.click();
+  await field.fill("Yeni başlık");
+  await field.press("Enter");
+  await expect(field).toHaveCount(0);
+  await expect(open).toContainText("Yeni başlık");
+  await expect(dialog).toHaveAccessibleName("Yeni başlık");
+  await expect(cards).toContainText("Yeni başlık");
+  await expect(open).toBeFocused();
+
+  // Losing focus saves too, and a long title grows the field without clipping.
+  await open.click();
+  const long = "Çok uzun bir başlık ".repeat(12).trim();
+  await field.fill(long);
+  expect(
+    await field.evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+  ).toBe(true);
+  expect((await field.boundingBox())?.height).toBeGreaterThan(60);
+  await dialog.getByRole("tab", { name: "Geçmiş" }).focus();
+  await expect(cards).toContainText("Çok uzun bir başlık");
+  await open.click();
+  await field.fill("Yeni başlık");
+  await field.press("Enter");
+  await expect(cards).not.toContainText("Çok uzun");
+
+  // Once saved nothing is left to lose, so Esc closes without asking.
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await cards.click();
+  await expect(open).toContainText("Yeni başlık");
+
+  // The history shows both the old and the new text.
+  await dialog.getByRole("tab", { name: "Geçmiş" }).click();
+  const titleEdit = dialog
+    .locator(".history-entry")
+    .filter({ hasText: "Eski başlık" });
+  await expect(titleEdit.locator(".history-diff-line.removed")).toContainText(
+    "Eski başlık",
+  );
+  await expect(titleEdit.locator(".history-diff-line.added")).toContainText(
+    "Yeni başlık",
+  );
+});
+
+test("kaydedilemeyen başlık yazıldığı gibi kalır ve kapatırken sorulur", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "TITLEFAIL", name: "Başlık hatası" },
+  });
+  await request.post("/api/v1/projects/TITLEFAIL/items", {
+    data: { title: "Sağlam başlık" },
+  });
+  await page.goto("/projects/TITLEFAIL");
+  const card = page.locator(".board-card");
+  await card.click();
+  const dialog = page.getByRole("dialog");
+  await page.route("**/api/v1/items/TITLEFAIL-1", (route) =>
+    route.request().method() === "PATCH"
+      ? route.fulfill({
+          status: 500,
+          body: "{}",
+          contentType: "application/json",
+        })
+      : route.continue(),
+  );
+  await dialog.getByRole("button", { name: "Başlığı düzenle" }).click();
+  const field = dialog.getByRole("textbox", { name: "Başlığı düzenle" });
+  await field.fill("Yazılmamış başlık");
+  await field.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("İşlem tamamlanamadı");
+  await expect(field).toHaveValue("Yazılmamış başlık");
+  await expect(card).toContainText("Sağlam başlık");
+  await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+  await expect(
+    dialog.getByRole("button", { name: "Kaydetmeden kapat" }),
+  ).toBeVisible();
+});
+
+test("iptal edilmiş PBI'nın başlığı da düzenlenir", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "TITLECAN", name: "İptal başlığı" },
+  });
+  await request.post("/api/v1/projects/TITLECAN/items", {
+    data: { title: "İptal işi" },
+  });
+  await request.post("/api/v1/items/TITLECAN-1/move", {
+    data: { status: "cancelled", reason: "Gerek kalmadı" },
+  });
+  await page.goto("/projects/TITLECAN");
+  await page.getByRole("button", { name: "Filtre", exact: true }).click();
+  await page.getByRole("menuitemcheckbox").click();
+  await page.keyboard.press("Escape");
+  await page.locator(".cancelled-list button").click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Başlığı düzenle" }).click();
+  await dialog
+    .getByRole("textbox", { name: "Başlığı düzenle" })
+    .fill("İptal işi, yeni ad");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".cancelled-list")).toContainText(
+    "İptal işi, yeni ad",
+  );
+});
+
+test("logo ve favicon aynı board ikonunu kullanır", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  const bars = page.locator(".sidebar .brand-icon svg rect");
+  await expect(bars).toHaveCount(3);
+  await expect(page.locator(".sidebar .brand-icon")).toHaveCSS(
+    "border-radius",
+    "9px",
+  );
+  const href = await page.locator('link[rel="icon"]').getAttribute("href");
+  expect(href).toBe("/favicon.svg");
+  const favicon = await request.get(href ?? "");
+  expect(favicon.headers()["content-type"]).toContain("image/svg+xml");
+  const svg = await favicon.text();
+  for (const bar of await bars.evaluateAll((rects) =>
+    rects.map((r) =>
+      ["x", "y", "width", "height", "rx"]
+        .map((name) => `${name}="${r.getAttribute(name)}"`)
+        .join(" "),
+    ),
+  ))
+    expect(svg).toContain(bar);
+});
