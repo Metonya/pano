@@ -32,6 +32,27 @@ export function activityText(entry: Detail["activity"][number]): string {
     return `${actor} ${t("activityReordered")}`;
   if (entry.kind === "assigned")
     return `${actor} ${t("activityAssigned")} ${typeof after.assignee === "string" ? agentName(after.assignee) : t("activityUnassigned")}`;
+  if (entry.kind === "sent_back" || entry.kind === "reassigned")
+    return `${actor} ${t(entry.kind === "sent_back" ? "activitySentBack" : "activityReassigned")}: ${entry.message}`;
+  if (entry.kind.startsWith("scenario_")) {
+    const label =
+      entry.kind === "scenario_added"
+        ? "activityScenarioAdded"
+        : entry.kind === "scenario_removed"
+          ? "activityScenarioRemoved"
+          : "activityScenarioEdited";
+    const details = [
+      before.steps_md,
+      before.expected_md,
+      before.result,
+      after.steps_md,
+      after.expected_md,
+      after.result,
+    ]
+      .filter((value) => typeof value === "string")
+      .join(" → ");
+    return `${actor} ${t(label)}${details ? `: ${details}` : ""}`;
+  }
   const actions: Record<string, string> = {
     created: t("activityCreated"),
     edited: t("activityEdited"),
@@ -41,6 +62,7 @@ export function activityText(entry: Detail["activity"][number]): string {
     criterion_updated: t("activityCriterionUpdated"),
     criterion_added: t("activityCriterionAdded"),
     criterion_removed: t("activityCriterionRemoved"),
+    approved: t("activityApproved"),
   };
   return `${actor} ${actions[entry.kind] ?? entry.message}`;
 }

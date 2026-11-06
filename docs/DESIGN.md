@@ -370,6 +370,8 @@ Her bileşende: gerçek HTML elemanı, `:focus-visible { outline: 2px solid var(
 
 ## 10. Ekran referansları
 
+Test detayında sıralama: Ne değişti, Nasıl denerim, test senaryoları, AI'ın kendi testleri ve Onayla / Geri gönder / Geri ata aksiyonları. Kalan senaryo onayı engeller; işaretsiz senaryo uyarı verir.
+
 [Claude Design canvas](https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK) — artboard'lar:
 
 | Artboard                                         | İçerik                                                                                                                                             |

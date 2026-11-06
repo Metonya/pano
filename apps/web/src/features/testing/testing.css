@@ -1,0 +1,25 @@
+.test-panel {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+}
+.test-panel h3 {
+  margin-top: 20px;
+}
+.test-panel label {
+  display: block;
+  margin: 8px 0;
+}
+.test-panel label input,
+.test-panel textarea {
+  display: block;
+  width: 100%;
+}
+.test-scenario {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.test-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

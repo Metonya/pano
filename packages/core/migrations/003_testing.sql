@@ -1,0 +1,2 @@
+ALTER TABLE items ADD COLUMN what_changed_md TEXT NOT NULL DEFAULT '';
+ALTER TABLE items ADD COLUMN how_to_test_md TEXT NOT NULL DEFAULT '';

@@ -17,6 +17,8 @@ export type Project = {
   waiting: Item[];
   agents: number;
   test_column: number;
+  ai_can_close: number;
+  dod_md: string;
   created_at: string;
 };
 export const queryKey = ["projects"];

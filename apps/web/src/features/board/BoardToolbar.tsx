@@ -1,4 +1,4 @@
-import { Plus, Star } from "lucide-react";
+import { Plus, Settings, Star } from "lucide-react";
 import { createPortal } from "react-dom";
 import type { Project } from "@/lib/api";
 import { t } from "@/lib/i18n";
@@ -11,6 +11,7 @@ export function BoardToolbar({
   setFilters,
   onStar,
   onCreate,
+  onSettings,
 }: {
   project: Project;
   items: BoardItem[];
@@ -18,11 +19,20 @@ export function BoardToolbar({
   setFilters: (filters: Filters) => void;
   onStar: () => void;
   onCreate: () => void;
+  onSettings: () => void;
 }) {
   const target = document.getElementById("page-toolbar-actions");
   if (!target) return null;
   return createPortal(
     <div className="board-actions">
+      <button
+        type="button"
+        className="icon"
+        aria-label={t("projectSettings")}
+        onClick={onSettings}
+      >
+        <Settings size={18} />
+      </button>
       <button
         type="button"
         className={`icon star ${project.starred ? "selected" : ""}`}

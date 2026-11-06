@@ -1,8 +1,10 @@
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { z } from "@hono/zod-openapi";
 import type { Core } from "@pano/core";
 import { actor, json, key, project, type Route } from "./shared";
 
-export function registerProjects(route: Route, core: Core) {
+export function registerProjects(route: Route, core: Core, dataDir: string) {
   route(
     "get",
     "/projects",
@@ -40,7 +42,10 @@ export function registerProjects(route: Route, core: Core) {
   const projectPatch = project
     .omit({ key: true })
     .partial()
-    .extend({ starred: z.boolean().optional() })
+    .extend({
+      starred: z.boolean().optional(),
+      test_items_destination: z.enum(["in_progress", "done"]).optional(),
+    })
     .strict();
   route(
     "patch",
@@ -80,7 +85,11 @@ export function registerProjects(route: Route, core: Core) {
     "post",
     "/projects/:key/purge",
     async (c) => {
+      const ids = core.projects.attachmentIds(key(c));
       core.projects.purge(key(c), (await json(c, purge)).confirmName, actor(c));
+      await Promise.all(
+        ids.map((id) => rm(join(dataDir, "attachments", id), { force: true })),
+      );
       return c.json({ ok: true });
     },
     purge,

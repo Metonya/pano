@@ -24,7 +24,10 @@ export const projectCreate = z
 export const projectPatch = projectCreate
   .omit({ key: true })
   .partial()
-  .extend({ starred: z.boolean().optional() })
+  .extend({
+    starred: z.boolean().optional(),
+    test_items_destination: z.enum(["in_progress", "done"]).optional(),
+  })
   .strict();
 export const itemCreate = z
   .object({
@@ -39,6 +42,8 @@ export const itemPatch = z
   .object({
     title: text.optional(),
     body_md: z.string().optional(),
+    what_changed_md: z.string().optional(),
+    how_to_test_md: z.string().optional(),
     status: statusSchema.optional(),
     priority: prioritySchema.optional(),
     assignee: text.nullable().optional(),

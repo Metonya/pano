@@ -8,6 +8,7 @@ import { createCriteria } from "./services/criteria";
 import { createItems } from "./services/items";
 import { createProjects } from "./services/projects";
 import { createScenarios } from "./services/scenarios";
+import { createSummary } from "./services/summary";
 
 export type { ChangeEvent } from "./events";
 export { positionBetween } from "./position";
@@ -38,7 +39,7 @@ export function createCore(path?: string) {
     db,
     migrate,
     events,
-    projects: createProjects(context),
+    projects: { ...createProjects(context), summary: createSummary(context) },
     items: createItems(context, activity),
     criteria: createCriteria(context),
     scenarios: createScenarios(context),

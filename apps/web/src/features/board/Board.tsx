@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "@/components/States";
+import { ProjectSettings } from "@/features/testing/ProjectSettings";
 import { type Project, queryKey, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { BoardCardOverlay } from "./BoardCard";
@@ -30,6 +31,7 @@ export function Board({ projects }: { projects: Project[] }) {
   const [dragged, setDragged] = useState<BoardItem | null>(null);
   const [selected, setSelected] = useState<BoardItem | null>(null);
   const [create, setCreate] = useState(false);
+  const [settings, setSettings] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     assignee: "",
@@ -131,6 +133,7 @@ export function Board({ projects }: { projects: Project[] }) {
         filters={filters}
         setFilters={setFilters}
         onCreate={() => setCreate(true)}
+        onSettings={() => setSettings(true)}
         onStar={() => {
           void request(`/projects/${key}/star`, { starred: !project.starred })
             .then(() => qc.invalidateQueries({ queryKey }))
@@ -213,6 +216,13 @@ export function Board({ projects }: { projects: Project[] }) {
         open={create}
         close={() => setCreate(false)}
       />
+      {settings && (
+        <ProjectSettings
+          project={project}
+          testCount={all.filter((i) => i.status === "test").length}
+          close={() => setSettings(false)}
+        />
+      )}
       <ItemDialog
         key={selected?.id ?? "closed"}
         projectKey={key}

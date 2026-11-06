@@ -25,7 +25,7 @@ export const handleError: ErrorHandler = (error, c) => {
   if (
     error.message.includes("UNIQUE constraint") ||
     error.message.includes("constraint failed") ||
-    /requires|disabled|cannot|Pending|Only archived|does not belong/.test(
+    /requires|required|disabled|cannot|Failed test|Choose where|Item must|Only archived|does not belong/.test(
       error.message,
     )
   )

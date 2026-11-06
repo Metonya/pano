@@ -7,6 +7,7 @@ import { registerAttachments } from "./attachments";
 import { registerChildren } from "./children";
 import { registerItems } from "./items";
 import { registerProjects } from "./projects";
+import { registerSummary } from "./summary";
 
 export function registerRoutes(
   app: OpenAPIHono,
@@ -72,7 +73,8 @@ export function registerRoutes(
   };
   route("get", "/health", (c) => c.json({ ok: true, version }));
   route("get", "/system", (c) => c.json({ version, dataDir }));
-  registerProjects(route, core);
+  registerProjects(route, core, dataDir);
+  registerSummary(route, core);
   registerItems(route, core);
   registerChildren(route, core);
   registerAttachments(route, core, dataDir);

@@ -16,6 +16,14 @@ export type BoardItem = {
 };
 export type Detail = BoardItem & {
   body_md: string;
+  what_changed_md: string;
+  how_to_test_md: string;
+  scenarios: {
+    id: string;
+    steps_md: string;
+    expected_md: string;
+    result: "pending" | "passed" | "failed";
+  }[];
   criteria: { id: string; text: string; done: number }[];
   activity: {
     id: string;

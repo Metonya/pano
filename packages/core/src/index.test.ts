@@ -67,7 +67,7 @@ test("migrations repeat and foreign keys are active", () => {
   const c = setup();
   c.migrate();
   c.migrate();
-  expect(c.db.query("SELECT * FROM schema_version").all()).toHaveLength(2);
+  expect(c.db.query("SELECT * FROM schema_version").all()).toHaveLength(3);
   expect(c.db.query("PRAGMA foreign_keys").get()).toEqual({ foreign_keys: 1 });
   expect(() =>
     c.db
@@ -118,7 +118,7 @@ test("version 1 databases receive purge audit, indexes and value enforcement", (
   }
   const core = createCore(path);
   try {
-    expect(core.db.query("SELECT * FROM schema_version").all()).toHaveLength(2);
+    expect(core.db.query("SELECT * FROM schema_version").all()).toHaveLength(3);
     core.projects.create({ key: "OLD", name: "Old" }, "mert");
     core.items.create("OLD", { title: "Task" }, "mert");
     expect(() =>
@@ -276,21 +276,21 @@ test("cancellation is filtered and invalid inputs rejected", () => {
 test("test settings, approval, return note, done and seen", () => {
   const c = setup();
   c.items.create("PANO", { title: "Task" }, "mert");
-  c.projects.update(
-    "PANO",
-    { test_column: false, ai_can_close: false, dod_md: "lint" },
-    "mert",
-  );
+  c.projects.update("PANO", { test_column: false, dod_md: "lint" }, "mert");
   expect(() => c.items.move("PANO-1", "test", "mert")).toThrow("disabled");
+  expect(() =>
+    c.projects.update("PANO", { ai_can_close: false }, "mert"),
+  ).toThrow();
+  c.projects.update("PANO", { test_column: true, ai_can_close: false }, "mert");
   expect(() => c.items.move("PANO-1", "done", "codex")).toThrow("AI");
-  c.projects.update("PANO", { test_column: true }, "mert");
   c.items.move("PANO-1", "test", "mert");
   const s = c.scenarios.add(
     "PANO-1",
     { steps_md: "open", expected_md: "works", author: "mert" },
     "mert",
   );
-  expect(() => c.items.move("PANO-1", "done", "mert")).toThrow("Pending");
+  c.scenarios.update("PANO-1", s.id, { result: "failed" }, "mert");
+  expect(() => c.items.approve("PANO-1", "mert")).toThrow("Failed");
   expect(() => c.items.move("PANO-1", "in_progress", "mert")).toThrow("reason");
   c.scenarios.update("PANO-1", s.id, { result: "passed" }, "mert");
   c.items.move("PANO-1", "done", "mert");
@@ -368,9 +368,79 @@ test("project summaries count statuses and exclude AI assignees from waiting", (
     test: 3,
     done: 0,
   });
-  expect(project?.waiting.map((item) => item.title)).toEqual([
+  expect(project?.waiting.map((item) => item.title).sort()).toEqual([
     "Human",
     "Unassigned",
   ]);
   expect(project?.agents).toBe(1);
+});
+
+test("human testing decisions retain notes, attachments and AI assignment", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Test", assignee: "codex" }, "codex");
+  c.items.update(
+    "PANO-1",
+    {
+      status: "test",
+      assignee: "mert",
+      what_changed_md: "Changed",
+      how_to_test_md: "Open",
+    },
+    "codex",
+  );
+  const scenario = c.scenarios.add(
+    "PANO-1",
+    { steps_md: "Open", expected_md: "Works", author: "codex" },
+    "codex",
+  );
+  const attachment = c.attachments.add(
+    "PANO-1",
+    { file_name: "screen.png", mime: "image/png", size: 3 },
+    "mert",
+  );
+  expect(() => c.items.sendBack("PANO-1", { note: " " }, "mert")).toThrow();
+  c.items.sendBack(
+    "PANO-1",
+    { note: "Fix it", attachmentIds: [attachment.id] },
+    "mert",
+  );
+  expect(c.items.get("PANO-1")).toMatchObject({
+    status: "in_progress",
+    assignee: "codex",
+    return_note: "Fix it",
+    return_attachments: [{ id: attachment.id }],
+  });
+  c.items.update("PANO-1", { status: "test", assignee: "mert" }, "codex");
+  c.items.reassign("PANO-1", { note: "Please check" }, "mert");
+  expect(c.items.get("PANO-1")).toMatchObject({
+    status: "test",
+    assignee: "codex",
+    return_note: "Please check",
+  });
+  expect(c.items.board("PANO").waiting).toHaveLength(0);
+  c.scenarios.update("PANO-1", scenario.id, { result: "failed" }, "mert");
+  expect(() => c.items.approve("PANO-1", "mert")).toThrow();
+  c.scenarios.update("PANO-1", scenario.id, { result: "pending" }, "mert");
+  expect(c.items.approve("PANO-1", "mert").status).toBe("done");
+});
+
+test("disabling Test requires a destination and records the move", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Test", assignee: "mert" }, "codex");
+  c.items.move("PANO-1", "test", "codex");
+  expect(() =>
+    c.projects.update("PANO", { test_column: false }, "mert"),
+  ).toThrow("Choose");
+  c.projects.update(
+    "PANO",
+    { test_column: false, test_items_destination: "in_progress" },
+    "mert",
+  );
+  expect(c.items.get("PANO-1").status).toBe("in_progress");
+  expect(
+    c.activity
+      .list("PANO-1")
+      .some((entry) => entry.message === "Test column disabled"),
+  ).toBe(true);
+  expect(c.projects.list()[0]?.waiting).toHaveLength(0);
 });

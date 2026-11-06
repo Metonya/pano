@@ -26,5 +26,7 @@ test("token ile giriş ve canlı güncelleme", async ({ page, request }) => {
     },
   );
   expect(response.ok()).toBeTruthy();
-  await expect(page.getByRole("link", { name: "Canlı proje" }).first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Canlı proje" }).first(),
+  ).toBeVisible();
 });

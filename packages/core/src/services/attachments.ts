@@ -5,7 +5,12 @@ import { attachmentSchema } from "../schemas";
 export function createAttachments(context: Context) {
   const { item, str, get, insert, log, write, event } = context;
   const attachments = {
-    add(key: string, input: z.input<typeof attachmentSchema>, actor: string) {
+    add(
+      key: string,
+      input: z.input<typeof attachmentSchema>,
+      actor: string,
+      attachmentId = ulid(),
+    ) {
       const data = attachmentSchema.parse(input);
       return write(actor, () => {
         const row = item(key);
@@ -21,7 +26,7 @@ export function createAttachments(context: Context) {
         )
           throw new Error("Activity does not belong to item");
         const attachment = {
-          id: ulid(),
+          id: attachmentId,
           item_id: id,
           activity_id: data.activity_id ?? null,
           file_name: data.file_name,
@@ -43,6 +48,9 @@ export function createAttachments(context: Context) {
           event: event(pid, id, "attachment_added", actor),
         };
       });
+    },
+    get(id: string) {
+      return get("SELECT * FROM attachments WHERE id = ?", id);
     },
   };
   return attachments;

@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Context } from "../context";
 import { projectCreate, projectPatch } from "../schemas";
 import type { Row, Values } from "../types";
+import { isAiActor, isAwaitingHuman } from "./waiting";
 export function createProjects(context: Context) {
   const {
     db,
@@ -67,16 +68,14 @@ export function createProjects(context: Context) {
               items.filter((item) => item.status === status).length,
             ]),
           );
-          const isAi = (assignee: string | number | null) =>
-            typeof assignee === "string" &&
-            /^(codex|claude|agent)(:|$)/i.test(assignee);
           const waiting = items.filter(
-            (item) => item.status === "test" && !isAi(item.assignee),
+            (item) => !!project.test_column && isAwaitingHuman(item),
           );
           const agents = new Set(
             items
               .filter(
-                (item) => item.status === "in_progress" && isAi(item.assignee),
+                (item) =>
+                  item.status === "in_progress" && isAiActor(item.assignee),
               )
               .map((item) => item.assignee),
           ).size;
@@ -89,8 +88,17 @@ export function createProjects(context: Context) {
       );
     },
     get: project,
+    attachmentIds(key: string) {
+      const row = project(key);
+      return all(
+        "SELECT a.id FROM attachments a JOIN items i ON i.id = a.item_id WHERE i.project_id = ?",
+        str(row.id),
+      ).map((entry) => str(entry.id));
+    },
     create(input: z.input<typeof projectCreate>, actor: string) {
       const data = projectCreate.parse(input);
+      if (data.test_column === false && data.ai_can_close === false)
+        throw new Error("Test column and AI Done cannot both be disabled");
       return write(actor, () => {
         const id = ulid();
         const timestamp = now();
@@ -118,9 +126,48 @@ export function createProjects(context: Context) {
       return write(actor, () => {
         const row = project(key);
         const id = str(row.id);
+        const enabled = data.test_column ?? Boolean(row.test_column);
+        const canClose = data.ai_can_close ?? Boolean(row.ai_can_close);
+        if (!enabled && !canClose)
+          throw new Error("Test column and AI Done cannot both be disabled");
+        if (!enabled && row.test_column) {
+          const testing = all(
+            "SELECT * FROM items WHERE project_id = ? AND status = 'test'",
+            id,
+          );
+          if (testing.length && !data.test_items_destination)
+            throw new Error("Choose where Test items should move");
+          for (const entry of testing) {
+            const status = data.test_items_destination;
+            if (!status) throw new Error("Choose where Test items should move");
+            if (
+              status === "done" &&
+              get(
+                "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed'",
+                str(entry.id),
+              )
+            )
+              throw new Error("Failed test scenarios prevent moving to Done");
+            update("items", str(entry.id), {
+              status,
+              updated_at: now(),
+              done_at: status === "done" ? now() : null,
+              seen_at: null,
+            });
+            log(
+              id,
+              str(entry.id),
+              actor,
+              "moved",
+              { status: "test" },
+              { status },
+              "Test column disabled",
+            );
+          }
+        }
         const patch: Values = {};
         for (const [k, v] of Object.entries(data))
-          if (v !== undefined)
+          if (v !== undefined && k !== "test_items_destination")
             patch[k] = typeof v === "boolean" ? Number(v) : v;
         const delta = changed(row, patch);
         if (Object.keys(delta.after).length) {

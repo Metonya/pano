@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ManagedDialog } from "@/components/ManagedDialog";
 import { DialogTitle } from "@/components/ui/dialog";
+import { TestPanel } from "@/features/testing/TestPanel";
 import { request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { activityText } from "./format";
@@ -37,6 +38,7 @@ export function ItemDialog({
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState(false);
+  const [testDirty, setTestDirty] = useState(false);
   const pendingCriteria = useRef(new Set<string>());
   const [pending, setPending] = useState<string[]>([]);
   async function checkCriterion(id: string, done: boolean) {
@@ -181,6 +183,7 @@ export function ItemDialog({
         if (!v) close();
       }}
       dirty={
+        testDirty ||
         (editing && body !== d?.body_md) ||
         !!criterion ||
         !!reason ||
@@ -327,6 +330,14 @@ export function ItemDialog({
             </ul>
           ) : (
             <div role="tabpanel">
+              {d.status === "test" && (
+                <TestPanel
+                  itemKey={key}
+                  detail={d}
+                  onDone={close}
+                  onDirty={setTestDirty}
+                />
+              )}
               <h3>{t("criteria")}</h3>
               {d.criteria.map((c) => (
                 <div className="criterion" key={c.id}>

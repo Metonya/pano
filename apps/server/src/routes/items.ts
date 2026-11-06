@@ -91,4 +91,25 @@ export function registerItems(route: Route, core: Core) {
   route("post", "/items/:key/seen", (c) =>
     c.json(core.items.markSeen(key(c), actor(c))),
   );
+  route("post", "/items/:key/approve", (c) =>
+    c.json(core.items.approve(key(c), actor(c))),
+  );
+  const sendBack = z
+    .object({ note: text, attachmentIds: z.array(z.string()).optional() })
+    .strict();
+  route(
+    "post",
+    "/items/:key/send-back",
+    async (c) =>
+      c.json(core.items.sendBack(key(c), await json(c, sendBack), actor(c))),
+    sendBack,
+  );
+  const reassign = z.object({ note: text }).strict();
+  route(
+    "post",
+    "/items/:key/reassign",
+    async (c) =>
+      c.json(core.items.reassign(key(c), await json(c, reassign), actor(c))),
+    reassign,
+  );
 }

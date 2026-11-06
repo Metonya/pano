@@ -4,10 +4,12 @@ import initial from "../migrations/001_init.sql" with { type: "text" };
 import indexes from "../migrations/002_purge_and_indexes.sql" with {
   type: "text",
 };
+import testing from "../migrations/003_testing.sql" with { type: "text" };
 
 const migrations = [
   { version: 1, name: "001_init.sql", sql: initial },
   { version: 2, name: "002_purge_and_indexes.sql", sql: indexes },
+  { version: 3, name: "003_testing.sql", sql: testing },
 ];
 export function migrate(db: Database) {
   db.exec(

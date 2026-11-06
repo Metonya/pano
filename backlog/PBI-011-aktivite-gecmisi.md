@@ -1,11 +1,11 @@
 ---
 id: PBI-011
 title: Web UI — PBI aktivite geçmişi ve değişiklik karşılaştırması
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -38,5 +38,7 @@ Kullanıcı bir işin hayatını baştan sona görebilsin: kim açtı, ne zaman 
 2. "Değişikliği göster" ile farkın doğru olduğunu kontrol et.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po codex'e (gpt-6.1-sol) paralel verdi.
 
 ## Done notu

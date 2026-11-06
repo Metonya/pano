@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "@hono/zod-openapi";
 import type { Core } from "@pano/core";
@@ -48,24 +48,49 @@ export function registerAttachments(route: Route, core: Core, dataDir: string) {
       const dir = join(dataDir, "attachments");
       await mkdir(dir, { recursive: true });
       const temp = join(dir, `.upload-${randomUUID()}`);
+      const attachmentId = randomUUID();
+      const destination = join(dir, attachmentId);
       await writeFile(temp, new Uint8Array(await file.arrayBuffer()));
       try {
-        const result = core.attachments.add(
-          key(c),
-          {
-            file_name: file.name,
-            mime: file.type,
-            size: file.size,
-            ...(activityId ? { activity_id: activityId } : {}),
-          },
-          actor(c),
-        );
-        await rename(temp, join(dir, result.id));
-        return c.json(result);
+        await rename(temp, destination);
+        try {
+          const result = core.attachments.add(
+            key(c),
+            {
+              file_name: file.name,
+              mime: file.type,
+              size: file.size,
+              ...(activityId ? { activity_id: activityId } : {}),
+            },
+            actor(c),
+            attachmentId,
+          );
+          return c.json(result);
+        } catch (error) {
+          await rm(destination, { force: true });
+          throw error;
+        }
       } finally {
         await rm(temp, { force: true });
       }
     },
     upload,
   );
+  route("get", "/attachments/:id", async (c) => {
+    const attachment = core.attachments.get(c.req.param("id") as string);
+    if (!attachment) return c.notFound();
+    try {
+      const bytes = await readFile(
+        join(dataDir, "attachments", String(attachment.id)),
+      );
+      return new Response(bytes, {
+        headers: {
+          "Content-Type": String(attachment.mime),
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    } catch {
+      return c.notFound();
+    }
+  });
 }

@@ -58,4 +58,6 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 
 - 2026-11-06 claude:po codex'e (gpt-6.1-terra, high) paralel verdi. Kapsam genişledi: Ne değişti, Nasıl denerim, Geri ata.
 
+- 2026-11-06 codex ilk sürümü bitirdi; testler geçti (49/49, e2e 14/14) ama claude:po ekranda stilsiz butonlar, anlamsız check listesi ve boş bölümler gördü; geri verdi. Kural: atanmamış Test kartı da kullanıcıyı bekler.
+
 ## Done notu

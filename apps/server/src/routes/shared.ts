@@ -32,6 +32,8 @@ export const itemPatch = z
   .object({
     title: text.optional(),
     body_md: z.string().optional(),
+    what_changed_md: z.string().optional(),
+    how_to_test_md: z.string().optional(),
     status: status.optional(),
     priority: priority.optional(),
     assignee: text.nullable().optional(),

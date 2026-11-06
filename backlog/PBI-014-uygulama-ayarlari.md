@@ -1,11 +1,11 @@
 ---
 id: PBI-014
 title: Uygulama ayarları — dil, görünüm, sürüm ve güncelleme
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -42,5 +42,7 @@ Pano'yu kuran herkes arayüzü kendi dilinde ve tercih ettiği görünümde kull
 3. Hakkında'da sürüm bilgisini kontrol et.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po codex'e (gpt-6.1-terra) paralel verdi.
 
 ## Done notu

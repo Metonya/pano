@@ -4,6 +4,7 @@ import type { Context } from "../context";
 import { itemCreate, itemPatch, statusSchema } from "../schemas";
 import type { Row, Values } from "../types";
 import type { createActivity } from "./activity";
+import { isAiActor, isAwaitingHuman } from "./waiting";
 export function createItems(
   context: Context,
   activity: ReturnType<typeof createActivity>["activity"],
@@ -78,13 +79,15 @@ export function createItems(
       return {
         project,
         columns,
-        waiting: items.filter((item) => item.status === "test"),
+        waiting: project.test_column ? items.filter(isAwaitingHuman) : [],
       };
     },
     get(key: string, options: { history?: boolean } = {}) {
       const row = item(key);
       const id = str(row.id);
       const sentBack = activity.list(key).find((entry) => {
+        if (entry.kind === "sent_back" || entry.kind === "reassigned")
+          return true;
         if (
           entry.kind !== "moved" ||
           typeof entry.before_json !== "string" ||
@@ -98,6 +101,12 @@ export function createItems(
       });
       return {
         return_note: sentBack?.message ?? null,
+        return_attachments: sentBack
+          ? all(
+              "SELECT *, '/api/v1/attachments/' || id AS url FROM attachments WHERE activity_id = ?",
+              str(sentBack.id),
+            )
+          : [],
         ...row,
         key,
         criteria: all(
@@ -188,23 +197,17 @@ export function createItems(
           throw new Error("Cancellation requires a reason");
         if (data.status === "test" && !p.test_column)
           throw new Error("Test column is disabled for this project");
-        if (
-          data.status === "done" &&
-          !p.ai_can_close &&
-          /^(codex|claude|agent)(:|$)/i.test(actor)
-        )
+        if (data.status === "done" && !p.ai_can_close && isAiActor(actor))
           throw new Error("AI cannot close items in this project");
         if (
           data.status === "done" &&
           row.status === "test" &&
           get(
-            "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'pending' LIMIT 1",
+            "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed' LIMIT 1",
             id,
           )
         )
-          throw new Error(
-            "Pending test scenarios must be completed before approval",
-          );
+          throw new Error("Failed test scenarios prevent approval");
         if (
           data.status === "in_progress" &&
           row.status === "test" &&
@@ -255,6 +258,25 @@ export function createItems(
     assign(key: string, assignee: string | null, actor: string) {
       return items.update(key, { assignee }, actor);
     },
+    approve(key: string, actor: string) {
+      return transition(key, "approved", "", [], actor);
+    },
+    sendBack(
+      key: string,
+      input: { note: string; attachmentIds?: string[] },
+      actor: string,
+    ) {
+      return transition(
+        key,
+        "sent_back",
+        input.note,
+        input.attachmentIds ?? [],
+        actor,
+      );
+    },
+    reassign(key: string, input: { note: string }, actor: string) {
+      return transition(key, "reassigned", input.note, [], actor);
+    },
     markSeen(key: string, actor: string) {
       return write(actor, () => {
         const row = item(key);
@@ -275,5 +297,72 @@ export function createItems(
       });
     },
   };
+  function transition(
+    key: string,
+    kind: "approved" | "sent_back" | "reassigned",
+    note: string,
+    attachmentIds: string[],
+    actor: string,
+  ) {
+    if (kind !== "approved" && !note.trim())
+      throw new Error("A note is required");
+    return write(actor, () => {
+      const row = item(key);
+      const id = str(row.id),
+        pid = str(row.project_id);
+      if (row.status !== "test") throw new Error("Item must be in Test");
+      if (
+        kind === "approved" &&
+        get(
+          "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed' LIMIT 1",
+          id,
+        )
+      )
+        throw new Error("Failed test scenarios prevent approval");
+      for (const attachmentId of attachmentIds) {
+        if (
+          !get(
+            "SELECT id FROM attachments WHERE id = ? AND item_id = ? AND activity_id IS NULL",
+            attachmentId,
+            id,
+          )
+        )
+          throw new Error(
+            "Attachment does not belong to item or is already linked",
+          );
+      }
+      const history = activity.list(key);
+      let assignee = "claude:po";
+      for (const entry of history) {
+        const candidates = [entry.actor];
+        for (const value of [entry.after_json, entry.before_json]) {
+          if (typeof value === "string")
+            candidates.push(JSON.parse(value).assignee);
+        }
+        const found = candidates.find(isAiActor);
+        if (typeof found === "string") {
+          assignee = found;
+          break;
+        }
+      }
+      const patch: Values =
+        kind === "approved"
+          ? { status: "done", done_at: now(), seen_at: null }
+          : { status: kind === "sent_back" ? "in_progress" : "test", assignee };
+      update("items", id, { ...patch, updated_at: now() });
+      const activityId = log(
+        pid,
+        id,
+        actor,
+        kind,
+        { status: row.status, assignee: row.assignee },
+        patch,
+        kind === "approved" ? "Item approved" : note.trim(),
+      );
+      for (const attachmentId of attachmentIds)
+        update("attachments", attachmentId, { activity_id: activityId });
+      return { value: items.get(key), event: event(pid, id, kind, actor) };
+    });
+  }
   return items;
 }

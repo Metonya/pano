@@ -27,6 +27,13 @@ export async function tasks(args: string[], api: Client) {
   );
   const path = `/items/${segment(p[0] ?? "")}`;
   switch (command) {
+    case "approve":
+      requireArgs(p, 1, "task approve <KEY>");
+      return api(`${path}/approve`, "POST", {});
+    case "send-back":
+    case "reassign":
+      requireArgs(p, 2, `task ${command} <KEY> "Not"`);
+      return api(`${path}/${command}`, "POST", { note: p[1] });
     case "create":
       requireArgs(
         p,
@@ -78,7 +85,7 @@ export async function tasks(args: string[], api: Client) {
       return api(`${path}/records`, "POST", { kind: "note", message: p[1] });
     default:
       throw new Error(
-        "Kullanım: pano task create|show|move|assign|check|note --help",
+        "Kullanım: pano task create|show|move|assign|check|note|approve|send-back|reassign --help",
       );
   }
 }
