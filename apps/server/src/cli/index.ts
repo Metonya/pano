@@ -1,5 +1,6 @@
 import { parse, requireArgs } from "./args";
 import { client, type Fetch, segment } from "./client";
+import { importBacklog } from "./import";
 import { mcpConfig } from "./mcp-config";
 import { readable } from "./output";
 import { projects } from "./projects";
@@ -11,6 +12,7 @@ pano project list [--all]
 pano project create <KEY> "Ad" [--description "Metin"]
 pano project star|archive <KEY> [--off]
 pano board <KEY>                       Backlog / In Progress / Test / Done
+pano import <backlog-klasörü> --project KEY
 pano task create <PROJECT> "Başlık" [--criteria "A"] [--criteria "B"] [--priority high|medium|low] [--body "Metin"] [--assignee actor]
 pano task show <KEY> [--history]
 pano task move <KEY> <backlog|in_progress|test|done|cancelled> [--reason "Neden"]
@@ -58,6 +60,7 @@ export async function runCli(
       off: { type: "boolean" },
       undo: { type: "boolean" },
       history: { type: "boolean" },
+      project: { type: "string" },
     });
     json = global.values.json === true;
     let data: unknown;
@@ -73,6 +76,9 @@ export async function runCli(
         (_, index) => !flagIndices.has(index),
       );
       switch (command) {
+        case "import":
+          data = await importBacklog(rest, api);
+          break;
         case "project":
           data = await projects(rest, api);
           break;

@@ -28,6 +28,8 @@ export function readable(data: unknown): string {
   if (Array.isArray(data))
     return table(data, ["key", "name", "starred", "archived_at"]);
   const row = data as Row;
+  if (typeof row.added === "number" && typeof row.skipped === "number")
+    return `${line(row.project)}: ${row.added} eklendi, ${row.skipped} atlandı.`;
   if (row.columns) {
     const columns = row.columns as Record<string, Row[]>;
     return Object.entries(columns)

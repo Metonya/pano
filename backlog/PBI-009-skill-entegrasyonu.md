@@ -2,7 +2,7 @@
 id: PBI-009
 title: Pano kendi kendini yönetsin — PO skill'ini ve md backlog'u pano'ya taşı
 status: in-progress
-assignee: codex
+assignee: claude:po
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -20,9 +20,9 @@ Md + HTML geçici sisteminden çıkıp tüm projelerin PBI'larını pano'da yön
 - Body: frontmatter ve "Kabul kriterleri" bölümü hariç markdown olduğu gibi aktarılır.
 
 ## Kabul kriterleri
-- [ ] `pano import backlog --project PANO` bu repodaki tüm PBI'ları statü, assignee, öncelik ve kriterleriyle aktarır; tekrar çalıştırınca kopya oluşturmaz.
+- [x] `pano import backlog --project PANO` bu repodaki tüm PBI'ları statü, assignee, öncelik ve kriterleriyle aktarır; tekrar çalıştırınca kopya oluşturmaz.
 - [ ] Product-owner skill'i güncellendikten sonra yeni bir Claude oturumunda talep → PBI pano'da oluşur, atama ve statü değişimleri board'da görünür.
-- [ ] `skills/pano/SKILL.md` tek başına okunarak bir agent pano'ya bağlanıp iş yapabilir.
+- [x] `skills/pano/SKILL.md` tek başına okunarak bir agent pano'ya bağlanıp iş yapabilir.
 
 ## Test planı
 1. Import'u çalıştır, board'u md board ile karşılaştır.
@@ -31,5 +31,8 @@ Md + HTML geçici sisteminden çıkıp tüm projelerin PBI'larını pano'da yön
 ## Notlar / log
 
 - 2026-11-06 claude:po import komutu ve skills/pano/SKILL.md kısmını codex'e (gpt-6.1-sol) paralel olarak verdi; PO skill'i ve Pano'ya geçiş sonra.
+
+- 2026-11-06 codex import ve SKILL.md'yi bitirdi. check (claude:po): CLI testleri 18/18 · gerçek sunucuda 14 PBI aktarıldı, ikinci çalıştırmada 14 atlandı; statü, öncelik, kriterler ve Türkçe metin doğru.
+- Açık: product-owner skill'ini Pano'ya geçirmek, kalıcı çalışan bir Pano sunucusu gerektiriyor; PBI-010 ve UI işleri bitince yapılacak. README cümlesi PBI-010 commit'iyle eklenecek.
 
 ## Done notu
