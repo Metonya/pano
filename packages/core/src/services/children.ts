@@ -11,6 +11,8 @@ export function createChildren(context: Context) {
     patch: Values,
     actor: string,
     kind: string,
+    /** Unchanged columns recorded too, so a history row can name what it is about. */
+    keep: string[] = [],
   ) {
     return write(actor, () => {
       const row = item(key);
@@ -25,13 +27,15 @@ export function createChildren(context: Context) {
       const delta = changed(child, patch);
       if (Object.keys(delta.after).length) {
         update(table, id, delta.after);
+        const kept = Object.fromEntries(keep.map((f) => [f, child[f] ?? null]));
+        const removal = "removed_at" in delta.after;
         log(
           pid,
           itemId,
           actor,
           kind,
-          { id, ...delta.before },
-          { id, ...delta.after },
+          { id, ...kept, ...delta.before },
+          removal ? { id, ...delta.after } : { id, ...kept, ...delta.after },
           kind,
         );
       }

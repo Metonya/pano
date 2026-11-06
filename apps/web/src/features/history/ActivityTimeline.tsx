@@ -1,17 +1,27 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { activityText } from "@/features/board/format";
+import {
+  activityReason,
+  activityText,
+  scenarioResultChanged,
+} from "@/features/board/format";
 import { agentName, type Detail } from "@/features/board/types";
 import { authHeaders, request } from "@/lib/api";
 import { language, t } from "@/lib/i18n";
 import { checkResult } from "./checkResult";
-import { DiffView, parseSnapshot } from "./DiffView";
-import { isImportant, isLegacyCheck, StatusFlow, statusFlow } from "./entry";
+import { ChildContent, DiffView, parseSnapshot } from "./DiffView";
+import {
+  childContent,
+  type HistoryFilter,
+  isLegacyCheck,
+  matchesFilter,
+  StatusFlow,
+  statusFlow,
+} from "./entry";
 import "./history.css";
 
 type Attachment = { id: string; activity_id: string | null; file_name: string };
 type Entry = Detail["activity"][number];
-type Filter = "important" | "decision" | "check" | "all";
 
 function Thumbnail({ attachment }: { attachment: Attachment }) {
   const [url, setUrl] = useState("");
@@ -61,16 +71,12 @@ function tone(entry: Entry): string {
   if (flow) return `status-${flow.to}`;
   if (entry.kind === "check")
     return `check-${checkResult(entry.message, parseSnapshot(entry.after_json))}`;
+  if (entry.kind === "scenario_edited" && scenarioResultChanged(entry))
+    return `check-${checkResult("", parseSnapshot(entry.after_json))}`;
   return entry.kind === "decision" ? "decision" : "plain";
 }
 
-const silentMessages = [
-  "Item updated",
-  "Item created",
-  "Item seen",
-  "Item approved",
-  "Cancellation undone",
-];
+const diffKinds = new Set(["edited", "criterion_updated", "scenario_edited"]);
 
 function Row({
   entry,
@@ -85,15 +91,9 @@ function Row({
   const summary = activityText(entry);
   const result = checkResult(entry.message, after);
   const flow = statusFlow(entry);
-  const reason =
-    typeof after.reason === "string" ? after.reason : entry.message;
+  const reason = activityReason(entry);
   const quoted = entry.kind === "sent_back" || entry.kind === "reassigned";
-  const showReason =
-    reason &&
-    !silentMessages.includes(reason) &&
-    !quoted &&
-    !["decision", "note", "check"].includes(entry.kind) &&
-    !isLegacyCheck(entry);
+  const content = childContent(entry);
   return (
     <li>
       <span className={`history-track ${tone(entry)}`} aria-hidden="true">
@@ -120,7 +120,7 @@ function Row({
             {entry.message}
           </span>
         )}
-        {showReason && (
+        {reason && (
           <p>
             {t("historyReason")}: {reason}
           </p>
@@ -129,14 +129,10 @@ function Row({
         {(entry.kind === "note" || entry.kind === "decision") && (
           <p>{entry.message}</p>
         )}
-        {(entry.kind === "edited" || entry.kind.startsWith("criterion_")) &&
-          entry.kind !== "criterion_checked" && (
-            <DiffView
-              before={before}
-              after={after}
-              criterion={entry.kind.startsWith("criterion_")}
-            />
-          )}
+        {diffKinds.has(entry.kind) && (
+          <DiffView before={before} after={after} />
+        )}
+        {content && <ChildContent kind={content.kind} lines={content.lines} />}
         {attachments.some((a) => a.activity_id === entry.id) && (
           <div className="history-attachments">
             {attachments
@@ -158,9 +154,9 @@ export function ActivityTimeline({
   itemKey: string;
   attachments?: Attachment[];
 }) {
-  const [filter, setFilter] = useState<Filter>("important");
-  const serverKind =
-    filter === "decision" || filter === "check" ? `&kind=${filter}` : "";
+  const [filter, setFilter] = useState<HistoryFilter>("important");
+  // Tests combine several kinds, so only decisions can be filtered by the server.
+  const serverKind = filter === "decision" ? "&kind=decision" : "";
   const query = useInfiniteQuery({
     queryKey: ["item", itemKey, "activity", serverKind],
     initialPageParam: 0,
@@ -171,11 +167,15 @@ export function ActivityTimeline({
     getNextPageParam: (lastPage, pages) =>
       lastPage.length === 50 ? pages.length * 50 : undefined,
   });
-  const entries = (query.data?.pages.flat() ?? []).filter(
-    (entry) =>
-      filter === "all" ||
-      (filter === "important" ? isImportant(entry) : !isLegacyCheck(entry)),
+  const entries = (query.data?.pages.flat() ?? []).filter((entry) =>
+    matchesFilter(entry, filter),
   );
+  // A page may hold nothing this filter shows: keep looking before saying "empty".
+  const searching = !entries.length && query.hasNextPage && !query.isError;
+  const { fetchNextPage, isFetchingNextPage } = query;
+  useEffect(() => {
+    if (searching && !isFetchingNextPage) void fetchNextPage();
+  }, [searching, isFetchingNextPage, fetchNextPage]);
   const days: { day: string; entries: Entry[] }[] = [];
   for (const entry of entries) {
     const day = dayOf(entry.created_at);
@@ -204,7 +204,9 @@ export function ActivityTimeline({
           </button>
         ))}
       </fieldset>
-      {query.isPending && <p role="status">{t("historyLoading")}</p>}
+      {(query.isPending || searching) && (
+        <p role="status">{t("historyLoading")}</p>
+      )}
       {query.isError && (
         <p role="alert">
           {t("failed")}{" "}
@@ -213,7 +215,7 @@ export function ActivityTimeline({
           </button>
         </p>
       )}
-      {!query.isPending && !query.isError && !entries.length && (
+      {!query.isPending && !query.isError && !searching && !entries.length && (
         <p className="history-empty">{t("historyEmpty")}</p>
       )}
       {days.map(({ day, entries: dayEntries }) => (

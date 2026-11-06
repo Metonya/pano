@@ -110,6 +110,81 @@ test("başlık ve body farkları, filtreler, iptal gerekçesi ve geri alma", asy
   await expect(history).toContainText("iptali geri aldı");
 });
 
+test("senaryo ve kriter kayıtları ne değiştiğini metniyle söyler", async ({
+  page,
+  request,
+}) => {
+  const headers = { "X-Pano-Actor": "mert" };
+  await request.post("/api/v1/projects", {
+    data: { key: "HISTCHILD", name: "İçerik" },
+  });
+  await request.post("/api/v1/projects/HISTCHILD/items", {
+    data: { title: "İçerik geçmişi" },
+  });
+  const url = "/api/v1/items/HISTCHILD-1";
+  const scenario = await (
+    await request.post(`${url}/scenarios`, {
+      data: { steps_md: "Sepeti aç", expected_md: "Boş", author: "mert" },
+      headers,
+    })
+  ).json();
+  await request.patch(`${url}/scenarios/${scenario.id}`, {
+    data: { expected_md: "Sepet boş görünür" },
+    headers,
+  });
+  await request.patch(`${url}/scenarios/${scenario.id}`, {
+    data: { result: "failed" },
+    headers,
+  });
+  await request.delete(`${url}/scenarios/${scenario.id}`, { headers });
+  const criterion = await (
+    await request.post(`${url}/criteria`, {
+      data: { text: "Eski kriter" },
+      headers,
+    })
+  ).json();
+  await request.patch(`${url}/criteria/${criterion.id}`, {
+    data: { text: "Yeni kriter" },
+    headers,
+  });
+  await request.delete(`${url}/criteria/${criterion.id}`, { headers });
+  await page.goto("/projects/HISTCHILD");
+  await page
+    .locator(".board-card")
+    .filter({ hasText: "İçerik geçmişi" })
+    .click();
+  await page.getByRole("tab", { name: "Geçmiş" }).click();
+  const history = page.getByRole("tabpanel", { name: "Geçmiş" });
+  const rows = history.locator(".history-timeline > li");
+  // Önemli: the result change alone stays out, the content changes stay in.
+  await expect(history).toContainText("Mert senaryoyu sildi: Sepeti aç");
+  await expect(history).not.toContainText("Kaldı işaretledi");
+  await expect(rows).toHaveCount(7);
+  const removed = rows.filter({ hasText: "senaryoyu sildi" });
+  await expect(removed.locator(".removed del")).toHaveText([
+    "Sepeti aç",
+    "Beklenen: Sepet boş görünür",
+  ]);
+  const edited = rows.filter({ hasText: "senaryoyu düzenledi" });
+  await expect(edited.locator(".removed")).toContainText("Boş");
+  await expect(edited.locator(".added")).toContainText("Sepet boş görünür");
+  const criterionEdit = rows.filter({ hasText: "kriteri düzenledi" });
+  await expect(criterionEdit.locator(".removed")).toContainText("Eski kriter");
+  await expect(criterionEdit.locator(".added")).toContainText("Yeni kriter");
+  await expect(history).toContainText("Mert kriteri sildi: Yeni kriter");
+  await expect(history).not.toContainText("Neden");
+  await expect(history).not.toContainText("scenario_");
+  await expect(history).not.toContainText("criterion_");
+  await history.getByRole("button", { name: "Testler", exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText(
+    "Mert senaryoyu Kaldı işaretledi: Sepeti aç",
+  );
+  await history.getByRole("button", { name: "Tümü", exact: true }).click();
+  await expect(history).not.toContainText("scenario_");
+  await expect(history).not.toContainText("Neden");
+});
+
 test("205 kayıtta ilk 50 kayıt açılır ve daha fazla yüklenir", async ({
   page,
   request,

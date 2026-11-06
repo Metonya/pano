@@ -162,6 +162,12 @@
   overflow: hidden;
   margin-top: 8px;
 }
+.history-diff > section:first-child {
+  margin-top: 0;
+}
+.history-diff > section + button {
+  margin-top: 8px;
+}
 .history-diff h4 {
   margin: 0;
   padding: 8px 12px;

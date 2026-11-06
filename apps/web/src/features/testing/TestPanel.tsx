@@ -1,8 +1,21 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleAlert, Pencil, Plus, Trash2, X } from "lucide-react";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { Check, CircleAlert, Ellipsis, Pencil, Plus, X } from "lucide-react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Detail } from "@/features/board/types";
 import { checkResult } from "@/features/history/checkResult";
 import { isLegacyCheck } from "@/features/history/entry";
@@ -17,6 +30,55 @@ function Markdown({ children }: { children: string }) {
     </div>
   );
 }
+
+/** A question that replaces a modal: the safe answer takes the focus. */
+export function InlineConfirm({
+  message,
+  cancelId,
+  disabled,
+  buttonClassName,
+  onCancel,
+  onConfirm,
+}: {
+  message: string;
+  cancelId?: string;
+  disabled?: boolean;
+  buttonClassName?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const cancel = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    cancel.current?.focus();
+  }, []);
+  return (
+    <fieldset className="inline-confirm" aria-label={message}>
+      <span>{message}</span>
+      <div className="inline-confirm-actions">
+        <button
+          ref={cancel}
+          id={cancelId}
+          type="button"
+          className={buttonClassName}
+          disabled={disabled}
+          onClick={onCancel}
+        >
+          {t("cancel")}
+        </button>
+        <button
+          type="button"
+          className={`${buttonClassName ?? ""} inline-confirm-danger`}
+          disabled={disabled}
+          onClick={onConfirm}
+        >
+          {t("deleteConfirm")}
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+type Attachment = { id: number; file: File; url: string };
 
 export function TestPanel({
   itemKey,
@@ -39,16 +101,25 @@ export function TestPanel({
   const qc = useQueryClient();
   const id = useId();
   const noteField = useRef<HTMLTextAreaElement>(null);
+  const stepsField = useRef<HTMLTextAreaElement>(null);
   const [steps, setSteps] = useState("");
   const [expected, setExpected] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [scenarioForm, setScenarioForm] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [scenarioNotes, setScenarioNotes] = useState<Record<string, string>>(
+    {},
+  );
   const [summaryField, setSummaryField] = useState<
     "what_changed_md" | "how_to_test_md" | null
   >(null);
   const [summary, setSummary] = useState("");
   const [note, setNote] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const liveAttachments = useRef<Attachment[]>([]);
+  const nextAttachment = useRef(0);
+  // A retry after a failed send must not upload the same file twice.
+  const uploaded = useRef(new Map<number, string>());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   // The detail response only carries the latest few records.
@@ -57,21 +128,75 @@ export function TestPanel({
     queryFn: () => request(`/items/${itemKey}/activity?kind=check&limit=50`),
     enabled: detail.status === "test",
   });
+  const failedScenarios = detail.scenarios.flatMap((scenario, index) =>
+    scenario.result === "failed"
+      ? [
+          {
+            scenario,
+            number: index + 1,
+            note: (scenarioNotes[scenario.id] ?? "").trim(),
+          },
+        ]
+      : [],
+  );
+  const hasScenarioNote = failedScenarios.some((f) => f.note);
+  const canSend = !!note.trim() || hasScenarioNote;
+  const editedScenario = detail.scenarios.find((s) => s.id === editing);
   useEffect(() => {
     onDirty(
       !!(
         note ||
-        steps ||
-        expected ||
-        file ||
+        hasScenarioNote ||
+        attachments.length ||
+        (editing
+          ? steps !== editedScenario?.steps_md ||
+            expected !== editedScenario?.expected_md
+          : steps || expected) ||
         (summaryField && summary !== detail[summaryField])
       ),
     );
-  }, [note, steps, expected, file, summary, summaryField, detail, onDirty]);
+  }, [
+    note,
+    hasScenarioNote,
+    attachments,
+    editing,
+    editedScenario,
+    steps,
+    expected,
+    summary,
+    summaryField,
+    detail,
+    onDirty,
+  ]);
   useEffect(() => () => onDirty(false), [onDirty]);
   useEffect(() => {
     if (composing) noteField.current?.focus();
   }, [composing]);
+  useEffect(() => {
+    liveAttachments.current = attachments;
+  }, [attachments]);
+  useEffect(
+    () => () => {
+      for (const a of liveAttachments.current) URL.revokeObjectURL(a.url);
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!scenarioForm) return;
+    // Runs after the menu that opened the form has finished handing focus back.
+    const timer = setTimeout(() => stepsField.current?.focus());
+    return () => clearTimeout(timer);
+  }, [scenarioForm]);
+  const closeScenarioForm = useCallback(() => {
+    setSteps("");
+    setExpected("");
+    setEditing(null);
+    setScenarioForm(false);
+  }, []);
+  // The scenario can disappear while being edited (for example an agent removes it).
+  useEffect(() => {
+    if (editing && !editedScenario) closeScenarioForm();
+  }, [editing, editedScenario, closeScenarioForm]);
   async function change(path: string, data: object, method = "POST") {
     await request(path, data, method);
     await Promise.all([
@@ -91,44 +216,137 @@ export function TestPanel({
       setBusy(false);
     }
   }
-  function selectFile(candidate: File | undefined) {
-    if (!candidate) return;
-    if (
-      !["image/png", "image/jpeg"].includes(candidate.type) ||
-      candidate.size > 10 * 1024 * 1024
-    ) {
-      setError(t("attachmentInvalid"));
-      return;
-    }
-    setError("");
-    setFile(candidate);
+  function addFiles(files: File[]) {
+    if (!files.length) return;
+    const isValid = (file: File) =>
+      ["image/png", "image/jpeg"].includes(file.type) &&
+      file.size <= 10 * 1024 * 1024;
+    const invalid = files.filter((file) => !isValid(file));
+    setError(
+      invalid.length
+        ? `${invalid.map((file) => file.name).join(", ")}: ${t("attachmentInvalid")}`
+        : "",
+    );
+    const added = files.filter(isValid).map((file) => ({
+      id: nextAttachment.current++,
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setAttachments((current) => [...current, ...added]);
+  }
+  function removeAttachment(attachment: Attachment) {
+    URL.revokeObjectURL(attachment.url);
+    uploaded.current.delete(attachment.id);
+    setAttachments((current) => current.filter((a) => a !== attachment));
+  }
+  function clearAttachments() {
+    for (const a of attachments) URL.revokeObjectURL(a.url);
+    uploaded.current.clear();
+    setAttachments([]);
+  }
+  function scenarioLabel(number: number, steps_md: string) {
+    return `${t("scenarioLabel")} ${number} (${steps_md.replace(/\s+/g, " ").trim()})`;
+  }
+  function compiledNote() {
+    const lines = failedScenarios.map((f) => {
+      const label = scenarioLabel(f.number, f.scenario.steps_md);
+      return f.note ? `${label}: ${f.note}` : label;
+    });
+    return [note.trim(), lines.join("\n")].filter(Boolean).join("\n\n");
+  }
+  async function uploadAttachment(attachment: Attachment) {
+    const known = uploaded.current.get(attachment.id);
+    if (known) return known;
+    const form = new FormData();
+    form.append("file", attachment.file);
+    const response = await fetch(`/api/v1/items/${itemKey}/attachments`, {
+      method: "POST",
+      headers: { ...authHeaders(), "X-Pano-Actor": "mert" },
+      body: form,
+    });
+    if (!response.ok) throw new Error("upload");
+    const { id: attachmentId } = (await response.json()) as { id: string };
+    uploaded.current.set(attachment.id, attachmentId);
+    return attachmentId;
   }
   async function sendBack() {
-    if (!note.trim()) return;
+    if (!canSend) return;
     await save(async () => {
-      let attachmentIds: string[] = [];
-      if (file) {
-        const form = new FormData();
-        form.append("file", file);
-        const response = await fetch(`/api/v1/items/${itemKey}/attachments`, {
-          method: "POST",
-          headers: { ...authHeaders(), "X-Pano-Actor": "mert" },
-          body: form,
-        });
-        if (!response.ok) throw new Error("upload");
-        attachmentIds = [(await response.json()).id];
-      }
+      const attachmentIds: string[] = [];
+      for (const attachment of attachments)
+        attachmentIds.push(await uploadAttachment(attachment));
       await change(`/items/${itemKey}/send-back`, {
-        note,
+        note: compiledNote(),
         ...(attachmentIds.length ? { attachmentIds } : {}),
       });
+      setNote("");
+      setScenarioNotes({});
+      clearAttachments();
+      setComposing(false);
       onDone();
     });
   }
-  const failed = detail.scenarios.some((s) => s.result === "failed");
+  const failed = failedScenarios.length > 0;
   const pending = detail.scenarios.some((s) => s.result === "pending");
   const checks = (checkRecords.data ?? []).filter(
     (a) => a.message.trim() && !isLegacyCheck(a),
+  );
+  const scenarioFormView = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save(async () => {
+          await change(
+            `/items/${itemKey}/scenarios${editing ? `/${editing}` : ""}`,
+            {
+              steps_md: steps,
+              expected_md: expected,
+              ...(editing ? {} : { author: "mert" }),
+            },
+            editing ? "PATCH" : "POST",
+          );
+          closeScenarioForm();
+        });
+      }}
+    >
+      <label>
+        {t("scenarioSteps")}
+        <textarea
+          ref={stepsField}
+          required
+          value={steps}
+          onChange={(e) => setSteps(e.target.value)}
+          rows={2}
+        />
+      </label>
+      <label>
+        {t("scenarioExpected")}
+        <textarea
+          required
+          value={expected}
+          onChange={(e) => setExpected(e.target.value)}
+          rows={2}
+        />
+      </label>
+      {!editing && (
+        <p className="test-help" id={`${id}-scenario-help`}>
+          {t("scenarioFieldsRequired")}
+        </p>
+      )}
+      <div className="test-form-actions">
+        <button type="button" disabled={busy} onClick={closeScenarioForm}>
+          {t("cancel")}
+        </button>
+        <button
+          className="test-primary"
+          type="submit"
+          aria-describedby={editing ? undefined : `${id}-scenario-help`}
+          disabled={busy || !steps.trim() || !expected.trim()}
+        >
+          {t(editing ? "save" : "add")}
+        </button>
+      </div>
+    </form>
   );
   if (detail.status !== "test") return <>{children}</>;
   return (
@@ -235,86 +453,151 @@ export function TestPanel({
           {detail.scenarios.map((s, index) => (
             <div className="test-scenario" key={s.id}>
               <span className="test-scenario-number">{index + 1}</span>
-              <div className="test-scenario-content">
-                <Markdown>{s.steps_md}</Markdown>
-                <div className="test-expected">
-                  <span>{t("scenarioExpected")}:</span>
-                  <Markdown>{s.expected_md}</Markdown>
-                </div>
-              </div>
-              <fieldset
-                className="test-result"
-                aria-label={`${t("scenarios")} ${index + 1}: ${s.steps_md}`}
-              >
-                {(["passed", "failed"] as const).map((result) => (
-                  <button
-                    type="button"
-                    key={result}
-                    className={`test-result-${result}`}
-                    aria-pressed={s.result === result}
-                    disabled={busy}
-                    onClick={() => {
-                      if (result === "failed" && s.result !== "failed")
-                        setComposing(true);
-                      void save(() =>
-                        change(
-                          `/items/${itemKey}/scenarios/${s.id}`,
-                          { result: s.result === result ? "pending" : result },
-                          "PATCH",
-                        ),
-                      );
-                    }}
+              {editing === s.id ? (
+                <div className="test-scenario-form">{scenarioFormView}</div>
+              ) : (
+                <>
+                  <div className="test-scenario-content">
+                    <div id={`${id}-steps-${s.id}`}>
+                      <Markdown>{s.steps_md}</Markdown>
+                    </div>
+                    <div className="test-expected">
+                      <span>{t("scenarioExpected")}:</span>
+                      <Markdown>{s.expected_md}</Markdown>
+                    </div>
+                  </div>
+                  <fieldset
+                    className="test-result"
+                    aria-label={`${t("scenarios")} ${index + 1}: ${s.steps_md}`}
                   >
-                    {result === "passed" ? (
-                      <Check size={14} aria-hidden="true" />
-                    ) : (
-                      <X size={14} aria-hidden="true" />
-                    )}
-                    {t(
-                      result === "passed" ? "scenarioPassed" : "scenarioFailed",
-                    )}
-                  </button>
-                ))}
-              </fieldset>
-              <div className="test-scenario-tools">
-                <button
-                  className="test-icon"
-                  type="button"
-                  aria-label={`${t("edit")}: ${s.steps_md}`}
-                  disabled={busy}
-                  onClick={() => {
-                    setScenarioForm(true);
-                    setEditing(s.id);
-                    setSteps(s.steps_md);
-                    setExpected(s.expected_md);
-                  }}
-                >
-                  <Pencil size={16} aria-hidden="true" />
-                </button>
-                <button
-                  className="test-icon"
-                  type="button"
-                  aria-label={`${t("deleteCriterion")}: ${s.steps_md}`}
-                  disabled={busy}
-                  onClick={() =>
-                    void save(() =>
-                      change(
-                        `/items/${itemKey}/scenarios/${s.id}`,
-                        {},
-                        "DELETE",
-                      ),
-                    )
-                  }
-                >
-                  <Trash2 size={16} aria-hidden="true" />
-                </button>
-              </div>
+                    {(["passed", "failed"] as const).map((result) => (
+                      <button
+                        type="button"
+                        key={result}
+                        className={`test-result-${result}`}
+                        aria-pressed={s.result === result}
+                        disabled={busy}
+                        onClick={() =>
+                          void save(() =>
+                            change(
+                              `/items/${itemKey}/scenarios/${s.id}`,
+                              {
+                                result:
+                                  s.result === result ? "pending" : result,
+                              },
+                              "PATCH",
+                            ),
+                          )
+                        }
+                      >
+                        {result === "passed" ? (
+                          <Check size={14} aria-hidden="true" />
+                        ) : (
+                          <X size={14} aria-hidden="true" />
+                        )}
+                        {t(
+                          result === "passed"
+                            ? "scenarioPassed"
+                            : "scenarioFailed",
+                        )}
+                      </button>
+                    ))}
+                  </fieldset>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        id={`${id}-menu-${s.id}`}
+                        className="test-icon"
+                        type="button"
+                        aria-label={t("actions")}
+                        aria-describedby={`${id}-steps-${s.id}`}
+                        disabled={busy}
+                      >
+                        <Ellipsis size={16} aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="menu-content"
+                      align="end"
+                      onCloseAutoFocus={(e) => {
+                        // The menu holds the focus until now, so the inline
+                        // question can only take it at this point.
+                        if (deleting !== s.id) return;
+                        e.preventDefault();
+                        document
+                          .getElementById(`${id}-cancel-${s.id}`)
+                          ?.focus();
+                      }}
+                    >
+                      {/* One form at a time, so typed text is never overwritten. */}
+                      <DropdownMenuItem
+                        disabled={scenarioForm}
+                        onSelect={() => {
+                          setDeleting(null);
+                          setScenarioForm(true);
+                          setEditing(s.id);
+                          setSteps(s.steps_md);
+                          setExpected(s.expected_md);
+                        }}
+                      >
+                        {t("edit")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => setDeleting(s.id)}
+                      >
+                        {t("deleteMenu")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {s.result === "failed" && (
+                    <label className="test-scenario-note">
+                      {t("scenarioNote")}
+                      <textarea
+                        rows={2}
+                        placeholder={t("scenarioNotePlaceholder")}
+                        value={scenarioNotes[s.id] ?? ""}
+                        onChange={(e) =>
+                          setScenarioNotes((current) => ({
+                            ...current,
+                            [s.id]: e.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  )}
+                  {deleting === s.id && (
+                    <InlineConfirm
+                      message={t("scenarioDeleteConfirm")}
+                      cancelId={`${id}-cancel-${s.id}`}
+                      disabled={busy}
+                      onCancel={() => {
+                        setDeleting(null);
+                        document.getElementById(`${id}-menu-${s.id}`)?.focus();
+                      }}
+                      onConfirm={() =>
+                        void save(async () => {
+                          await change(
+                            `/items/${itemKey}/scenarios/${s.id}`,
+                            {},
+                            "DELETE",
+                          );
+                          setDeleting(null);
+                        })
+                      }
+                    />
+                  )}
+                </>
+              )}
             </div>
           ))}
-          {!scenarioForm ? (
+          {scenarioForm && !editing ? (
+            scenarioFormView
+          ) : (
             <button
               className="test-link"
               type="button"
+              disabled={scenarioForm}
               onClick={() => {
                 setScenarioForm(true);
                 setEditing(null);
@@ -323,71 +606,6 @@ export function TestPanel({
               <Plus size={16} aria-hidden="true" />
               {t("addScenario")}
             </button>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void save(async () => {
-                  await change(
-                    `/items/${itemKey}/scenarios${editing ? `/${editing}` : ""}`,
-                    {
-                      steps_md: steps,
-                      expected_md: expected,
-                      ...(editing ? {} : { author: "mert" }),
-                    },
-                    editing ? "PATCH" : "POST",
-                  );
-                  setSteps("");
-                  setExpected("");
-                  setEditing(null);
-                  setScenarioForm(false);
-                });
-              }}
-            >
-              <label>
-                {t("scenarioSteps")}
-                <textarea
-                  required
-                  value={steps}
-                  onChange={(e) => setSteps(e.target.value)}
-                  rows={2}
-                />
-              </label>
-              <label>
-                {t("scenarioExpected")}
-                <textarea
-                  required
-                  value={expected}
-                  onChange={(e) => setExpected(e.target.value)}
-                  rows={2}
-                />
-              </label>
-              <p className="test-help" id={`${id}-scenario-help`}>
-                {t("scenarioFieldsRequired")}
-              </p>
-              <div className="test-form-actions">
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setSteps("");
-                    setExpected("");
-                    setEditing(null);
-                    setScenarioForm(false);
-                  }}
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  className="test-primary"
-                  type="submit"
-                  aria-describedby={`${id}-scenario-help`}
-                  disabled={busy || !steps.trim() || !expected.trim()}
-                >
-                  {t(editing ? "save" : "add")}
-                </button>
-              </div>
-            </form>
           )}
         </section>
         {!!checks.length && (
@@ -433,19 +651,34 @@ export function TestPanel({
               e.preventDefault();
               void sendBack();
             }}
-            onPaste={(e) => selectFile(Array.from(e.clipboardData.files)[0])}
+            onPaste={(e) => addFiles(Array.from(e.clipboardData.files))}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              selectFile(e.dataTransfer.files[0]);
+              addFiles(Array.from(e.dataTransfer.files));
             }}
           >
+            {failed && (
+              <div className="test-failed-summary">
+                <p>{t("failedScenariosSummary")}</p>
+                <ul>
+                  {failedScenarios.map((f) => (
+                    <li key={f.scenario.id}>
+                      <span>
+                        {scenarioLabel(f.number, f.scenario.steps_md)}
+                      </span>
+                      {f.note && <span className="test-help">{f.note}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <label>
               {t("returnNote")}
               <textarea
                 ref={noteField}
-                required
-                aria-required="true"
+                required={!hasScenarioNote}
+                aria-required={!hasScenarioNote}
                 rows={3}
                 value={note}
                 placeholder={t("returnNotePlaceholder")}
@@ -454,36 +687,46 @@ export function TestPanel({
               />
             </label>
             <p className="test-help" id={`${id}-note-help`}>
-              {t("returnNoteRequired")}
+              {t(hasScenarioNote ? "returnNoteOptional" : "returnNoteRequired")}
             </p>
+            {!!attachments.length && (
+              <ul className="test-attachments">
+                {attachments.map((attachment) => (
+                  <li key={attachment.id}>
+                    <img src={attachment.url} alt="" />
+                    <span title={attachment.file.name}>
+                      {attachment.file.name}
+                    </span>
+                    <button
+                      type="button"
+                      className="test-attachment-remove"
+                      aria-label={`${t("attachmentRemove")}: ${attachment.file.name}`}
+                      disabled={busy}
+                      onClick={() => removeAttachment(attachment)}
+                    >
+                      <X size={14} aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="test-attachment">
-              {file ? (
-                <span className="test-file">
-                  {file.name}
-                  <button
-                    type="button"
-                    className="test-icon"
-                    aria-label={`${t("attachmentRemove")}: ${file.name}`}
-                    onClick={() => setFile(null)}
-                  >
-                    <X size={14} aria-hidden="true" />
-                  </button>
-                </span>
-              ) : (
-                <>
-                  <span>{t("attachmentDrop")}</span>
-                  <label className="test-file-button">
-                    {t("attachmentChoose")}
-                    <input
-                      type="file"
-                      className="sr-only"
-                      accept="image/png,image/jpeg"
-                      onChange={(e) => selectFile(e.target.files?.[0])}
-                    />
-                  </label>
-                  <small>{t("attachmentHelp")}</small>
-                </>
-              )}
+              <span>{t("attachmentDrop")}</span>
+              <label className="test-file-button">
+                {t("attachmentChoose")}
+                <input
+                  type="file"
+                  className="sr-only"
+                  accept="image/png,image/jpeg"
+                  multiple
+                  onChange={(e) => {
+                    addFiles(Array.from(e.target.files ?? []));
+                    // Lets the same file be chosen again after removing it.
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <small>{t("attachmentHelp")}</small>
             </div>
             <div className="test-form-actions">
               <button
@@ -492,7 +735,7 @@ export function TestPanel({
                 onClick={() => {
                   setComposing(false);
                   setNote("");
-                  setFile(null);
+                  clearAttachments();
                 }}
               >
                 {t("cancel")}
@@ -500,7 +743,7 @@ export function TestPanel({
               <button
                 type="submit"
                 className="test-primary"
-                disabled={!note.trim() || busy}
+                disabled={!canSend || busy}
                 aria-describedby={`${id}-note-help`}
               >
                 {t("sendBack")}

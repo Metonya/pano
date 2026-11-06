@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ActivityTimeline } from "@/features/history/ActivityTimeline";
 import { isImportant, StatusFlow, statusFlow } from "@/features/history/entry";
-import { TestPanel } from "@/features/testing/TestPanel";
+import { InlineConfirm, TestPanel } from "@/features/testing/TestPanel";
 import { date, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { activityText } from "./format";
@@ -135,6 +135,9 @@ export function ItemDialog({
   const [expanded, setExpanded] = useState(false);
   const [editingCriterion, setEditingCriterion] = useState<string | null>(null);
   const [criterionText, setCriterionText] = useState("");
+  const [deletingCriterion, setDeletingCriterion] = useState<string | null>(
+    null,
+  );
   const [criterion, setCriterion] = useState("");
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -582,7 +585,7 @@ export function ItemDialog({
                 <div className="criteria-list">
                   {d.criteria.map((c) => (
                     <div
-                      className={`criterion ${c.done ? "is-done" : ""}`}
+                      className={`criterion ${c.done ? "is-done" : ""} ${deletingCriterion === c.id ? "is-confirming" : ""}`}
                       key={c.id}
                     >
                       <input
@@ -625,29 +628,42 @@ export function ItemDialog({
                       ) : (
                         <>
                           <span className="criterion-text">{c.text}</span>
-                          <span className="criterion-tools">
-                            <button
-                              type="button"
-                              className="sheet-icon"
-                              aria-label={`${t("editCriterion")}: ${c.text}`}
+                          {deletingCriterion === c.id ? (
+                            <InlineConfirm
+                              message={t("criterionDeleteConfirm")}
+                              buttonClassName="sheet-button"
                               disabled={pending.includes(c.id)}
-                              onClick={() => {
-                                setCriterionText(c.text);
-                                setEditingCriterion(c.id);
+                              onCancel={() => setDeletingCriterion(null)}
+                              onConfirm={() => {
+                                setDeletingCriterion(null);
+                                void mutateCriterion(c.id);
                               }}
-                            >
-                              <Pencil size={15} aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              className="sheet-icon"
-                              aria-label={`${t("deleteCriterion")}: ${c.text}`}
-                              disabled={pending.includes(c.id)}
-                              onClick={() => void mutateCriterion(c.id)}
-                            >
-                              <Trash2 size={15} aria-hidden="true" />
-                            </button>
-                          </span>
+                            />
+                          ) : (
+                            <span className="criterion-tools">
+                              <button
+                                type="button"
+                                className="sheet-icon"
+                                aria-label={`${t("editCriterion")}: ${c.text}`}
+                                disabled={pending.includes(c.id)}
+                                onClick={() => {
+                                  setCriterionText(c.text);
+                                  setEditingCriterion(c.id);
+                                }}
+                              >
+                                <Pencil size={15} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                className="sheet-icon"
+                                aria-label={`${t("deleteCriterion")}: ${c.text}`}
+                                disabled={pending.includes(c.id)}
+                                onClick={() => setDeletingCriterion(c.id)}
+                              >
+                                <Trash2 size={15} aria-hidden="true" />
+                              </button>
+                            </span>
+                          )}
                         </>
                       )}
                     </div>

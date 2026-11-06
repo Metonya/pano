@@ -34,6 +34,7 @@ export function createScenarios(context: Context) {
         patch,
         actor,
         "scenario_edited",
+        ["steps_md"],
       );
     },
     remove(key: string, id: string, actor: string) {
@@ -44,6 +45,7 @@ export function createScenarios(context: Context) {
         { removed_at: now() },
         actor,
         "scenario_removed",
+        ["steps_md", "expected_md"],
       );
     },
   };

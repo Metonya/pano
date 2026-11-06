@@ -311,6 +311,12 @@
     opacity: 1;
   }
 }
+.criterion.is-confirming {
+  flex-wrap: wrap;
+}
+.criterion .inline-confirm {
+  padding-left: 30px;
+}
 .criterion-add {
   display: flex;
   gap: 8px;

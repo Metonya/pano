@@ -56,6 +56,7 @@ test("boş ve sıfırlanmış form kapanır; dolu form tüm kapatma yollarında 
     outside,
     () => page.keyboard.press("Escape"),
     () => page.getByRole("button", { name: "Vazgeç" }).click(),
+    () => page.getByRole("button", { name: "Kapat", exact: true }).click(),
   ]) {
     await page.waitForTimeout(250); // let the open animation settle
     const before = await dialog.boundingBox();
@@ -65,17 +66,17 @@ test("boş ve sıfırlanmış form kapanır; dolu form tüm kapatma yollarında 
     if (!after) throw new Error("Dialog is not visible");
     expect(Math.abs(after.y - before.y)).toBeLessThan(1);
     await expect(
-      page.getByText("Yazdıkların silinsin mi?", { exact: true }),
+      page.getByText("Kaydedilmemiş değişikliklerin var", { exact: true }),
     ).toBeVisible();
     await expect(dialog).toHaveCount(1);
     await expect(
-      page.getByRole("button", { name: "Yazmaya devam et" }),
+      page.getByRole("button", { name: "Düzenlemeye devam et" }),
     ).toBeFocused();
-    await page.getByRole("button", { name: "Yazmaya devam et" }).click();
+    await page.getByRole("button", { name: "Düzenlemeye devam et" }).click();
     await expect(page.getByLabel("Proje adı")).toHaveValue("Taslak");
   }
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Sil ve kapat" }).click();
+  await page.getByRole("button", { name: "Kaydetmeden kapat" }).click();
   await expect(dialog).toHaveCount(0);
   await open();
   await expect(page.getByLabel("Proje adı")).toHaveValue("");
@@ -111,9 +112,13 @@ test("kalıcı silmede dışarı tıklama engellenir; Esc ve Vazgeç sorusuz kap
   await page.mouse.click(5, 5);
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
-    page.getByText("Yazdıkların silinsin mi?", { exact: true }),
+    page.getByText("Kaydedilmemiş değişikliklerin var", { exact: true }),
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await open();
+  await page.getByLabel("Proje adı").fill("Silme");
+  await page.getByRole("button", { name: "Kapat", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await open();
   await expect(page.getByLabel("Proje adı")).toHaveValue("");

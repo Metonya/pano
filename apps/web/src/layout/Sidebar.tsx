@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Archive, FolderKanban, Inbox, Settings } from "lucide-react";
+import { Archive, FolderKanban, Inbox, Settings, Star } from "lucide-react";
 import { useEffect, useReducer } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { relativeTime } from "@/features/board/format";
 import type { BoardItem } from "@/features/board/types";
 import type { Project } from "@/lib/api";
@@ -24,6 +24,7 @@ export function Sidebar({
   waiting: number;
   showArchive: (v: boolean) => void;
 }) {
+  const { pathname } = useLocation();
   const system = useQuery<{ updateAvailable: boolean; latestVersion?: string }>(
     {
       queryKey: ["system"],
@@ -80,30 +81,14 @@ export function Sidebar({
         <Link
           className={waiting ? "waiting-nav" : "waiting-nav is-empty"}
           to="/waiting"
+          title={t("waitingHelp")}
+          aria-current={pathname === "/waiting" ? "page" : undefined}
           onClick={() => setMobile(false)}
         >
           <Inbox size={18} />
           <span>{t("waiting")}</span>
           {waiting > 0 && <b>{waiting}</b>}
         </Link>
-        {active.some((p) => p.starred) && (
-          <div className="nav-group">
-            <div className="nav-label">{t("starred")}</div>
-            {active
-              .filter((p) => p.starred)
-              .map((p) => (
-                <Link
-                  className="nav-project"
-                  key={p.id}
-                  to={`/projects/${p.key}`}
-                  onClick={() => setMobile(false)}
-                >
-                  <span className="small-icon">{p.name[0]}</span>
-                  {p.name}
-                </Link>
-              ))}
-          </div>
-        )}
         <div className="nav-group">
           <button
             type="button"
@@ -112,19 +97,31 @@ export function Sidebar({
           >
             {t("projects")}
           </button>
-          {active
-            .filter((p) => !p.starred)
-            .map((p) => (
+          {/* `active` comes from sorted(), which puts starred projects first. */}
+          {active.map((p) => {
+            const to = `/projects/${p.key}`;
+            return (
               <Link
                 className="nav-project"
                 key={p.id}
-                to={`/projects/${p.key}`}
+                to={to}
+                aria-current={pathname === to ? "page" : undefined}
                 onClick={() => setMobile(false)}
               >
                 <span className="small-icon">{p.name[0]}</span>
-                {p.name}
+                <span className="nav-project-name">{p.name}</span>
+                {!!p.starred && (
+                  <span
+                    className="nav-star"
+                    role="img"
+                    aria-label={t("starred")}
+                  >
+                    <Star size={12} fill="currentColor" aria-hidden="true" />
+                  </span>
+                )}
               </Link>
-            ))}
+            );
+          })}
         </div>
         {!!agents.data?.length && (
           <div className="nav-group">

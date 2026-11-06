@@ -68,9 +68,30 @@ export function createProjects(context: Context) {
               items.filter((item) => item.status === status).length,
             ]),
           );
-          const waiting = items.filter(
-            (item) => !!project.test_column && isAwaitingHuman(item),
-          );
+          const waiting = items
+            .filter((item) => !!project.test_column && isAwaitingHuman(item))
+            .map((item): Row => {
+              const sent = get(
+                "SELECT actor, created_at FROM activity WHERE item_id = ? AND kind = 'moved' AND json_extract(after_json, '$.status') = 'test' ORDER BY created_at DESC, id DESC LIMIT 1",
+                str(item.id),
+              );
+              return {
+                ...item,
+                scenario_count: Number(
+                  get(
+                    "SELECT COUNT(*) AS n FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL",
+                    str(item.id),
+                  )?.n ?? 0,
+                ),
+                sent_by: sent?.actor ?? null,
+                sent_at: sent?.created_at ?? item.updated_at,
+              };
+            })
+            .sort(
+              (a, b) =>
+                str(a.sent_at).localeCompare(str(b.sent_at)) ||
+                Number(a.number) - Number(b.number),
+            );
           const agents = new Set(
             items
               .filter(

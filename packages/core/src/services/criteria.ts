@@ -49,6 +49,7 @@ export function createCriteria(context: Context) {
         { removed_at: now() },
         actor,
         "criterion_removed",
+        ["text"],
       );
     },
   };

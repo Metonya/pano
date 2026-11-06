@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useContext, useState } from "react";
 import { LanguageContext } from "@/app/Providers";
+import { Switch } from "@/components/Switch";
 import { request } from "@/lib/api";
 import { type Language, language, t } from "@/lib/i18n";
 import "./settings.css";
@@ -120,16 +121,11 @@ export function Settings() {
             <span id="app-updates">{t("updatesLabel")}:</span>
             <div className="settings-control">
               <div className="settings-switch-row">
-                <button
-                  type="button"
-                  role="switch"
-                  className="settings-switch"
-                  aria-checked={updatesOn}
-                  aria-labelledby="app-updates app-updates-text"
-                  onClick={() => save({ updateCheck: !updatesOn })}
-                >
-                  <span />
-                </button>
+                <Switch
+                  checked={updatesOn}
+                  labelledBy="app-updates app-updates-text"
+                  onChange={(updateCheck) => save({ updateCheck })}
+                />
                 <span id="app-updates-text">{t("updates")}</span>
               </div>
               <small>{t("updatesHelp")}</small>
@@ -209,19 +205,28 @@ export function Settings() {
           </fieldset>
         )}
         {tab === 2 && (
-          <div className="settings-grid">
-            <span>MCP:</span>
-            <Copyable value={mcpUrl} label="MCP" />
-            <span>Claude Code:</span>
-            <Copyable
-              value={`claude mcp add --transport http pano ${mcpUrl}`}
-              label="Claude Code"
-            />
-            <span>{t("tokenLabel")}:</span>
-            <span className="settings-muted">
-              {t(local ? "tokenNotNeeded" : "tokenNeeded")}
-            </span>
-          </div>
+          <>
+            <p className="settings-intro">{t("agentConnectionIntro")}</p>
+            <div className="settings-grid">
+              <span>MCP:</span>
+              <div className="settings-control">
+                <Copyable value={mcpUrl} label="MCP" />
+                <small>{t("mcpHelp")}</small>
+              </div>
+              <span>Claude Code:</span>
+              <div className="settings-control">
+                <Copyable
+                  value={`claude mcp add --transport http pano ${mcpUrl}`}
+                  label="Claude Code"
+                />
+                <small>{t("claudeCodeHelp")}</small>
+              </div>
+              <span>{t("tokenLabel")}:</span>
+              <span className="settings-muted">
+                {t(local ? "tokenNotNeeded" : "tokenNeeded")}
+              </span>
+            </div>
+          </>
         )}
         {tab === 3 && (
           <div className="settings-grid settings-about">

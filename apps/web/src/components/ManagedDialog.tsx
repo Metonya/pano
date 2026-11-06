@@ -1,5 +1,6 @@
+import { X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import { t } from "@/lib/i18n";
 
 // Read-only dialogs use the defaults; forms supply their dirty state.
@@ -11,6 +12,7 @@ export function ManagedDialog({
   children,
   describedBy,
   className = "",
+  hideClose,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -19,6 +21,8 @@ export function ManagedDialog({
   children: ReactNode;
   describedBy?: string;
   className?: string;
+  // The PBI detail sheet draws its own close button in its header.
+  hideClose?: boolean;
 }) {
   const [confirmClose, setConfirmClose] = useState(false);
   const continueButton = useRef<HTMLButtonElement>(null);
@@ -59,6 +63,18 @@ export function ManagedDialog({
         onInteractOutside={(event) => event.preventDefault()}
       >
         {children}
+        {/* After the content, so opening still focuses the first form field. */}
+        {!(hideClose ?? className.includes("item-sheet")) && (
+          <DialogClose asChild>
+            <button
+              type="button"
+              className="dialog-close"
+              aria-label={t("close")}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </DialogClose>
+        )}
         {confirmClose && (
           <fieldset
             aria-label={t("discardQuestion")}

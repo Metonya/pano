@@ -6,6 +6,12 @@ export type Item = {
   updated_at: string;
   assignee: string | null;
 };
+export type WaitingItem = Item & {
+  priority: "high" | "medium" | "low";
+  scenario_count: number;
+  sent_by: string | null;
+  sent_at: string;
+};
 export type Project = {
   id: string;
   key: string;
@@ -15,7 +21,7 @@ export type Project = {
   archived_at: string | null;
   updated_at: string;
   counts: Record<string, number>;
-  waiting: Item[];
+  waiting: WaitingItem[];
   agents: number;
   test_column: number;
   ai_can_close: number;

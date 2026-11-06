@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("insan testi geri gönderme, geri atama ve onay", async ({
-  page,
-  request,
-}) => {
+test("insan testi geri gönderme ve onay", async ({ page, request }) => {
   await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
   const post = (path: string, data: object, actor = "codex") =>
     request.post(`/api/v1${path}`, {
@@ -34,7 +31,6 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   await page.goto("/waiting");
   await expect(page.getByText("HUMAN-1")).toBeVisible();
   await page.getByRole("link", { name: /Test edilecek/ }).click();
-  await page.getByText("Test edilecek", { exact: true }).first().click();
   await expect(page.getByLabel("Adımlar", { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "AI'ın kendi testleri" }),
@@ -55,46 +51,92 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
     .getByRole("group", { name: /1: Sayfayı aç/ })
     .getByRole("button", { name: "Kaldı" })
     .click();
-  // A failed scenario opens the note straight away; only one send-back is on screen.
+  // A failed scenario asks for its own note; the composer stays closed.
   const sendBackForm = page.getByRole("form", {
     name: "Geri gönder",
     exact: true,
   });
+  const failedCard = page
+    .locator(".test-scenario")
+    .filter({ hasText: "Sayfayı aç" });
+  const scenarioNote = failedCard.getByLabel("Senaryo notu");
+  await expect(scenarioNote).toBeVisible();
+  await expect(scenarioNote).toHaveAttribute("placeholder", "Ne oldu?");
+  await expect(sendBackForm).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Geri ata" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Geri gönder", exact: true }),
+  ).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Onayla" })).toBeDisabled();
+  await expect(page.locator(".test-actions .test-primary")).toHaveText(
+    "Geri gönder",
+  );
+  await expect(page.locator(".test-actions")).toContainText("Kalan senaryolar");
+  // Without a scenario note, the general note is required.
+  await page.locator(".test-actions .test-primary").click();
   await expect(sendBackForm).toBeVisible();
   expect(
     await page
       .locator(".sheet-body")
       .evaluate((body) => body.scrollWidth <= body.clientWidth),
   ).toBe(true);
-  await expect(page.getByRole("button", { name: "Geri ata" })).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Geri gönder", exact: true }),
-  ).toHaveCount(1);
-  await page
-    .locator(".test-actions")
-    .getByRole("button", { name: "Vazgeç", exact: true })
-    .click();
-  await expect(page.getByRole("button", { name: "Onayla" })).toBeDisabled();
-  await expect(page.locator(".test-actions .test-primary")).toHaveText(
-    "Geri gönder",
-  );
-  await expect(page.locator(".test-actions")).toContainText("Kalan senaryolar");
+  const submit = sendBackForm.getByRole("button", {
+    name: "Geri gönder",
+    exact: true,
+  });
+  await expect(submit).toBeDisabled();
+  await expect(sendBackForm).toContainText("Zorunlu.");
+  await sendBackForm.getByRole("button", { name: "Vazgeç" }).click();
+  // Leaving Failed hides the note; returning brings it back.
+  await scenarioNote.fill("Başlık kayık");
+  await failedCard.getByRole("button", { name: "Kaldı" }).click();
+  await expect(scenarioNote).toHaveCount(0);
+  await failedCard.getByRole("button", { name: "Kaldı" }).click();
+  await expect(scenarioNote).toHaveValue("Başlık kayık");
+  // A scenario note is enough; the composer lists what failed.
   await page.locator(".test-actions .test-primary").click();
+  await expect(sendBackForm).toContainText("Senaryo 1 (Sayfayı aç)");
+  await expect(sendBackForm).toContainText("Başlık kayık");
+  await expect(sendBackForm).toContainText("isteğe bağlı");
+  await expect(submit).toBeEnabled();
   await page
     .getByLabel("Geri gönderme notu", { exact: true })
     .fill("Görünüm hatalı");
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "ekran.png",
+  const png = (name: string) => ({
+    name,
     mimeType: "image/png",
     buffer: Buffer.from("89504e470d0a1a0a", "hex"),
   });
-  await sendBackForm
-    .getByRole("button", { name: "Geri gönder", exact: true })
-    .click();
+  const fileInput = page.locator('input[type="file"]');
+  await expect(fileInput).toHaveAttribute("multiple", "");
+  await fileInput.setInputFiles([png("ekran.png"), png("ikinci.png")]);
+  await expect(sendBackForm.locator(".test-attachments img")).toHaveCount(2);
+  await expect(sendBackForm.locator(".test-attachments img").first()).toHaveCSS(
+    "width",
+    "120px",
+  );
+  const remove = sendBackForm.getByRole("button", {
+    name: "Eki kaldır: ikinci.png",
+  });
+  await expect(remove).toHaveCSS("height", "24px");
+  await remove.click();
+  await expect(sendBackForm.locator(".test-attachments img")).toHaveCount(1);
+  // The drop zone stays; a bad file reports an error and keeps the others.
+  await fileInput.setInputFiles([
+    { name: "not.txt", mimeType: "text/plain", buffer: Buffer.from("x") },
+    png("ucuncu.png"),
+  ]);
+  await expect(page.locator(".test-actions [role=alert]")).toContainText(
+    "not.txt",
+  );
+  await expect(sendBackForm.locator(".test-attachments img")).toHaveCount(2);
+  await submit.click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const returned = await (await request.get("/api/v1/items/HUMAN-1")).json();
-  expect(returned.return_note).toBe("Görünüm hatalı");
-  expect(returned.return_attachments).toHaveLength(1);
+  expect(returned.return_note).toBe(
+    "Görünüm hatalı\n\nSenaryo 1 (Sayfayı aç): Başlık kayık",
+  );
+  expect(returned.return_attachments).toHaveLength(2);
   expect(returned.status).toBe("in_progress");
   expect(returned.assignee).toBe("codex");
   await request.patch(
@@ -116,6 +158,97 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   expect(
     (await (await request.get("/api/v1/items/HUMAN-1")).json()).status,
   ).toBe("done");
+});
+
+test("senaryo yerinde düzenlenir, satır içi onayla silinir ve not tek başına yeter", async ({
+  page,
+  request,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
+  const headers = { "X-Pano-Actor": "codex" };
+  await request.post("/api/v1/projects", {
+    data: { key: "SCENE", name: "Senaryo testi" },
+    headers,
+  });
+  await request.post("/api/v1/projects/SCENE/items", {
+    data: { title: "Senaryo işi", assignee: "codex" },
+    headers,
+  });
+  for (const steps_md of ["İlk adım", "İkinci adım", "Üçüncü adım"])
+    await request.post("/api/v1/items/SCENE-1/scenarios", {
+      data: { steps_md, expected_md: "Olur", author: "codex" },
+      headers,
+    });
+  await request.patch("/api/v1/items/SCENE-1", {
+    data: { status: "test", assignee: "mert" },
+    headers,
+  });
+  await page.goto("/projects/SCENE");
+  await page.getByText("Senaryo işi", { exact: true }).first().click();
+  const card = (text: string) =>
+    page.locator(".test-scenario").filter({ hasText: text });
+  const menu = (text: string) =>
+    card(text).getByRole("button", { name: "Diğer işlemler" });
+  // Result buttons stay on the row; edit and delete live in the menu.
+  await expect(
+    card("İlk adım").getByRole("button", { name: "Geçti" }),
+  ).toBeVisible();
+  await expect(card("İlk adım").locator(".test-icon")).toHaveCount(1);
+
+  // Edit in place: the card becomes the form, not the end of the list.
+  await menu("İkinci adım").click();
+  await page.getByRole("menuitem", { name: "Düzenle" }).click();
+  const form = page.locator(".test-scenario form");
+  await expect(form).toHaveCount(1);
+  // A filled textarea's text counts as label text, so match by label start.
+  const stepsField = form.getByLabel(/^Adımlar/);
+  await expect(stepsField).toHaveValue("İkinci adım");
+  await expect(stepsField).toBeFocused();
+  await expect(form).not.toContainText("Eklemek için");
+  await expect(
+    page.locator(".test-scenario").nth(1).locator("form"),
+  ).toHaveCount(1);
+  await stepsField.fill("Yeni adım");
+  await form.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(card("İkinci adım")).toBeVisible();
+  await menu("İkinci adım").click();
+  await page.getByRole("menuitem", { name: "Düzenle" }).click();
+  await stepsField.fill("Yeni adım");
+  await form.getByRole("button", { name: "Kaydet" }).click();
+  await expect(card("Yeni adım")).toBeVisible();
+  await expect(form).toHaveCount(0);
+
+  // Delete asks inside the card without opening another dialog.
+  await menu("Üçüncü adım").click();
+  await page.getByRole("menuitem", { name: "Sil…" }).click();
+  const confirm = card("Üçüncü adım").getByRole("group", {
+    name: "Bu senaryo silinsin mi?",
+  });
+  await expect(confirm.getByRole("button", { name: "Vazgeç" })).toBeFocused();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await confirm.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(page.locator(".test-scenario")).toHaveCount(3);
+  await menu("Üçüncü adım").click();
+  await page.getByRole("menuitem", { name: "Sil…" }).click();
+  await confirm.getByRole("button", { name: "Sil", exact: true }).click();
+  await expect(page.locator(".test-scenario")).toHaveCount(2);
+
+  // Only scenario notes: no general note, no attachments.
+  await card("Yeni adım").getByRole("button", { name: "Kaldı" }).click();
+  await card("Yeni adım").getByLabel("Senaryo notu").fill("Açılmadı");
+  await card("İlk adım").getByRole("button", { name: "Kaldı" }).click();
+  await expect(card("İlk adım").getByLabel("Senaryo notu")).toBeVisible();
+  await page.locator(".test-actions .test-primary").click();
+  await page
+    .getByRole("form", { name: "Geri gönder", exact: true })
+    .getByRole("button", { name: "Geri gönder", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const returned = await (await request.get("/api/v1/items/SCENE-1")).json();
+  expect(returned.return_note).toBe(
+    "Senaryo 1 (İlk adım)\nSenaryo 2 (Yeni adım): Açılmadı",
+  );
 });
 
 test("test paneli boş alanları gizler, markdown düzenler ve AI testlerini ayırır", async ({

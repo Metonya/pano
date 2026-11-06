@@ -417,6 +417,31 @@ test("project summaries count statuses and exclude AI assignees from waiting", (
   expect(project?.agents).toBe(1);
 });
 
+test("waiting items list oldest first with scenario count and sender", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Later" }, "mert");
+  c.items.create("PANO", { title: "Earlier" }, "mert");
+  c.items.update("PANO-2", { status: "test", assignee: "mert" }, "claude:po");
+  Bun.sleepSync(2);
+  c.items.move("PANO-1", "test", "mert");
+  c.scenarios.add(
+    "PANO-2",
+    { steps_md: "Open", expected_md: "Works", author: "claude:po" },
+    "claude:po",
+  );
+  const waiting = c.projects.list()[0]?.waiting;
+  expect(
+    waiting?.map(({ title, scenario_count, sent_by }) => ({
+      title,
+      scenario_count,
+      sent_by,
+    })),
+  ).toEqual([
+    { title: "Earlier", scenario_count: 1, sent_by: "claude:po" },
+    { title: "Later", scenario_count: 0, sent_by: "mert" },
+  ]);
+});
+
 test("human testing decisions retain notes, attachments and AI assignment", () => {
   const c = setup();
   c.items.create("PANO", { title: "Test", assignee: "codex" }, "codex");

@@ -31,6 +31,18 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await page
     .getByRole("button", { name: "Kriteri sil: Güncel kriter" })
     .click();
+  // Deleting asks inside the row first; cancelling keeps the criterion.
+  const confirm = page.getByRole("group", { name: "Bu kriter silinsin mi?" });
+  await expect(confirm.getByRole("button", { name: "Vazgeç" })).toBeFocused();
+  await confirm.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(
+    page.getByRole("checkbox", { name: "Güncel kriter", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Kriteri sil: Güncel kriter" })
+    .click();
+  await confirm.getByRole("button", { name: "Sil", exact: true }).click();
   await expect(page.getByLabel("Güncel kriter")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(card).not.toContainText("1/1");

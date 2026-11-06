@@ -24,15 +24,18 @@ export function ErrorState({ retry }: { retry: () => void }) {
 }
 export function Placeholder({
   text,
+  help,
   waiting = false,
 }: {
   text: string;
+  help?: string;
   waiting?: boolean;
 }) {
   return (
     <div className="state">
       {waiting ? <Inbox /> : <FolderKanban />}
       <h2>{text}</h2>
+      {help && <p>{help}</p>}
     </div>
   );
 }

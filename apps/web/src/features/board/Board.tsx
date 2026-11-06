@@ -8,8 +8,8 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "@/components/States";
 import { ProjectSettings } from "@/features/testing/ProjectSettings";
 import { type Project, queryKey, request } from "@/lib/api";
@@ -32,6 +32,7 @@ import {
 
 export function Board({ projects }: { projects: Project[] }) {
   const { key = "" } = useParams();
+  const [params, setParams] = useSearchParams();
   const project = projects.find((p) => p.key === key);
   const qc = useQueryClient();
   const opener = useRef<HTMLElement | null>(null);
@@ -86,6 +87,23 @@ export function Board({ projects }: { projects: Project[] }) {
         .then(() => qc.invalidateQueries({ queryKey: boardKey }))
         .catch(() => setError(true));
   }
+  // Links such as the "Seni bekliyor" rows open a card with ?item=N.
+  const openRef = useRef(open);
+  openRef.current = open;
+  const requested = params.get("item");
+  const loaded = query.data;
+  useEffect(() => {
+    if (!requested || !loaded) return;
+    const item = loaded.find((i) => String(i.number) === requested);
+    if (item) openRef.current(item);
+    setParams(
+      (current) => {
+        current.delete("item");
+        return current;
+      },
+      { replace: true },
+    );
+  }, [requested, loaded, setParams]);
   async function move(e: DragEndEvent) {
     if (!e.over || !query.data) return;
     const item = all.find((i) => i.id === e.active.id);
