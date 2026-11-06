@@ -1,11 +1,11 @@
 ---
 id: PBI-005
 title: Web UI — proje listesi, yıldızlama ve arşiv
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -35,5 +35,6 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 3. Telefon genişliğinde ve dark modda kontrol et.
 
 ## Notlar / log
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) terminalden verdi; react-query, react-router, Playwright ve shadcn component'leri önceden kuruldu.
 
 ## Done notu
