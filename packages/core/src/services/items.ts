@@ -258,6 +258,42 @@ export function createItems(
     assign(key: string, assignee: string | null, actor: string) {
       return items.update(key, { assignee }, actor);
     },
+    restore(key: string, actor: string) {
+      return write(actor, () => {
+        const row = item(key);
+        if (row.status !== "cancelled")
+          throw new Error("Item must be cancelled");
+        const cancellation = activity
+          .list(key)
+          .find((entry) => entry.kind === "cancelled");
+        if (!cancellation) throw new Error("Cancellation history is missing");
+        const before = JSON.parse(String(cancellation.before_json));
+        const status = statusSchema.parse(before.status);
+        if (status === "cancelled")
+          throw new Error("Previous status must be active");
+        const id = str(row.id),
+          pid = str(row.project_id);
+        const patch = {
+          status,
+          done_at: before.done_at ?? null,
+          updated_at: now(),
+        };
+        update("items", id, patch);
+        log(
+          pid,
+          id,
+          actor,
+          "restored",
+          { status: "cancelled" },
+          { status },
+          "Cancellation undone",
+        );
+        return {
+          value: items.get(key),
+          event: event(pid, id, "restored", actor),
+        };
+      });
+    },
     approve(key: string, actor: string) {
       return transition(key, "approved", "", [], actor);
     },

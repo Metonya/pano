@@ -67,7 +67,9 @@ test("migrations repeat and foreign keys are active", () => {
   const c = setup();
   c.migrate();
   c.migrate();
-  expect(c.db.query("SELECT * FROM schema_version").all()).toHaveLength(3);
+  expect(
+    c.db.query("SELECT * FROM schema_version").all().length,
+  ).toBeGreaterThanOrEqual(4);
   expect(c.db.query("PRAGMA foreign_keys").get()).toEqual({ foreign_keys: 1 });
   expect(() =>
     c.db
@@ -118,7 +120,9 @@ test("version 1 databases receive purge audit, indexes and value enforcement", (
   }
   const core = createCore(path);
   try {
-    expect(core.db.query("SELECT * FROM schema_version").all()).toHaveLength(3);
+    expect(
+      core.db.query("SELECT * FROM schema_version").all().length,
+    ).toBeGreaterThanOrEqual(4);
     core.projects.create({ key: "OLD", name: "Old" }, "mert");
     core.items.create("OLD", { title: "Task" }, "mert");
     expect(() =>
@@ -246,7 +250,7 @@ test("history retains three intermediate states, actor and change events", () =>
   expect(edits.every((a) => a.actor === "codex" && a.message === "scope")).toBe(
     true,
   );
-  for (const kind of ["moved", "assigned", "check"]) {
+  for (const kind of ["moved", "assigned", "criterion_checked"]) {
     const record = history.find((a) => a.kind === kind);
     expect(record?.before_json).toBeTruthy();
     expect(record?.after_json).toBeTruthy();
@@ -323,6 +327,14 @@ test("records, scenarios, criteria and attachments retain history", () => {
     { kind: "check", message: "tests passed" },
     "codex",
   );
+  expect(
+    c.activity.list("PANO-1").filter((entry) => entry.kind === "check"),
+  ).toEqual(record ? [record] : []);
+  expect(
+    c.activity
+      .list("PANO-1")
+      .some((entry) => entry.kind === "criterion_checked"),
+  ).toBe(true);
   c.attachments.add(
     "PANO-1",
     {
@@ -351,6 +363,36 @@ test("records, scenarios, criteria and attachments retain history", () => {
   expect(() =>
     c.criteria.check("PANO-1", criterion.id, false, "mert"),
   ).toThrow();
+});
+
+test("legacy criterion checks migrate without changing AI checks or audit snapshots", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Legacy", criteria: ["accept"] }, "codex");
+  const criterion = c.items.get("PANO-1").criteria[0];
+  c.criteria.check("PANO-1", String(criterion?.id), true, "mert");
+  const checked = c.activity
+    .list("PANO-1")
+    .find((a) => a.kind === "criterion_checked");
+  c.records.add(
+    "PANO-1",
+    { kind: "check", message: "Unit 18/18 passed" },
+    "codex",
+  );
+  c.db
+    .query("UPDATE activity SET kind = 'check' WHERE id = ?")
+    .run(String(checked?.id));
+  c.db.query("DELETE FROM schema_version WHERE version = 4").run();
+  c.migrate();
+  c.migrate();
+  expect(c.activity.list("PANO-1").find((a) => a.id === checked?.id)).toEqual(
+    checked,
+  );
+  expect(
+    c.activity
+      .list("PANO-1")
+      .filter((a) => a.kind === "check")
+      .map((a) => a.message),
+  ).toEqual(["Unit 18/18 passed"]);
 });
 
 test("project summaries count statuses and exclude AI assignees from waiting", () => {

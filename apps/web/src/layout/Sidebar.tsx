@@ -22,6 +22,13 @@ export function Sidebar({
   waiting: number;
   showArchive: (v: boolean) => void;
 }) {
+  const system = useQuery<{ updateAvailable: boolean; latestVersion?: string }>(
+    {
+      queryKey: ["system"],
+      refetchInterval: 60000,
+      queryFn: () => request("/system"),
+    },
+  );
   const agents = useQuery<{ item: BoardItem; project: Project }[]>({
     queryKey: ["board", "agents", active.map((p) => p.key).join(",")],
     queryFn: async () =>
@@ -136,6 +143,11 @@ export function Sidebar({
           </div>
         )}
         <div className="nav-bottom">
+          {system.data?.updateAvailable && (
+            <Link to="/settings">
+              {t("newVersion")}: {system.data.latestVersion}
+            </Link>
+          )}
           <button type="button" onClick={() => showArchive(true)}>
             <Archive size={18} />
             {t("archive")} <span>{archived.length}</span>

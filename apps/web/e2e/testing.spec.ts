@@ -4,6 +4,7 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   page,
   request,
 }) => {
+  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
   const post = (path: string, data: object, actor = "codex") =>
     request.post(`/api/v1${path}`, {
       data,
@@ -34,9 +35,31 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   await expect(page.getByText("HUMAN-1")).toBeVisible();
   await page.getByRole("link", { name: /Test edilecek/ }).click();
   await page.getByText("Test edilecek", { exact: true }).first().click();
-  await page.getByLabel("Sayfayı aç").selectOption("failed");
+  await expect(page.getByLabel("Adımlar", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "AI'ın kendi testleri" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Senaryo ekle", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Ekle", exact: true }).first(),
+  ).toBeDisabled();
+  await page.getByLabel("Adımlar", { exact: true }).fill("İkinci senaryo");
+  await page.getByLabel("Beklenen sonuç", { exact: true }).fill("İkinci sonuç");
+  await page
+    .locator(".test-panel")
+    .getByRole("button", { name: "Ekle", exact: true })
+    .click();
+  await expect(page.getByText("İkinci senaryo", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Adımlar", { exact: true })).toHaveCount(0);
+  await page
+    .getByRole("group", { name: /1: Sayfayı aç/ })
+    .getByRole("button", { name: "Kaldı" })
+    .click();
   await expect(page.getByRole("button", { name: "Onayla" })).toBeDisabled();
-  await page.getByRole("button", { name: "Geri gönder", exact: true }).click();
+  await expect(page.locator(".test-actions .test-primary")).toHaveText(
+    "Geri gönder",
+  );
+  await expect(page.locator(".test-actions")).toContainText("Kalan senaryolar");
   await page.getByLabel("Not", { exact: true }).fill("Görünüm hatalı");
   await page.locator('input[type="file"]').setInputFiles({
     name: "ekran.png",
@@ -44,8 +67,8 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
     buffer: Buffer.from("89504e470d0a1a0a", "hex"),
   });
   await page
+    .getByRole("form", { name: "Geri gönder", exact: true })
     .getByRole("button", { name: "Geri gönder", exact: true })
-    .last()
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const returned = await (await request.get("/api/v1/items/HUMAN-1")).json();
@@ -63,8 +86,8 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   await page.getByRole("button", { name: "Geri ata", exact: true }).click();
   await page.getByLabel("Not", { exact: true }).fill("Sen de kontrol et");
   await page
+    .getByRole("form", { name: "Geri ata", exact: true })
     .getByRole("button", { name: "Geri ata", exact: true })
-    .last()
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(
@@ -78,4 +101,90 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   expect(
     (await (await request.get("/api/v1/items/HUMAN-1")).json()).status,
   ).toBe("done");
+});
+
+test("test paneli boş alanları gizler, markdown düzenler ve AI testlerini ayırır", async ({
+  page,
+  request,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
+  const headers = { "X-Pano-Actor": "codex" };
+  await request.post("/api/v1/projects", {
+    data: { key: "PANEL", name: "Panel testi" },
+    headers,
+  });
+  await request.post("/api/v1/projects/PANEL/items", {
+    data: {
+      title: "Panel görünümü",
+      criteria: ["Kriter işareti"],
+    },
+    headers,
+  });
+  const detail = await (await request.get("/api/v1/items/PANEL-1")).json();
+  await request.patch("/api/v1/items/PANEL-1", {
+    data: { status: "test" },
+    headers,
+  });
+  await request.patch(
+    `/api/v1/items/PANEL-1/criteria/${detail.criteria[0].id}`,
+    { data: { done: true }, headers },
+  );
+  await page.goto("/projects/PANEL");
+  await page.getByText("Panel görünümü", { exact: true }).first().click();
+  const panel = page.locator(".test-panel");
+  await expect(
+    panel.getByRole("heading", { name: "Ne değişti", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    panel.getByRole("heading", { name: "Nasıl denerim", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    panel.getByRole("heading", { name: "AI'ın kendi testleri" }),
+  ).toHaveCount(0);
+  await panel.getByRole("button", { name: "Ne değişti", exact: true }).click();
+  await panel
+    .getByLabel("Ne değişti", { exact: true })
+    .fill("**Görünüm düzeldi**");
+  await panel.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(panel.locator("strong")).toHaveText("Görünüm düzeldi");
+  await panel.getByRole("button", { name: "Düzenle", exact: true }).click();
+  await panel.locator("textarea").fill("");
+  await panel.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(
+    panel.getByRole("heading", { name: "Ne değişti", exact: true }),
+  ).toHaveCount(0);
+  await request.post("/api/v1/items/PANEL-1/records", {
+    data: { kind: "check", message: "Unit 18/18 passed" },
+    headers,
+  });
+  await request.post("/api/v1/items/PANEL-1/records", {
+    data: { kind: "check", message: "Build failed" },
+    headers,
+  });
+  await page.reload();
+  await page.getByText("Panel görünümü", { exact: true }).first().click();
+  await expect(panel.locator(".test-checks li")).toHaveCount(2);
+  await expect(panel.locator(".test-check-passed")).toContainText(
+    "Geçti: Unit 18/18 passed",
+  );
+  await expect(panel.locator(".test-check-failed")).toContainText(
+    "Kaldı: Build failed",
+  );
+  const approve = panel.getByRole("button", { name: "Onayla", exact: true });
+  await expect(approve).toHaveCSS("min-height", "36px");
+  await expect(approve).toHaveCSS("border-radius", "10px");
+  await expect(approve).toHaveCSS("background-color", "rgb(0, 113, 227)");
+  await expect(page.locator(".item-detail")).toHaveCSS("overflow-y", "visible");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await request.patch("/api/v1/items/PANEL-1", {
+    data: { status: "in_progress", reason: "Panel kontrolü" },
+    headers,
+  });
+  await page.reload();
+  await page.getByText("Panel görünümü", { exact: true }).first().click();
+  await expect(panel).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Kabul kriterleri", exact: true }),
+  ).toBeVisible();
 });

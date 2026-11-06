@@ -1,7 +1,7 @@
 ---
 id: PBI-012
 title: İnsan testi akışı — "Seni bekliyor", test senaryoları, onayla / geri gönder
-status: in-progress
+status: done
 assignee: codex
 priority: P1
 created: 2026-11-05
@@ -31,22 +31,22 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 - Tasarım: `docs/DESIGN.md` + Claude Design "PBI detayı" ekranı (Test durumundaki varyantı PBI-004'te eklenecek).
 
 ## Kabul kriterleri
-- [ ] Test detayında AI'ın yazdığı "Ne değişti" ve "Nasıl denerim" görünür.
-- [ ] "Geri ata" zorunlu notla kartı Test'te bırakır, AI'a atar ve "Seni bekliyor"dan çıkarır; not `get_item` cevabının başında görünür.
+- [x] Test detayında AI'ın yazdığı "Ne değişti" ve "Nasıl denerim" görünür.
+- [x] "Geri ata" zorunlu notla kartı Test'te bırakır, AI'a atar ve "Seni bekliyor"dan çıkarır; not `get_item` cevabının başında görünür.
 
-- [ ] AI bir kartı senaryolarla kullanıcıya atadığında kart "Seni bekliyor" listesinde ve Test kolonunda görünür.
-- [ ] Kullanıcı senaryo ekleyip düzenleyebilir; değişiklikler geçmişte görünür.
-- [ ] "Onayla" kartı Done'a taşır; "Geri gönder" not olmadan gönderilemez, ekran görüntüsüyle birlikte kaydedilir ve kart In Progress'e, son AI agent'a döner.
-- [ ] Geri gönderilen kartı `get_item` ile okuyan agent kullanıcının notunu ve ekin linkini ilk sırada alır.
-- [ ] Test kolonu kapalı projede "Seni bekliyor" listesi ve Test kolonu görünmez.
-- [ ] Görülmemiş Done kartları işaretli; açılınca işaret kalkar.
-- [ ] Herhangi bir senaryo "Kaldı" ise Onayla devre dışıdır ve nedeni yazar; işaretlenmemiş senaryo onayı engellemez, sadece uyarı gösterir.
-- [ ] Senaryo kaldırılabilir (geçmişte kalır); ek dosya seçici ile de eklenir ve kaldırılabilir; 10 MB üstü veya desteklenmeyen dosya açıklayıcı hata verir; yükleme hatasında not kaybolmaz.
-- [ ] Proje ayarlarında Test kolonu kapatılırken Test'te kart varsa kullanıcıya sorulur: kartlar In Progress'e mi dönsün, Done'a mı alınsın; seçim geçmişe yazılır. Test kolonu kapalı ve "AI Done'a çekebilir" kapalı birlikte seçilemez (açıklama gösterilir).
-- [ ] "Seni bekliyor" listesi tüm projelerdeki kullanıcıya atanmış Test kartlarını proje gruplu gösterir; Projeler ekranında her projede bekleyen test sayısı görünür.
-- [ ] Ek yükleme atomik: dosya kaydı başarısız olursa metadata da oluşmaz (PBI-003'ten devralındı).
-- [ ] Arşivdeki proje kalıcı silinince ek dosyaları da diskten temizlenir (PBI-003'ten devralındı).
-- [ ] Playwright testi: senaryolu kart → kullanıcı geri gönderir (ekranla) → agent düzeltir → kullanıcı onaylar akışı geçer.
+- [x] AI bir kartı senaryolarla kullanıcıya atadığında kart "Seni bekliyor" listesinde ve Test kolonunda görünür.
+- [x] Kullanıcı senaryo ekleyip düzenleyebilir; değişiklikler geçmişte görünür.
+- [x] "Onayla" kartı Done'a taşır; "Geri gönder" not olmadan gönderilemez, ekran görüntüsüyle birlikte kaydedilir ve kart In Progress'e, son AI agent'a döner.
+- [x] Geri gönderilen kartı `get_item` ile okuyan agent kullanıcının notunu ve ekin linkini ilk sırada alır.
+- [x] Test kolonu kapalı projede "Seni bekliyor" listesi ve Test kolonu görünmez.
+- [x] Görülmemiş Done kartları işaretli; açılınca işaret kalkar.
+- [x] Herhangi bir senaryo "Kaldı" ise Onayla devre dışıdır ve nedeni yazar; işaretlenmemiş senaryo onayı engellemez, sadece uyarı gösterir.
+- [x] Senaryo kaldırılabilir (geçmişte kalır); ek dosya seçici ile de eklenir ve kaldırılabilir; 10 MB üstü veya desteklenmeyen dosya açıklayıcı hata verir; yükleme hatasında not kaybolmaz.
+- [x] Proje ayarlarında Test kolonu kapatılırken Test'te kart varsa kullanıcıya sorulur: kartlar In Progress'e mi dönsün, Done'a mı alınsın; seçim geçmişe yazılır. Test kolonu kapalı ve "AI Done'a çekebilir" kapalı birlikte seçilemez (açıklama gösterilir).
+- [x] "Seni bekliyor" listesi tüm projelerdeki kullanıcıya atanmış Test kartlarını proje gruplu gösterir; Projeler ekranında her projede bekleyen test sayısı görünür.
+- [x] Ek yükleme atomik: dosya kaydı başarısız olursa metadata da oluşmaz (PBI-003'ten devralındı).
+- [x] Arşivdeki proje kalıcı silinince ek dosyaları da diskten temizlenir (PBI-003'ten devralındı).
+- [x] Playwright testi: senaryolu kart → kullanıcı geri gönderir (ekranla) → agent düzeltir → kullanıcı onaylar akışı geçer.
 
 ## Test planı
 
@@ -60,4 +60,7 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 
 - 2026-11-06 codex ilk sürümü bitirdi; testler geçti (49/49, e2e 14/14) ama claude:po ekranda stilsiz butonlar, anlamsız check listesi ve boş bölümler gördü; geri verdi. Kural: atanmamış Test kartı da kullanıcıyı bekler.
 
+- 2026-11-06 codex düzeltti; panel butonları, AI test kayıtları ve boş bölümler tamam. check (claude:po): lint · typecheck temiz · test 59/59 · build geçti · e2e 18/18 · token e2e 1/1; ekran kontrol edildi. Eski geliştirme verisindeki 'Sonuç belirtilmedi: check' satırları kriter kind'ı değişmeden önceki kayıtlar.
+
 ## Done notu
+Test kartı: Ne değişti, Nasıl denerim, senaryolar, AI testleri; Onayla, Geri gönder (not + ekran görüntüsü), Geri ata. Proje ayarları ve projeler arası Seni bekliyor çalışıyor. Bilinen kısıt: AI'ın anında tetiklenmesi açık konu.

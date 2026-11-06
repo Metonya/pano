@@ -14,6 +14,8 @@ export function createApp(options: {
   core: Core;
   dataDir: string;
   token?: string;
+  fetch?: typeof fetch;
+  checkUpdates?: boolean;
 }) {
   const app = new OpenAPIHono();
   app.onError(handleError);

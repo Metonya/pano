@@ -172,6 +172,28 @@ export function Board({ projects }: { projects: Project[] }) {
             ))}
           </div>
           <DndContext
+            accessibility={{
+              announcements: {
+                onDragStart({ active }) {
+                  const item = all.find((i) => i.id === active.id);
+                  return `${t("drag")}: #${item?.number ?? ""}`;
+                },
+                onDragOver({ active, over }) {
+                  const item = all.find((i) => i.id === active.id);
+                  const target = all.find((i) => i.id === over?.id);
+                  return `#${item?.number ?? ""} ${target ? `#${target.number}` : over?.id && statuses.includes(over.id as Status) ? labels[over.id as Status] : ""}`;
+                },
+                onDragEnd({ active, over }) {
+                  const item = all.find((i) => i.id === active.id);
+                  const target = all.find((i) => i.id === over?.id);
+                  return `#${item?.number ?? ""} ${target ? `#${target.number}` : over?.id && statuses.includes(over.id as Status) ? labels[over.id as Status] : ""}`;
+                },
+                onDragCancel({ active }) {
+                  const item = all.find((i) => i.id === active.id);
+                  return `#${item?.number ?? ""}: ${t("cancel")}`;
+                },
+              },
+            }}
             sensors={sensors}
             onDragStart={(e) =>
               setDragged(all.find((i) => i.id === e.active.id) ?? null)

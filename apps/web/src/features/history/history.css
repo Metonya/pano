@@ -1,0 +1,142 @@
+.activity-history {
+  min-width: 0;
+}
+.history-filters {
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.history-filters button {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+.history-filters button[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--card);
+  font-weight: 600;
+}
+.history-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.history-timeline > li {
+  display: flex;
+  gap: 14px;
+}
+.history-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 10px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+.history-track > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.history-timeline > li:not(:last-child) .history-track::after {
+  content: "";
+  flex: 1;
+  width: 1px;
+  background: var(--line);
+}
+.history-entry {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.history-entry strong {
+  font-weight: 600;
+}
+.history-entry time {
+  color: var(--muted);
+  font-size: 13px;
+}
+.history-entry p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+.history-check {
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--field);
+}
+.history-check.passed {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.history-check.failed {
+  background: var(--fail-bg);
+  color: var(--fail);
+}
+.history-diff {
+  width: 100%;
+  min-width: 0;
+}
+.history-diff button {
+  color: var(--accent-text);
+}
+.history-diff section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.history-diff h4 {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--field);
+}
+.history-diff-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+.history-diff-line.added {
+  background: var(--diff-add-bg);
+  color: var(--diff-add);
+}
+.history-diff-line.removed {
+  background: var(--diff-del-bg);
+  color: var(--diff-del);
+}
+.history-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.history-attachments img {
+  width: 120px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+@media (max-width: 600px) {
+  .activity-history button {
+    min-height: 44px;
+  }
+}

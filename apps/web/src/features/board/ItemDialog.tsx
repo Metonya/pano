@@ -5,10 +5,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ManagedDialog } from "@/components/ManagedDialog";
 import { DialogTitle } from "@/components/ui/dialog";
+import { ActivityTimeline } from "@/features/history/ActivityTimeline";
 import { TestPanel } from "@/features/testing/TestPanel";
 import { request } from "@/lib/api";
 import { t } from "@/lib/i18n";
-import { activityText } from "./format";
 import { type BoardItem, type Detail, labels, type Status } from "./types";
 
 export function ItemDialog({
@@ -26,7 +26,7 @@ export function ItemDialog({
   const key = item ? `${projectKey}-${item.number}` : "";
   const detail = useQuery<Detail>({
     queryKey: ["item", key],
-    queryFn: () => request(`/items/${key}?history=true`),
+    queryFn: () => request(`/items/${key}`),
     enabled: !!item,
   });
   const [tab, setTab] = useState<"detail" | "history">("detail");
@@ -37,6 +37,8 @@ export function ItemDialog({
   const [criterion, setCriterion] = useState("");
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelError, setCancelError] = useState(false);
   const [error, setError] = useState(false);
   const [testDirty, setTestDirty] = useState(false);
   const pendingCriteria = useRef(new Set<string>());
@@ -202,6 +204,7 @@ export function ItemDialog({
               {t("status")}{" "}
               <select
                 value={d.status}
+                disabled={d.status === "cancelled"}
                 onChange={(e) =>
                   void change(`/items/${key}/move`, { status: e.target.value })
                 }
@@ -245,43 +248,71 @@ export function ItemDialog({
                 }}
               />
             </label>
-            <button
-              type="button"
-              onClick={() => setCancelling(!cancelling)}
-              aria-label={t("actions")}
-            >
-              …
-            </button>
-          </div>
-          {cancelling && (
-            <div>
-              <label>
-                {t("cancelReason")}
-                <input
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                />
-              </label>
+            {d.status === "cancelled" ? (
               <button
                 type="button"
-                disabled={!reason.trim()}
+                disabled={cancelBusy}
                 onClick={async () => {
-                  if (
-                    await change(`/items/${key}/move`, {
-                      status: "cancelled",
-                      reason,
-                    })
-                  ) {
-                    setReason("");
-                    setCancelling(false);
-                    close();
-                  }
+                  setCancelBusy(true);
+                  await change(`/items/${key}/restore`, {});
+                  setCancelBusy(false);
                 }}
               >
-                {t("cancelItem")}
+                {t("historyRestore")}
               </button>
-            </div>
-          )}
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCancelling(!cancelling)}
+                aria-label={t("actions")}
+              >
+                …
+              </button>
+            )}
+          </div>
+          <ManagedDialog
+            open={cancelling}
+            onOpenChange={setCancelling}
+            dirty={!!reason}
+          >
+            <DialogTitle>{t("historyCancelTitle")}</DialogTitle>
+            <p>{t("historyCancelExplanation")}</p>
+            <label>
+              {t("cancelReason")}
+              <input
+                required
+                aria-required="true"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              disabled={!reason.trim() || cancelBusy}
+              onClick={async () => {
+                setCancelBusy(true);
+                if (
+                  await change(`/items/${key}/move`, {
+                    status: "cancelled",
+                    reason: reason.trim(),
+                  })
+                ) {
+                  setReason("");
+                  setCancelling(false);
+                  setCancelError(false);
+                } else {
+                  setCancelError(true);
+                }
+                setCancelBusy(false);
+              }}
+            >
+              {t("cancelItem")}
+            </button>
+            <button type="button" onClick={() => setCancelling(false)}>
+              {t("cancel")}
+            </button>
+            {cancelError && <p role="alert">{t("failed")}</p>}
+          </ManagedDialog>
           <div
             role="tablist"
             className="detail-tabs"
@@ -320,14 +351,21 @@ export function ItemDialog({
             </button>
           </div>
           {tab === "history" ? (
-            <ul>
-              {d.activity.map((a) => (
-                <li key={a.id}>
-                  {activityText(a)} ·{" "}
-                  {new Date(a.created_at).toLocaleString("tr-TR")}
-                </li>
-              ))}
-            </ul>
+            <ActivityTimeline
+              key={key}
+              itemKey={key}
+              attachments={
+                (
+                  d as Detail & {
+                    attachments?: {
+                      id: string;
+                      activity_id: string | null;
+                      file_name: string;
+                    }[];
+                  }
+                ).attachments
+              }
+            />
           ) : (
             <div role="tabpanel">
               {d.status === "test" && (

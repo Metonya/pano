@@ -6,7 +6,11 @@ import { defineConfig, devices } from "@playwright/test";
 const dataDir = mkdtempSync(join(tmpdir(), "pano-e2e-"));
 export default defineConfig({
   testDir: "./e2e",
-  use: { baseURL: "http://127.0.0.1:15173", ...devices["Desktop Chrome"] },
+  use: {
+    locale: "tr-TR",
+    baseURL: "http://127.0.0.1:15173",
+    ...devices["Desktop Chrome"],
+  },
   webServer: [
     {
       command: "bun ../server/src/main.ts serve",

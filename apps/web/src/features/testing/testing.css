@@ -1,25 +1,251 @@
 .test-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   border-bottom: 1px solid var(--line);
   padding-bottom: 20px;
+  min-width: 0;
+}
+.item-detail:has(.test-panel) {
+  max-height: none;
+  overflow: visible;
+}
+.test-panel .test-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.item-detail .test-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.test-panel h3,
+.test-panel p,
+.test-panel .markdown > :first-child {
+  margin-top: 0;
+}
+.test-panel h3,
+.test-panel p,
+.test-panel .markdown > :last-child {
+  margin-bottom: 0;
 }
 .test-panel h3 {
-  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.test-panel .test-section h3 {
+  margin: 0;
+}
+.test-panel button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.test-panel button:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+.test-panel button:focus-visible,
+.test-panel input:focus-visible,
+.test-panel textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.test-panel button.test-primary {
+  background: var(--primary);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.test-panel button:disabled {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.test-panel button.test-link {
+  align-self: flex-start;
+  background: transparent;
+  border-color: transparent;
+  color: var(--accent-text);
+  padding: 0 8px;
+  font-size: 13px;
+}
+.test-section-heading,
+.test-missing-summary,
+.test-result,
+.test-scenario-tools,
+.test-form-actions,
+.test-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.test-section-heading {
+  justify-content: space-between;
+}
+.test-result {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.test-check-unknown {
+  background: var(--field);
+  color: var(--muted);
 }
 .test-panel label {
   display: block;
-  margin: 8px 0;
+  font-size: 14px;
 }
-.test-panel label input,
+.test-panel label + label {
+  margin-top: 12px;
+}
+.test-panel input:not([type="checkbox"]),
 .test-panel textarea {
   display: block;
+  box-sizing: border-box;
   width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.test-panel textarea {
+  resize: vertical;
+}
+.test-panel .test-form-actions {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.test-panel .test-help {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
 }
 .test-scenario {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+.test-scenario-number {
+  color: var(--muted);
+  font-size: 13px;
+  padding-top: 2px;
+}
+.test-scenario-content {
+  flex: 1 1 180px;
+  min-width: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.test-expected {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.test-panel .test-result button {
+  padding: 0 10px;
+  font-size: 13px;
+}
+.test-panel button.test-icon {
+  width: 36px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.test-panel .test-result-passed[aria-pressed="true"],
+.test-check-passed {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.test-panel .test-result-failed[aria-pressed="true"],
+.test-check-failed {
+  background: var(--fail-bg);
+  color: var(--fail);
+}
+.test-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.test-checks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.test-panel svg {
+  flex-shrink: 0;
+}
+.test-return-form {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.test-attachment {
+  padding: 12px;
+  margin-top: 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
 }
 .test-actions {
   display: flex;
-  gap: 8px;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.test-action-reasons {
+  flex: 1 1 180px;
+}
+.test-action-buttons {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+.test-panel .test-failure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fail);
+  font-size: 13px;
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .test-panel button {
+    min-height: 44px;
+  }
+  .test-panel button.test-icon {
+    width: 44px;
+  }
 }

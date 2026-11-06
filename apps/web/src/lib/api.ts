@@ -1,3 +1,4 @@
+import { language } from "./i18n";
 export type Item = {
   id: string;
   number: number;
@@ -55,7 +56,7 @@ export async function request(path: string, body?: object, method = "POST") {
   return response.json();
 }
 export const date = (value: string) =>
-  new Intl.DateTimeFormat("tr-TR", {
+  new Intl.DateTimeFormat(language() === "tr" ? "tr-TR" : "en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));

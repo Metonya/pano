@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { ErrorState, LoadingState, Placeholder } from "@/components/States";
+import { ErrorState, LoadingState } from "@/components/States";
 import { TokenLogin } from "@/components/TokenLogin";
 import { Board } from "@/features/board/Board";
 import { CreateProjectDialog } from "@/features/projects/CreateProjectDialog";
 import { DeleteProjectDialog } from "@/features/projects/DeleteProjectDialog";
 import { ProjectList } from "@/features/projects/ProjectList";
+import { Settings } from "@/features/settings/Settings";
 import { Waiting } from "@/features/waiting/Waiting";
 import { Sidebar } from "@/layout/Sidebar";
 import { Toolbar } from "@/layout/Toolbar";
@@ -140,10 +141,7 @@ export function App() {
               />
               <Route path="/waiting" element={<Waiting active={active} />} />
               <Route path="/projects/:key" element={<Board projects={all} />} />
-              <Route
-                path="/settings"
-                element={<Placeholder text={t("settingsSoon")} />}
-              />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           )}
         </div>

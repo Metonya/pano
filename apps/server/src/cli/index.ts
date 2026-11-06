@@ -1,3 +1,4 @@
+import { version } from "../../../../package.json";
 import { parse, requireArgs } from "./args";
 import { client, type Fetch, segment } from "./client";
 import { importBacklog } from "./import";
@@ -5,6 +6,7 @@ import { mcpConfig } from "./mcp-config";
 import { readable } from "./output";
 import { projects } from "./projects";
 import { tasks } from "./tasks";
+import { update } from "./update";
 
 const help = `Pano CLI
 pano serve                            Sunucuyu başlat
@@ -50,6 +52,7 @@ export async function runCli(
   try {
     // Parse only universal flags here; command parsers validate their own options.
     const global = parse(args, {
+      version: { type: "boolean" },
       criteria: { type: "string", multiple: true },
       body: { type: "string" },
       priority: { type: "string" },
@@ -64,7 +67,8 @@ export async function runCli(
     });
     json = global.values.json === true;
     let data: unknown;
-    if (!global.positionals.length || global.values.help) data = help;
+    if (global.values.version) data = version;
+    else if (!global.positionals.length || global.values.help) data = help;
     else {
       const api = client(env, options.fetch ?? fetch);
       const flagIndices = new Set(
@@ -76,6 +80,10 @@ export async function runCli(
         (_, index) => !flagIndices.has(index),
       );
       switch (command) {
+        case "update":
+          requireArgs(parse(rest).positionals, 0, "update");
+          data = await update(options.fetch ?? fetch);
+          break;
         case "import":
           data = await importBacklog(rest, api);
           break;

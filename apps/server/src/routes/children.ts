@@ -71,7 +71,17 @@ export function registerChildren(route: Route, core: Core) {
       c.json(core.records.add(key(c), await json(c, record), actor(c))),
     record,
   );
-  route("get", "/items/:key/activity", (c) =>
-    c.json(core.activity.list(key(c))),
+  const historyQuery = z.object({
+    limit: z.coerce.number().int().min(1).max(200).optional(),
+    offset: z.coerce.number().int().nonnegative().optional(),
+    kind: z.enum(["decision", "check"]).optional(),
+  });
+  route(
+    "get",
+    "/items/:key/activity",
+    (c) =>
+      c.json(core.activity.list(key(c), historyQuery.parse(c.req.query()))),
+    undefined,
+    historyQuery,
   );
 }

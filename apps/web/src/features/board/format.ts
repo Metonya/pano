@@ -1,4 +1,4 @@
-import { t } from "@/lib/i18n";
+import { language, t } from "@/lib/i18n";
 import { agentName, type Detail, labels, type Status } from "./types";
 
 export function relativeTime(value: string, now = Date.now()): string {
@@ -6,6 +6,18 @@ export function relativeTime(value: string, now = Date.now()): string {
     0,
     Math.floor((now - new Date(value).getTime()) / 60000),
   );
+  if (language() === "en" && minutes >= 1) {
+    const [value, unit] =
+      minutes < 60
+        ? ([minutes, "minute"] as const)
+        : minutes < 1440
+          ? ([Math.floor(minutes / 60), "hour"] as const)
+          : ([Math.floor(minutes / 1440), "day"] as const);
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      -value,
+      unit,
+    );
+  }
   if (minutes < 1) return t("justNow");
   if (minutes < 60) return `${minutes} ${t("minutesAgo")}`;
   if (minutes < 1440) return `${Math.floor(minutes / 60)} ${t("hoursAgo")}`;
@@ -59,6 +71,12 @@ export function activityText(entry: Detail["activity"][number]): string {
     cancelled: t("activityCancelled"),
     seen: t("activitySeen"),
     check: t("activityChecked"),
+    criterion_checked: after.done
+      ? t("historyCriterionChecked")
+      : t("historyCriterionUnchecked"),
+    restored: t("historyRestored"),
+    decision: t("historyDecisionRecorded"),
+    note: t("historyNoteRecorded"),
     criterion_updated: t("activityCriterionUpdated"),
     criterion_added: t("activityCriterionAdded"),
     criterion_removed: t("activityCriterionRemoved"),

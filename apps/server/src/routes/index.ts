@@ -3,6 +3,7 @@ import type { Core } from "@pano/core";
 import type { Context } from "hono";
 import { version } from "../../../../package.json";
 import { eventsResponse } from "../sse";
+import { createSystem } from "../system";
 import { registerAttachments } from "./attachments";
 import { registerChildren } from "./children";
 import { registerItems } from "./items";
@@ -11,7 +12,18 @@ import { registerSummary } from "./summary";
 
 export function registerRoutes(
   app: OpenAPIHono,
-  { core, dataDir }: { core: Core; dataDir: string; token?: string },
+  {
+    core,
+    dataDir,
+    fetch: fetcher,
+    checkUpdates,
+  }: {
+    core: Core;
+    dataDir: string;
+    token?: string;
+    fetch?: typeof fetch;
+    checkUpdates?: boolean;
+  },
 ) {
   type Method = "get" | "post" | "patch" | "delete";
   const route = (
@@ -72,7 +84,32 @@ export function registerRoutes(
     app.on(method.toUpperCase(), `/api/v1${path}`, handler);
   };
   route("get", "/health", (c) => c.json({ ok: true, version }));
-  route("get", "/system", (c) => c.json({ version, dataDir }));
+  const system = createSystem(core, dataDir, fetcher);
+  route("get", "/system", (c) => c.json(system.info()));
+  route("get", "/settings", (c) => c.json(system.settings()));
+  route("patch", "/settings", async (c) => {
+    const body = z
+      .object({
+        language: z.enum(["tr", "en"]).optional(),
+        theme: z.enum(["light", "dark", "auto"]).optional(),
+        updateCheck: z.boolean().optional(),
+      })
+      .strict()
+      .parse(await c.req.json());
+    const put = core.db.query(
+      "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    );
+    core.db.transaction(() => {
+      for (const [key, value] of Object.entries(body))
+        put.run(key, String(value));
+    })();
+    return c.json(system.settings());
+  });
+  if (checkUpdates || fetcher) {
+    void system.check();
+    const timer = setInterval(() => void system.check(), 86400000);
+    timer.unref();
+  }
   registerProjects(route, core, dataDir);
   registerSummary(route, core);
   registerItems(route, core);

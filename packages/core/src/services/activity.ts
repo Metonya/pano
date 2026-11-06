@@ -4,16 +4,32 @@ import { text } from "../schemas";
 export function createActivity(context: Context) {
   const { all, item, str, write, log, event, get } = context;
   const activity = {
-    list(key: string, options: { limit?: number } = {}) {
+    list(
+      key: string,
+      options: {
+        limit?: number;
+        offset?: number;
+        kind?: "decision" | "check";
+      } = {},
+    ) {
       const row = item(key);
       const limit =
         options.limit === undefined
           ? -1
           : z.number().int().nonnegative().parse(options.limit);
+      const offset = z
+        .number()
+        .int()
+        .nonnegative()
+        .parse(options.offset ?? 0);
+      const kind = z.enum(["decision", "check"]).optional().parse(options.kind);
       return all(
-        "SELECT * FROM activity WHERE item_id = ? ORDER BY rowid DESC LIMIT ?",
+        "SELECT * FROM activity WHERE item_id = ? AND (? IS NULL OR kind = ?) ORDER BY rowid DESC LIMIT ? OFFSET ?",
         str(row.id),
+        kind ?? null,
+        kind ?? null,
         limit,
+        offset,
       );
     },
   };

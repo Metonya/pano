@@ -40,7 +40,7 @@ await collect(web);
 if (!assets["/index.html"]) throw new Error("Web build did not produce index.html");
 await mkdir(dist, { recursive: true });
 const entry = join(dist, "bin-entry.ts");
-await writeFile(entry, `import { runCli } from "../apps/server/src/cli";\n(globalThis as any).panoAssets = ${JSON.stringify(assets)};\nprocess.exitCode = await runCli(process.argv.slice(2));\n`);
+await writeFile(entry, `import { runCli } from "../apps/server/src/cli";\n(globalThis as any).panoAssets = ${JSON.stringify(assets)};\n(globalThis as any).panoBuildDate = ${JSON.stringify(new Date().toISOString())};\nprocess.exitCode = await runCli(process.argv.slice(2));\n`);
 const target = process.env.PANO_BUILD_TARGET;
 const output = join(dist, target?.startsWith("bun-windows") || (!target && process.platform === "win32") ? "pano.exe" : "pano");
 try {

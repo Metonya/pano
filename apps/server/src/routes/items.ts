@@ -79,6 +79,9 @@ export function registerItems(route: Route, core: Core) {
     move,
   );
   const assign = z.object({ assignee: text.nullable() }).strict();
+  route("post", "/items/:key/restore", (c) =>
+    c.json(core.items.restore(key(c), actor(c))),
+  );
   route(
     "post",
     "/items/:key/assign",

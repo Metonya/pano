@@ -38,7 +38,7 @@ export function createCriteria(context: Context) {
         id,
         { done: Number(z.boolean().parse(done)) },
         actor,
-        "check",
+        "criterion_checked",
       );
     },
     remove(key: string, id: string, actor: string) {
