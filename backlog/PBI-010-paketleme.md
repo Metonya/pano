@@ -20,11 +20,11 @@ Herkes kendi platformunda tek adımda kurup kullanabilsin: indir-çalıştır bi
 - Statik dosyaları gömme: Bun `import ... with { type: "file" }` veya build sırasında üretilen asset manifest.
 
 ## Kabul kriterleri
-- [ ] `bun run build:bin` yerel platform için tek dosya üretir; başka hiçbir dosya olmadan çalışır ve UI açılır.
+- [x] `bun run build:bin` yerel platform için tek dosya üretir; başka hiçbir dosya olmadan çalışır ve UI açılır.
 - [ ] Tag atınca release workflow 5 binary'yi ve Docker image'ı yayınlar.
 - [ ] `docker run -p 7777:7777 -e PANO_TOKEN=x -v pano-data:/data ghcr.io/metonya/pano` ile UI açılır, container yeniden başlayınca veri kalır.
 - [ ] Docker imajı < 150 MB.
-- [ ] README'de Windows, macOS, Linux ve Docker kurulumları adım adım yazılı.
+- [x] README'de Windows, macOS, Linux ve Docker kurulumları adım adım yazılı.
 
 ## Test planı
 1. Windows binary'yi indirip çift tıkla/terminalden çalıştır → UI açılmalı.
@@ -33,5 +33,9 @@ Herkes kendi platformunda tek adımda kurup kullanabilsin: indir-çalıştır bi
 ## Notlar / log
 
 - 2026-11-06 claude:po codex'e (gpt-6.1-terra, high) paralel olarak verdi.
+
+- 2026-11-06 codex iki turda bitirdi; ilk binary migration'ları diskte aradığı için hiç açılmıyordu (claude:po testi yakaladı), SQL'ler gömüldü. Web'e token giriş ekranı eklendi.
+- check (claude:po): lint · typecheck temiz · test 41/41 · e2e 11/11 · token e2e 1/1 · `dist/pano.exe` (117 MB) ayrı klasörden açıldı: UI, SPA yolu, /agents.md, CLI, token zorunluluğu çalışıyor; canlı bağlantı kurulup kopunca yeniden bağlanıyor.
+- Açık: Docker Desktop kapalı olduğu için imaj, veri kalıcılığı ve 150 MB sınırı denenmedi; release workflow tag atılmadan doğrulanamaz.
 
 ## Done notu

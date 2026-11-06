@@ -1,16 +1,19 @@
+/// <reference path="./sql.d.ts" />
 import type { Database } from "bun:sqlite";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import initial from "../migrations/001_init.sql" with { type: "text" };
+import indexes from "../migrations/002_purge_and_indexes.sql" with {
+  type: "text",
+};
+
+const migrations = [
+  { version: 1, name: "001_init.sql", sql: initial },
+  { version: 2, name: "002_purge_and_indexes.sql", sql: indexes },
+];
 export function migrate(db: Database) {
   db.exec(
     "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, name TEXT NOT NULL)",
   );
-  const dir = join(import.meta.dir, "../migrations");
-  const files = readdirSync(dir)
-    .filter((name) => /^\d+_.+\.sql$/.test(name))
-    .sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
-  for (const file of files) {
-    const version = Number.parseInt(file, 10);
+  for (const { version, name, sql } of migrations) {
     db.transaction(() => {
       if (
         db
@@ -18,8 +21,8 @@ export function migrate(db: Database) {
           .get(version)
       )
         return;
-      db.exec(readFileSync(join(dir, file), "utf8"));
-      db.query("INSERT INTO schema_version VALUES (?, ?)").run(version, file);
+      db.exec(sql);
+      db.query("INSERT INTO schema_version VALUES (?, ?)").run(version, name);
     }).immediate();
   }
 }

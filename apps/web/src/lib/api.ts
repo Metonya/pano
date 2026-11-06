@@ -20,20 +20,35 @@ export type Project = {
   created_at: string;
 };
 export const queryKey = ["projects"];
+const tokenKey = "pano:token";
+export const getToken = () => localStorage.getItem(tokenKey) ?? "";
+export function setToken(token: string) {
+  localStorage.setItem(tokenKey, token);
+}
+export function authHeaders(token = getToken()): Record<string, string> {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+export function unauthorized(token: string) {
+  if (token === getToken())
+    window.dispatchEvent(new Event("pano:unauthorized"));
+}
 export async function request(path: string, body?: object, method = "POST") {
+  const token = getToken();
   const response = await fetch(
     `/api/v1${path}`,
     body
       ? {
           method,
           headers: {
+            ...authHeaders(token),
             "Content-Type": "application/json",
             "X-Pano-Actor": "mert",
           },
           body: JSON.stringify(body),
         }
-      : undefined,
+      : { headers: authHeaders(token) },
   );
+  if (response.status === 401) unauthorized(token);
   if (!response.ok) throw new Error(String(response.status));
   return response.json();
 }

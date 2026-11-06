@@ -8,6 +8,7 @@ import { handleError } from "./errors";
 import { handleMcp } from "./mcp";
 import { auth } from "./middleware/auth";
 import { registerRoutes } from "./routes";
+import { staticResponse } from "./static";
 
 export function createApp(options: {
   core: Core;
@@ -16,8 +17,10 @@ export function createApp(options: {
 }) {
   const app = new OpenAPIHono();
   app.onError(handleError);
-  app.notFound((c) =>
-    c.json({ error: { code: "not_found", message: "Route not found" } }, 404),
+  app.notFound(
+    (c) =>
+      staticResponse(c.req.raw) ??
+      c.json({ error: { code: "not_found", message: "Route not found" } }, 404),
   );
   app.use("/api/*", auth(options.token));
   app.use("/mcp", auth(options.token));

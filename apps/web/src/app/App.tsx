@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { ErrorState, LoadingState, Placeholder } from "@/components/States";
+import { TokenLogin } from "@/components/TokenLogin";
 import { Board } from "@/features/board/Board";
 import { CreateProjectDialog } from "@/features/projects/CreateProjectDialog";
 import { DeleteProjectDialog } from "@/features/projects/DeleteProjectDialog";
@@ -20,6 +21,13 @@ export function App() {
   const [create, setCreate] = useState(false);
   const [deleting, setDeleting] = useState<Project | null>(null);
   const [actionError, setActionError] = useState(false);
+  const [login, setLogin] = useState(false);
+  useEffect(() => {
+    const onUnauthorized = () => setLogin(true);
+    window.addEventListener("pano:unauthorized", onUnauthorized);
+    return () =>
+      window.removeEventListener("pano:unauthorized", onUnauthorized);
+  }, []);
   const connection = useProjectEvents();
   const projects = useQuery<Project[]>({
     queryKey,
@@ -66,6 +74,16 @@ export function App() {
     navigate("/");
     setMobile(false);
   };
+  if (login)
+    return (
+      <TokenLogin
+        onSuccess={() => {
+          setLogin(false);
+          void qc.invalidateQueries();
+          window.dispatchEvent(new Event("pano:retry-connection"));
+        }}
+      />
+    );
   return (
     <div className="app">
       <Sidebar

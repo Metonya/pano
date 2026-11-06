@@ -1,0 +1,77 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: bun-windows-x64, name: pano-windows-x64.exe }
+          - { os: ubuntu-latest, target: bun-linux-x64, name: pano-linux-x64 }
+          - { os: ubuntu-24.04-arm, target: bun-linux-arm64, name: pano-linux-arm64 }
+          - { os: macos-15-intel, target: bun-darwin-x64, name: pano-darwin-x64 }
+          - { os: macos-latest, target: bun-darwin-arm64, name: pano-darwin-arm64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - run: bun install --frozen-lockfile
+      - run: bun run build:bin
+        env:
+          PANO_BUILD_TARGET: ${{ matrix.target }}
+      - name: Name artifact
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Windows ]]; then src=dist/pano.exe; else src=dist/pano; fi
+          cp "$src" "dist/${{ matrix.name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/${{ matrix.name }}
+          if-no-files-found: error
+
+  release:
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - run: cd artifacts && sha256sum pano-* > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/metonya/pano:latest
+            ghcr.io/metonya/pano:${{ github.ref_name }}

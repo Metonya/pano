@@ -1,5 +1,8 @@
 {
   "brand": "Pano",
+  "tokenTitle": "Pano token",
+  "tokenInvalid": "Token geçersiz. Tekrar dene.",
+  "continue": "Devam",
   "keyHint": "PBI'lar {key}-1, {key}-2 diye numaralanır",
   "changeKey": "Değiştir",
   "discardQuestion": "Yazdıkların silinsin mi?",

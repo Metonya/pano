@@ -10,6 +10,7 @@
     "pano": "bun apps/server/src/main.ts",
     "dev": "concurrently --kill-others \"bun run --cwd apps/server dev\" \"bun run --cwd apps/web dev\"",
     "build": "bun run --cwd apps/server build && bun run --cwd apps/web build",
+    "build:bin": "bun scripts/build-bin.ts",
     "test": "bun test packages/core apps/server apps/web/src",
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "seed": "bun packages/core/src/seed.ts",

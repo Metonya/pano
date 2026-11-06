@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+scratch
+scratch.*
+.env*
+*.db
+*.db-*
