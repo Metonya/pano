@@ -1,8 +1,8 @@
 ---
 id: PBI-014
 title: Uygulama ayarları — dil, görünüm, sürüm ve güncelleme
-status: in-progress
-assignee: claude:po
+status: done
+assignee: codex
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -34,7 +34,7 @@ Pano'yu kuran herkes arayüzü kendi dilinde ve tercih ettiği görünümde kull
 - [x] Görünüm Açık/Koyu/Otomatik arasında anında değişir; Otomatik'te sistem teması değişince arayüz de değişir; yenilemede tema yanıp sönmez.
 - [x] Hakkında bölümü doğru sürüm ve veri klasörünü gösterir.
 - [x] Sahte bir release cevabıyla (test) yeni sürüm bildirimi görünür; güncelleme kontrolü kapatılınca hiç istek atılmaz.
-- [ ] `pano update` checksum uyuşmazsa binary'yi değiştirmez ve açıklayıcı hata verir; başarılı güncellemeden sonra `pano --version` yeni sürümü gösterir.
+- [x] `pano update` checksum uyuşmazsa binary'yi değiştirmez ve açıklayıcı hata verir; başarılı güncellemeden sonra `pano --version` yeni sürümü gösterir.
 
 ## Test planı
 1. Ayarlardan dili English yap → board'u ve bir PBI'yı gez.
@@ -47,4 +47,7 @@ Pano'yu kuran herkes arayüzü kendi dilinde ve tercih ettiği görünümde kull
 
 - 2026-11-06 codex bitirdi. check (claude:po): lint · typecheck temiz · test 59/59 · build geçti · e2e 18/18 · token e2e 1/1; ekran kontrol edildi. Açık: repo private ve release yok, gerçek binary ile `pano update` uçtan uca denenemedi.
 
+- 2026-11-06 codex `pano update` testlerini yazdı, Windows `.old` akışı ve hata durumunda geri yüklemeyi ekledi. check (claude:po): test 76/76.
+
 ## Done notu
+Ayarlar ekranı, Türkçe/English, Açık/Koyu/Otomatik, sürüm ve güncelleme bildirimi, `pano update`. Bilinen kısıt: `pano update` sahte sunucuyla test edildi; gerçek release ile denenmedi (repo private, release yok).
