@@ -310,9 +310,6 @@ export function createItems(
         actor,
       );
     },
-    reassign(key: string, input: { note: string }, actor: string) {
-      return transition(key, "reassigned", input.note, [], actor);
-    },
     markSeen(key: string, actor: string) {
       return write(actor, () => {
         const row = item(key);
@@ -335,7 +332,7 @@ export function createItems(
   };
   function transition(
     key: string,
-    kind: "approved" | "sent_back" | "reassigned",
+    kind: "approved" | "sent_back",
     note: string,
     attachmentIds: string[],
     actor: string,
@@ -384,7 +381,7 @@ export function createItems(
       const patch: Values =
         kind === "approved"
           ? { status: "done", done_at: now(), seen_at: null }
-          : { status: kind === "sent_back" ? "in_progress" : "test", assignee };
+          : { status: "in_progress", assignee };
       update("items", id, { ...patch, updated_at: now() });
       const activityId = log(
         pid,

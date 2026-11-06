@@ -55,25 +55,43 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
     .getByRole("group", { name: /1: Sayfayı aç/ })
     .getByRole("button", { name: "Kaldı" })
     .click();
+  // A failed scenario opens the note straight away; only one send-back is on screen.
+  const sendBackForm = page.getByRole("form", {
+    name: "Geri gönder",
+    exact: true,
+  });
+  await expect(sendBackForm).toBeVisible();
+  await expect(page.getByRole("button", { name: "Geri ata" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Geri gönder", exact: true }),
+  ).toHaveCount(1);
+  await page
+    .locator(".test-actions")
+    .getByRole("button", { name: "Vazgeç", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: "Onayla" })).toBeDisabled();
   await expect(page.locator(".test-actions .test-primary")).toHaveText(
     "Geri gönder",
   );
   await expect(page.locator(".test-actions")).toContainText("Kalan senaryolar");
-  await page.getByLabel("Not", { exact: true }).fill("Görünüm hatalı");
+  await page.locator(".test-actions .test-primary").click();
+  await page
+    .getByLabel("Geri gönderme notu", { exact: true })
+    .fill("Görünüm hatalı");
   await page.locator('input[type="file"]').setInputFiles({
     name: "ekran.png",
     mimeType: "image/png",
     buffer: Buffer.from("89504e470d0a1a0a", "hex"),
   });
-  await page
-    .getByRole("form", { name: "Geri gönder", exact: true })
+  await sendBackForm
     .getByRole("button", { name: "Geri gönder", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const returned = await (await request.get("/api/v1/items/HUMAN-1")).json();
   expect(returned.return_note).toBe("Görünüm hatalı");
   expect(returned.return_attachments).toHaveLength(1);
+  expect(returned.status).toBe("in_progress");
+  expect(returned.assignee).toBe("codex");
   await request.patch(
     `/api/v1/items/HUMAN-1/scenarios/${returned.scenarios[0].id}`,
     { data: { result: "passed" } },
@@ -83,19 +101,11 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
   });
   await page.reload();
   await page.getByText("Test edilecek", { exact: true }).first().click();
-  await page.getByRole("button", { name: "Geri ata", exact: true }).click();
-  await page.getByLabel("Not", { exact: true }).fill("Sen de kontrol et");
-  await page
-    .getByRole("form", { name: "Geri ata", exact: true })
-    .getByRole("button", { name: "Geri ata", exact: true })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(
-    (await (await request.get("/api/v1/items/HUMAN-1")).json()).assignee,
-  ).toBe("codex");
-  await request.patch("/api/v1/items/HUMAN-1", { data: { assignee: "mert" } });
-  await page.reload();
-  await page.getByText("Test edilecek", { exact: true }).first().click();
+  // Asking for In Progress from the status menu takes the same send-back path.
+  await page.getByRole("button", { name: /^Durum/ }).click();
+  await page.getByRole("menuitemradio", { name: "In Progress" }).click();
+  await expect(sendBackForm).toBeVisible();
+  await sendBackForm.getByRole("button", { name: "Vazgeç" }).click();
   await page.getByRole("button", { name: "Onayla" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(
@@ -170,11 +180,11 @@ test("test paneli boş alanları gizler, markdown düzenler ve AI testlerini ay�
   await expect(panel.locator(".test-check-failed")).toContainText(
     "Kaldı: Build failed",
   );
-  const approve = panel.getByRole("button", { name: "Onayla", exact: true });
+  const approve = page.getByRole("button", { name: "Onayla", exact: true });
   await expect(approve).toHaveCSS("min-height", "36px");
   await expect(approve).toHaveCSS("border-radius", "10px");
   await expect(approve).toHaveCSS("background-color", "rgb(0, 113, 227)");
-  await expect(page.locator(".item-detail")).toHaveCSS("overflow-y", "visible");
+  await expect(page.locator(".test-actions")).toHaveCSS("position", "sticky");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await request.patch("/api/v1/items/PANEL-1", {

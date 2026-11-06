@@ -21,6 +21,7 @@ import { BoardToolbar } from "./BoardToolbar";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { ItemDialog } from "./ItemDialog";
 import { boardKeyboardCoordinates } from "./keyboard";
+import "./board.css";
 import {
   type BoardItem,
   labels,
@@ -229,7 +230,7 @@ export function Board({ projects }: { projects: Project[] }) {
             </DragOverlay>
           </DndContext>
           {filters.cancelled && shown.some((i) => i.status === "cancelled") && (
-            <div>
+            <section className="cancelled-list">
               <h2>{labels.cancelled}</h2>
               {sortItems(shown.filter((i) => i.status === "cancelled")).map(
                 (i) => (
@@ -238,7 +239,7 @@ export function Board({ projects }: { projects: Project[] }) {
                   </button>
                 ),
               )}
-            </div>
+            </section>
           )}
         </>
       )}

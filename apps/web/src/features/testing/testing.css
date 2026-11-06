@@ -2,13 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 20px;
   min-width: 0;
-}
-.item-detail:has(.test-panel) {
-  max-height: none;
-  overflow: visible;
 }
 .test-panel .test-section {
   display: flex;
@@ -16,29 +10,23 @@
   gap: 12px;
   min-width: 0;
 }
-.item-detail .test-panel form {
+.test-panel form,
+.test-return-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.test-panel h3,
-.test-panel p,
-.test-panel .markdown > :first-child {
-  margin-top: 0;
-}
-.test-panel h3,
-.test-panel p,
-.test-panel .markdown > :last-child {
-  margin-bottom: 0;
-}
 .test-panel h3 {
+  margin: 0;
   font-size: 15px;
   font-weight: 600;
 }
-.test-panel .test-section h3 {
+.test-panel p,
+.test-actions p {
   margin: 0;
 }
-.test-panel button {
+.test-panel button,
+.test-actions button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -47,29 +35,28 @@
   padding: 0 16px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--field);
+  background: transparent;
   color: var(--text);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
-.test-panel button:hover:not(:disabled) {
-  filter: brightness(0.95);
+.test-panel button:hover:not(:disabled),
+.test-actions button:hover:not(:disabled) {
+  background: var(--field);
+  opacity: 1;
 }
-.test-panel button:focus-visible,
-.test-panel input:focus-visible,
-.test-panel textarea:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-.test-panel button.test-primary {
+.test-panel button.test-primary,
+.test-actions button.test-primary,
+.test-actions button.test-primary:hover:not(:disabled) {
   background: var(--primary);
   border-color: transparent;
   color: #fff;
   font-weight: 600;
 }
-.test-panel button:disabled {
+.test-panel button:disabled,
+.test-actions button:disabled {
   background: transparent;
   border-color: var(--line);
   color: var(--muted);
@@ -77,7 +64,6 @@
 }
 .test-panel button.test-link {
   align-self: flex-start;
-  background: transparent;
   border-color: transparent;
   color: var(--accent-text);
   padding: 0 8px;
@@ -97,49 +83,45 @@
 .test-section-heading {
   justify-content: space-between;
 }
+.test-missing-summary {
+  margin-left: -8px;
+}
 .test-result {
   border: 0;
   padding: 0;
   margin: 0;
   min-width: 0;
 }
-.test-check-unknown {
-  background: var(--field);
-  color: var(--muted);
-}
-.test-panel label {
+.test-panel label,
+.test-return-form > label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
-.test-panel label + label {
-  margin-top: 12px;
-}
-.test-panel input:not([type="checkbox"]),
-.test-panel textarea {
+.test-panel textarea,
+.test-return-form textarea {
   display: block;
-  box-sizing: border-box;
   width: 100%;
+  min-height: 0;
   margin-top: 8px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--field);
   color: var(--text);
   font: inherit;
   font-size: 15px;
+  font-weight: 400;
   line-height: 1.5;
-}
-.test-panel textarea {
   resize: vertical;
 }
-.test-panel .test-form-actions {
+.test-form-actions {
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: 4px;
 }
-.test-panel .test-help {
+.test-help {
   color: var(--muted);
   font-size: 13px;
-  margin-top: 8px;
 }
 .test-scenario {
   display: flex;
@@ -153,7 +135,9 @@
 .test-scenario-number {
   color: var(--muted);
   font-size: 13px;
+  font-weight: 600;
   padding-top: 2px;
+  font-variant-numeric: tabular-nums;
 }
 .test-scenario-content {
   flex: 1 1 180px;
@@ -162,30 +146,43 @@
   overflow-wrap: anywhere;
 }
 .test-expected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   color: var(--muted);
   font-size: 13px;
   margin-top: 4px;
 }
 .test-panel .test-result button {
+  min-height: 32px;
   padding: 0 10px;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 600;
 }
-.test-panel button.test-icon {
-  width: 36px;
+.test-panel button.test-icon,
+.test-actions button.test-icon {
+  width: 32px;
+  min-height: 32px;
   padding: 0;
-  background: transparent;
   border-color: transparent;
   color: var(--muted);
 }
 .test-panel .test-result-passed[aria-pressed="true"],
+.test-panel .test-result-passed[aria-pressed="true"]:hover:not(:disabled),
 .test-check-passed {
   background: var(--success-bg);
   color: var(--success);
 }
 .test-panel .test-result-failed[aria-pressed="true"],
+.test-panel .test-result-failed[aria-pressed="true"]:hover:not(:disabled),
 .test-check-failed {
   background: var(--fail-bg);
   color: var(--fail);
+}
+.test-check-unknown {
+  background: var(--field);
+  color: var(--muted);
 }
 .test-checks {
   display: flex;
@@ -201,39 +198,83 @@
   gap: 6px;
   min-height: 30px;
   padding: 4px 12px;
-  border-radius: 16px;
+  border-radius: 15px;
   font-size: 13px;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
-.test-panel svg {
+.test-panel svg,
+.test-actions svg {
   flex-shrink: 0;
 }
-.test-return-form {
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
 .test-attachment {
-  padding: 12px;
-  margin-top: 12px;
-  border: 1px dashed var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--line);
   border-radius: 12px;
+  color: var(--muted);
+  font-size: 13px;
 }
+.test-attachment small {
+  font-size: 12px;
+  margin-left: auto;
+}
+.test-file-button {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--sheet);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+}
+.test-file-button:hover {
+  background: var(--field);
+}
+.test-file-button:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.test-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+/* Stays in view while the sheet scrolls, so the decision is never buried. */
 .test-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding-top: 20px;
+  margin: 24px -32px 0;
+  padding: 14px 32px;
   border-top: 1px solid var(--line);
+  background: var(--sheet);
+}
+.test-return-form {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 .test-action-reasons {
   flex: 1 1 180px;
+  min-width: 0;
 }
 .test-action-buttons {
   margin-left: auto;
   justify-content: flex-end;
 }
-.test-panel .test-failure {
+.test-failure {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -242,10 +283,17 @@
   font-weight: 600;
 }
 @media (max-width: 640px) {
-  .test-panel button {
+  .test-panel button,
+  .test-actions button {
     min-height: 44px;
   }
-  .test-panel button.test-icon {
+  .test-panel button.test-icon,
+  .test-actions button.test-icon {
     width: 44px;
+    min-height: 44px;
+  }
+  .test-actions {
+    margin: 24px -20px 0;
+    padding: 12px 20px;
   }
 }

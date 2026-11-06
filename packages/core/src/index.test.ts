@@ -453,11 +453,10 @@ test("human testing decisions retain notes, attachments and AI assignment", () =
     return_attachments: [{ id: attachment.id }],
   });
   c.items.update("PANO-1", { status: "test", assignee: "mert" }, "codex");
-  c.items.reassign("PANO-1", { note: "Please check" }, "mert");
+  c.items.assign("PANO-1", "codex", "mert");
   expect(c.items.get("PANO-1")).toMatchObject({
     status: "test",
     assignee: "codex",
-    return_note: "Please check",
   });
   expect(c.items.board("PANO").waiting).toHaveLength(0);
   c.scenarios.update("PANO-1", scenario.id, { result: "failed" }, "mert");

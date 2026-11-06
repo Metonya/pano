@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Archive, FolderKanban, Inbox, Settings } from "lucide-react";
+import { useEffect, useReducer } from "react";
 import { Link } from "react-router-dom";
-import { agentName, type BoardItem } from "@/features/board/types";
+import { relativeTime } from "@/features/board/format";
+import type { BoardItem } from "@/features/board/types";
 import type { Project } from "@/lib/api";
 import { request } from "@/lib/api";
 import { t } from "@/lib/i18n";
+import { latestPerAgent, silentMinutes } from "./agents";
 
-const SILENT_MINUTES = 30;
 export function Sidebar({
   mobile,
   setMobile,
@@ -46,6 +48,12 @@ export function Sidebar({
         )
       ).flat(),
   });
+  // Elapsed time must advance even when no SSE event refreshes the query.
+  const [, tick] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    const timer = setInterval(tick, 60000);
+    return () => clearInterval(timer);
+  }, []);
   return (
     <>
       <aside className={`sidebar ${mobile ? "mobile-open" : ""}`}>
@@ -121,22 +129,21 @@ export function Sidebar({
         {!!agents.data?.length && (
           <div className="nav-group">
             <div className="nav-label">{t("agents")}</div>
-            {agents.data.map(({ item, project }) => {
-              const minutes = Math.floor(
-                (Date.now() - new Date(item.last_activity).getTime()) / 60000,
-              );
+            {latestPerAgent(agents.data).map(({ name, item, project }) => {
+              const silent = silentMinutes(item.last_activity);
               return (
                 <Link
-                  className="nav-project agent-row"
-                  key={item.id}
+                  className={`nav-project agent-row ${silent === null ? "" : "is-silent"}`}
+                  key={name}
                   to={`/projects/${project.key}`}
                 >
-                  <span>{agentName(item.assignee ?? "")}</span>
-                  {minutes >= SILENT_MINUTES && (
-                    <small>
-                      {minutes} {t("silent")}
-                    </small>
-                  )}
+                  <i className="agent-dot" aria-hidden="true" />
+                  <span>{name}</span>
+                  <small>
+                    {silent === null
+                      ? `#${item.number} · ${relativeTime(item.last_activity)}`
+                      : `${silent} ${t("silent")}`}
+                  </small>
                 </Link>
               );
             })}

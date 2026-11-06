@@ -1,5 +1,5 @@
 import { language, t } from "@/lib/i18n";
-import { agentName, type Detail, labels, type Status } from "./types";
+import { agentName, type Detail } from "./types";
 
 export function relativeTime(value: string, now = Date.now()): string {
   const minutes = Math.max(
@@ -34,43 +34,41 @@ export function activityText(entry: Detail["activity"][number]): string {
     /* Old activity may not contain JSON. */
   }
   const actor = agentName(entry.actor);
-  if (
-    entry.kind === "moved" &&
-    typeof after.status === "string" &&
-    after.status in labels
-  )
-    return `${actor} ${t("activityStatus")} ${labels[after.status as Status]} ${t("activityMade")}`;
+  const handedTo =
+    typeof after.assignee === "string"
+      ? ` · ${t("assignee")}: ${agentName(after.assignee)}`
+      : "";
+  if (entry.kind === "moved" && typeof after.status === "string")
+    return `${actor} ${t("activityMoved")}${handedTo}`;
   if (entry.kind === "moved" && before.position !== after.position)
     return `${actor} ${t("activityReordered")}`;
   if (entry.kind === "assigned")
     return `${actor} ${t("activityAssigned")} ${typeof after.assignee === "string" ? agentName(after.assignee) : t("activityUnassigned")}`;
   if (entry.kind === "sent_back" || entry.kind === "reassigned")
-    return `${actor} ${t(entry.kind === "sent_back" ? "activitySentBack" : "activityReassigned")}: ${entry.message}`;
+    return `${actor} ${t(entry.kind === "sent_back" ? "activitySentBack" : "activityReassigned")}${handedTo}`;
   if (entry.kind.startsWith("scenario_")) {
     const label =
-      entry.kind === "scenario_added"
-        ? "activityScenarioAdded"
-        : entry.kind === "scenario_removed"
-          ? "activityScenarioRemoved"
-          : "activityScenarioEdited";
-    const details = [
-      before.steps_md,
-      before.expected_md,
-      before.result,
-      after.steps_md,
-      after.expected_md,
-      after.result,
-    ]
-      .filter((value) => typeof value === "string")
-      .join(" → ");
-    return `${actor} ${t(label)}${details ? `: ${details}` : ""}`;
+      after.result === "passed"
+        ? "activityScenarioPassed"
+        : after.result === "failed"
+          ? "activityScenarioFailed"
+          : after.result === "pending"
+            ? "activityScenarioReset"
+            : entry.kind === "scenario_added"
+              ? "activityScenarioAdded"
+              : entry.kind === "scenario_removed"
+                ? "activityScenarioRemoved"
+                : "activityScenarioEdited";
+    const step = after.steps_md ?? before.steps_md;
+    return `${actor} ${t(label)}${typeof step === "string" ? `: ${step}` : ""}`;
   }
   const actions: Record<string, string> = {
     created: t("activityCreated"),
     edited: t("activityEdited"),
     cancelled: t("activityCancelled"),
     seen: t("activitySeen"),
-    check: t("activityChecked"),
+    check:
+      "done" in after ? t("historyCriterionChecked") : t("activityChecked"),
     criterion_checked: after.done
       ? t("historyCriterionChecked")
       : t("historyCriterionUnchecked"),

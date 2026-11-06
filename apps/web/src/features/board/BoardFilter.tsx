@@ -1,11 +1,25 @@
+import { ListFilter } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { t } from "@/lib/i18n";
 import { agentName, type BoardItem } from "./types";
+
 export type Filters = {
   search: string;
   assignee: string;
   priority: string;
   cancelled: boolean;
 };
+
 export function BoardFilter({
   items,
   filters,
@@ -15,55 +29,83 @@ export function BoardFilter({
   filters: Filters;
   setFilters: (filters: Filters) => void;
 }) {
+  const active =
+    Number(!!filters.assignee) +
+    Number(!!filters.priority) +
+    Number(filters.cancelled);
+  const assignees = [
+    ...new Set(items.map((i) => i.assignee).filter((x): x is string => !!x)),
+  ];
+  // Selecting keeps the menu open so several filters can be set in one go.
+  const stayOpen = (event: Event) => event.preventDefault();
   return (
-    <details className="board-filter">
-      <summary>{t("filter")}</summary>
-      <div>
-        <label>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={`toolbar-icon ${active ? "is-active" : ""}`}
+          aria-label={active ? `${t("filter")}: ${active}` : t("filter")}
+        >
+          <ListFilter size={18} aria-hidden="true" />
+          {!!active && <span className="toolbar-badge">{active}</span>}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="menu-content" align="end">
+        <DropdownMenuLabel className="menu-label">
           {t("assignee")}
-          <select
-            value={filters.assignee}
-            onChange={(e) =>
-              setFilters({ ...filters, assignee: e.target.value })
-            }
-          >
-            <option value="">{t("all")}</option>
-            {[
-              ...new Set(
-                items.map((i) => i.assignee).filter((x): x is string => !!x),
-              ),
-            ].map((a) => (
-              <option key={a} value={a}>
-                {agentName(a)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={filters.assignee}
+          onValueChange={(assignee) => setFilters({ ...filters, assignee })}
+        >
+          <DropdownMenuRadioItem value="" onSelect={stayOpen}>
+            {t("all")}
+          </DropdownMenuRadioItem>
+          {assignees.map((a) => (
+            <DropdownMenuRadioItem key={a} value={a} onSelect={stayOpen}>
+              {agentName(a)}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="menu-label">
           {t("priority")}
-          <select
-            value={filters.priority}
-            onChange={(e) =>
-              setFilters({ ...filters, priority: e.target.value })
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={filters.priority}
+          onValueChange={(priority) => setFilters({ ...filters, priority })}
+        >
+          {(["", "high", "medium", "low"] as const).map((p) => (
+            <DropdownMenuRadioItem key={p} value={p} onSelect={stayOpen}>
+              {t(p || "all")}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={filters.cancelled}
+          onSelect={stayOpen}
+          onCheckedChange={(cancelled) =>
+            setFilters({ ...filters, cancelled: !!cancelled })
+          }
+        >
+          {t("showCancelled")}
+        </DropdownMenuCheckboxItem>
+        {!!active && (
+          <DropdownMenuItem
+            onSelect={() =>
+              setFilters({
+                ...filters,
+                assignee: "",
+                priority: "",
+                cancelled: false,
+              })
             }
           >
-            <option value="">{t("all")}</option>
-            <option value="high">{t("high")}</option>
-            <option value="medium">{t("medium")}</option>
-            <option value="low">{t("low")}</option>
-          </select>
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={filters.cancelled}
-            onChange={(e) =>
-              setFilters({ ...filters, cancelled: e.target.checked })
-            }
-          />{" "}
-          {t("showCancelled")}
-        </label>
-      </div>
-    </details>
+            {t("filterClear")}
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

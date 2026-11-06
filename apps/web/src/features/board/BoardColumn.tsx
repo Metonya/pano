@@ -7,6 +7,7 @@ import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { BoardCard } from "./BoardCard";
 import { type BoardItem, labels, type Status } from "./types";
+
 export function BoardColumn({
   status,
   items,
@@ -18,16 +19,20 @@ export function BoardColumn({
   open: (item: BoardItem) => void;
   mobileActive: boolean;
 }) {
-  const { setNodeRef } = useDroppable({ id: status });
+  const { setNodeRef, isOver, over } = useDroppable({ id: status });
   const [limit, setLimit] = useState(30);
+  const dropTarget = isOver || over?.data.current?.item?.status === status;
   return (
     <section
-      className={`board-column ${mobileActive ? "mobile-active" : ""}`}
+      className={`board-column ${mobileActive ? "mobile-active" : ""} ${dropTarget ? "is-drop-target" : ""}`}
+      aria-label={labels[status]}
       ref={setNodeRef}
     >
-      <h2>
-        {labels[status]} <span>{items.length}</span>
-      </h2>
+      <div className={`board-column-head status-${status}`}>
+        <span className="status-dot" aria-hidden="true" />
+        <h2>{labels[status]}</h2>
+        <span className="board-column-count">{items.length}</span>
+      </div>
       <div
         className="board-column-scroll"
         onScroll={(e) => {
@@ -45,7 +50,11 @@ export function BoardColumn({
           ))}
         </SortableContext>
         {items.length > limit && (
-          <button type="button" onClick={() => setLimit((n) => n + 30)}>
+          <button
+            type="button"
+            className="board-more"
+            onClick={() => setLimit((n) => n + 30)}
+          >
             {t("more")}
           </button>
         )}

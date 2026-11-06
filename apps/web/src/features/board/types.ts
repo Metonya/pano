@@ -66,6 +66,12 @@ export function agentName(id: string) {
   return `${names[name.toLowerCase()] ?? name}${role ? ` · ${roles[role.toLowerCase()] ?? role}` : ""}`;
 }
 
+const AI_ACTOR = /^(codex|claude|agent)(:|$)/i;
+export const isAiActor = (actor: string) => AI_ACTOR.test(actor);
+export const isAwaitingHuman = (item: BoardItem) =>
+  item.status === "test" && !isAiActor(item.assignee ?? "");
+export const initial = (id: string) => agentName(id).charAt(0).toUpperCase();
+
 /** Done reads like a log: the most recently finished item comes first. */
 export const sortColumn = (status: Status, items: BoardItem[]) =>
   status === "done"

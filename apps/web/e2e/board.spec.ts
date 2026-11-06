@@ -25,7 +25,9 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
     .getByLabel("Kriteri düzenle", { exact: true })
     .fill("Güncel kriter");
   await page.getByRole("button", { name: "Kaydet" }).click();
-  await page.getByLabel("Güncel kriter").check();
+  await page
+    .getByRole("checkbox", { name: "Güncel kriter", exact: true })
+    .check();
   await page
     .getByRole("button", { name: "Kriteri sil: Güncel kriter" })
     .click();
@@ -85,15 +87,30 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await request.post("/api/v1/items/BOARD-1/assign", {
     data: { assignee: "codex" },
   });
-  await page.getByText("Filtre", { exact: true }).click();
+  await page.getByRole("button", { name: "Filtre", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Codex" }).click();
+  // The menu stays open so several filters can be set together.
   await expect(
-    page.getByLabel("Atanan").locator('option[value="codex"]'),
-  ).toHaveCount(1);
-  await page.getByLabel("Atanan").selectOption("codex");
+    page.getByRole("menuitemradio", { name: "Yüksek" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Filtre: 1" })).toBeVisible();
   await expect(card).toBeVisible();
   await expect(
     page.locator(".board-card").filter({ hasText: "Başka iş" }),
   ).toHaveCount(0);
+  await page.getByRole("button", { name: "Filtre: 1" }).click();
+  await page.getByRole("menuitem", { name: "Filtreyi temizle" }).click();
+  await expect(
+    page.locator(".board-card").filter({ hasText: "Başka iş" }),
+  ).toBeVisible();
+  // Search opens from its icon and closes again with Esc.
+  await page.getByRole("button", { name: "Ara", exact: true }).click();
+  await page.getByRole("textbox", { name: "Ara" }).fill("Başka");
+  await expect(card).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Ara" }).press("Escape");
+  await expect(page.getByRole("textbox", { name: "Ara" })).toHaveCount(0);
+  await expect(card).toBeVisible();
 });
 
 test("klavyeyle kolonlar arasında taşınan kart yenilemede kalır", async ({

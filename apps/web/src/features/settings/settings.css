@@ -1,15 +1,21 @@
+/* macOS Settings window: see "Uygulama ayarları penceresi" in docs/DESIGN.md. */
 .app-settings {
+  gap: 0;
+  width: 100%;
   max-width: 720px;
-  min-height: 500px;
-  margin: 24px auto;
+  min-height: 520px;
+  margin: 8px auto;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--card);
+  background: var(--window);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 .settings-title {
-  text-align: center;
-  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
@@ -34,32 +40,172 @@
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.settings-tabs button:hover {
+  background: var(--field);
+  opacity: 1;
 }
 .settings-tabs button[aria-selected="true"] {
-  background: var(--field);
+  background: var(--track);
   color: var(--accent-text);
 }
 .settings-body {
-  padding: 28px;
+  padding: 28px 56px;
 }
 .settings-grid {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
-  gap: 18px 16px;
+  grid-template-columns: 150px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 22px;
   align-items: start;
+  margin: 0;
+  padding: 0;
+  border: 0;
   font-size: 13px;
 }
-.settings-grid > :nth-child(odd) {
+.settings-grid > span:nth-child(odd),
+.settings-grid > label {
+  padding-top: 6px;
   text-align: right;
 }
-.settings-grid select {
-  width: max-content;
-}
-.settings-body fieldset {
+.settings-grid hr {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
   border: 0;
+  border-top: 1px solid var(--line);
+}
+/* After the divider the label/value rhythm shifts by one. */
+.settings-grid hr ~ span:nth-of-type(n) {
+  padding-top: 0;
+  text-align: right;
+}
+.settings-control {
   display: flex;
-  justify-content: center;
-  gap: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.settings-control small,
+.settings-muted {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.settings-grid select {
+  height: 30px;
+  min-width: 180px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+}
+.settings-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+}
+.settings-switch {
+  display: flex;
+  flex-shrink: 0;
+  width: 38px;
+  height: 22px;
+  padding: 2px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--track);
+  transition: background-color 150ms ease-out;
+}
+.settings-switch:hover {
+  opacity: 1;
+}
+.settings-switch > span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 150ms ease-out;
+}
+.settings-switch[aria-checked="true"] {
+  background: var(--primary);
+}
+.settings-switch[aria-checked="true"] > span {
+  transform: translateX(16px);
+}
+.settings-control strong {
+  font-weight: 600;
+}
+.settings-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+}
+.settings-update {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.settings-update a {
+  color: inherit;
+  text-decoration: underline;
+}
+.settings-update code,
+.settings-about code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.settings-copy {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.settings-copy input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--text);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+.settings-button {
+  flex-shrink: 0;
+  min-width: 84px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+}
+.settings-grid legend {
+  float: left;
+  grid-column: 1;
+  width: 150px;
+  padding-top: 2px;
+  text-align: right;
+}
+.settings-theme-column {
+  grid-column: 2;
+  gap: 14px;
 }
 .settings-themes {
   display: flex;
@@ -70,38 +216,107 @@
   align-items: center;
   flex-direction: column;
   gap: 8px;
+  cursor: pointer;
+}
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-option input {
+  margin: 0;
+  accent-color: var(--primary);
 }
 .theme-preview {
+  --page: #f5f5f7;
+  --bar: #d2d2d7;
+  --surface: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   width: 96px;
   height: 64px;
-  border: 1px solid #aaa;
+  padding: 8px;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #f5f5f7;
+  background: var(--page);
+}
+.theme-preview i {
+  width: 60%;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--bar);
+}
+.theme-preview b {
+  flex: 1;
+  border-radius: 4px;
+  background: var(--surface);
 }
 .theme-preview.dark {
-  background: #1c1c1e;
+  --page: #000;
+  --bar: #3a3a3c;
+  --surface: #1c1c1e;
 }
 .theme-preview.auto {
-  background: linear-gradient(90deg, #f5f5f7 50%, #1c1c1e 50%);
+  background: linear-gradient(90deg, #f5f5f7 50%, #000 50%);
+}
+.theme-preview.auto i {
+  width: 100%;
+  background: linear-gradient(90deg, #d2d2d7 50%, #3a3a3c 50%);
+}
+.theme-preview.auto b {
+  background: linear-gradient(90deg, #fff 50%, #1c1c1e 50%);
 }
 .theme-preview.selected {
-  outline: 2px solid #0071e3;
+  border: 2px solid var(--primary);
+  padding: 7px;
 }
-@media (max-width: 600px) {
+.settings-about {
+  row-gap: 14px;
+}
+.settings-grid.settings-about > span:nth-child(odd) {
+  padding-top: 0;
+  color: var(--muted);
+}
+.settings-about > :nth-child(even) {
+  text-align: left;
+  padding-top: 0;
+}
+.settings-about a {
+  color: var(--accent-text);
+}
+@media (max-width: 640px) {
   .settings-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    row-gap: 6px;
   }
-  .settings-grid > :nth-child(odd) {
+  .settings-grid > span:nth-child(odd),
+  .settings-grid > label,
+  .settings-grid hr ~ span:nth-of-type(n),
+  .settings-grid legend {
+    padding-top: 12px;
     text-align: left;
   }
+  .settings-theme-column {
+    grid-column: 1;
+  }
   .settings-body {
-    padding: 20px;
+    padding: 16px 20px 24px;
+  }
+  .settings-tabs {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .settings-tabs button {
+    flex-shrink: 0;
   }
   .settings-themes {
-    gap: 6px;
+    gap: 8px;
   }
   .theme-preview {
-    width: 72px;
+    width: 84px;
+  }
+  .settings-switch-row {
+    min-height: 44px;
   }
 }

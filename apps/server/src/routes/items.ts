@@ -107,12 +107,4 @@ export function registerItems(route: Route, core: Core) {
       c.json(core.items.sendBack(key(c), await json(c, sendBack), actor(c))),
     sendBack,
   );
-  const reassign = z.object({ note: text }).strict();
-  route(
-    "post",
-    "/items/:key/reassign",
-    async (c) =>
-      c.json(core.items.reassign(key(c), await json(c, reassign), actor(c))),
-    reassign,
-  );
 }

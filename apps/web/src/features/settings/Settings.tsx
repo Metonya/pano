@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bot,
+  Check,
   CircleHelp,
   Contrast,
   Settings as SettingsIcon,
@@ -19,6 +20,34 @@ type System = {
   latestVersion?: string;
   updateAvailable: boolean;
 };
+
+function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function Copyable({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="settings-copy">
+      <input aria-label={label} readOnly value={value} />
+      <button
+        type="button"
+        className="settings-button"
+        onClick={() => {
+          void navigator.clipboard.writeText(value).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          });
+        }}
+      >
+        {t(copied ? "copied" : "copy")}
+      </button>
+    </div>
+  );
+}
+
 export function Settings() {
   const [tab, setTab] = useState(0);
   const setLanguage = useContext(LanguageContext);
@@ -46,6 +75,9 @@ export function Settings() {
     t("about"),
   ];
   const icons = [SettingsIcon, Contrast, Bot, CircleHelp];
+  const updatesOn = settings.data?.updateCheck !== "false";
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+  const mcpUrl = `${location.origin}/mcp`;
   return (
     <section className="app-settings">
       <div className="settings-title">{tabs[tab]}</div>
@@ -60,126 +92,156 @@ export function Settings() {
               key={name}
               onClick={() => setTab(i)}
             >
-              <Icon size={22} />
+              <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
               {name}
             </button>
           );
         })}
       </div>
-      <div role="tabpanel" className="settings-body">
+      <div role="tabpanel" aria-label={tabs[tab]} className="settings-body">
         {tab === 0 && (
           <div className="settings-grid">
             <label htmlFor="app-language">{t("language")}:</label>
-            <select
-              id="app-language"
-              value={language()}
-              onChange={(e) => {
-                const value = e.target.value as Language;
-                save({ language: value });
-                setLanguage(value);
-              }}
-            >
-              <option value="tr">Türkçe</option>
-              <option value="en">English</option>
-            </select>
-            <span>{t("updates")}:</span>
-            <label>
-              <input
-                type="checkbox"
-                checked={settings.data?.updateCheck !== "false"}
-                onChange={(e) => save({ updateCheck: e.target.checked })}
-              />{" "}
-              {t("updates")}
-            </label>
+            <div className="settings-control">
+              <select
+                id="app-language"
+                value={language()}
+                onChange={(e) => {
+                  const value = e.target.value as Language;
+                  save({ language: value });
+                  setLanguage(value);
+                }}
+              >
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+              </select>
+              <small>{t("languageHelp")}</small>
+            </div>
+            <span id="app-updates">{t("updatesLabel")}:</span>
+            <div className="settings-control">
+              <div className="settings-switch-row">
+                <button
+                  type="button"
+                  role="switch"
+                  className="settings-switch"
+                  aria-checked={updatesOn}
+                  aria-labelledby="app-updates app-updates-text"
+                  onClick={() => save({ updateCheck: !updatesOn })}
+                >
+                  <span />
+                </button>
+                <span id="app-updates-text">{t("updates")}</span>
+              </div>
+              <small>{t("updatesHelp")}</small>
+            </div>
+            <hr />
             <span>{t("version")}:</span>
-            <div>
-              Pano v{system.data?.version}
-              {system.data?.updateAvailable && (
-                <p>
-                  <b>
-                    {t("newVersion")}: {system.data.latestVersion}
-                  </b>{" "}
-                  ?{" "}
-                  <a href="https://github.com/Metonya/pano/releases">
-                    {t("releaseNotes")}
-                  </a>
-                  <br />
-                  {t("updateCommand")}: <code>pano update</code> /{" "}
-                  <code>docker pull ghcr.io/metonya/pano:latest</code>
-                </p>
-              )}
+            <div className="settings-control">
+              <span>
+                <strong>Pano v{system.data?.version}</strong>
+                {system.data?.buildDate && (
+                  <span className="settings-muted">
+                    {" · build "}
+                    {new Intl.DateTimeFormat(language(), {
+                      dateStyle: "medium",
+                    }).format(new Date(system.data.buildDate))}
+                  </span>
+                )}
+              </span>
+              {system.data &&
+                (system.data.updateAvailable ? (
+                  <div className="settings-update">
+                    <strong>
+                      {t("newVersion")}: {system.data.latestVersion}
+                    </strong>
+                    <a href="https://github.com/Metonya/pano/releases">
+                      {t("releaseNotes")}
+                    </a>
+                    <span>
+                      {t("updateCommand")}: <code>pano update</code> ·{" "}
+                      <code>docker pull ghcr.io/metonya/pano:latest</code>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="settings-ok">
+                    <Check size={14} strokeWidth={2.6} aria-hidden="true" />
+                    {t("upToDate")}
+                  </span>
+                ))}
             </div>
           </div>
         )}
         {tab === 1 && (
-          <fieldset>
+          <fieldset className="settings-grid">
             <legend>{t("theme")}:</legend>
-            <div className="settings-themes">
-              {(["light", "dark", "auto"] as const).map((value) => (
-                <label key={value}>
-                  <span
-                    className={`theme-preview ${value} ${theme === value ? "selected" : ""}`}
-                  />
-                  <span>
-                    <input
-                      type="radio"
-                      name="theme"
-                      checked={theme === value}
-                      onChange={() => {
-                        setTheme(value);
-                        localStorage.setItem("pano-theme", value);
-                        if (value === "auto")
-                          delete document.documentElement.dataset.theme;
-                        else document.documentElement.dataset.theme = value;
-                        save({ theme: value });
-                      }}
-                    />
-                    {t(value)}
-                  </span>
-                </label>
-              ))}
+            <div className="settings-control settings-theme-column">
+              <div className="settings-themes">
+                {(["light", "dark", "auto"] as const).map((value) => (
+                  <label key={value}>
+                    <span
+                      aria-hidden="true"
+                      className={`theme-preview ${value} ${theme === value ? "selected" : ""}`}
+                    >
+                      <i />
+                      <b />
+                    </span>
+                    <span className="theme-option">
+                      <input
+                        type="radio"
+                        name="theme"
+                        checked={theme === value}
+                        onChange={() => {
+                          setTheme(value);
+                          localStorage.setItem("pano-theme", value);
+                          if (value === "auto")
+                            delete document.documentElement.dataset.theme;
+                          else document.documentElement.dataset.theme = value;
+                          save({ theme: value });
+                        }}
+                      />
+                      {t(value)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <small>{t("themeHelp")}</small>
             </div>
           </fieldset>
         )}
         {tab === 2 && (
           <div className="settings-grid">
-            <label htmlFor="mcp-url">MCP:</label>
-            <div>
-              <input id="mcp-url" readOnly value={`${location.origin}/mcp`} />
-              <button
-                type="button"
-                onClick={() =>
-                  void navigator.clipboard.writeText(`${location.origin}/mcp`)
-                }
-              >
-                {t("copy")}
-              </button>
-            </div>
+            <span>MCP:</span>
+            <Copyable value={mcpUrl} label="MCP" />
             <span>Claude Code:</span>
-            <code>
-              claude mcp add --transport http pano {location.origin}/mcp
-            </code>
+            <Copyable
+              value={`claude mcp add --transport http pano ${mcpUrl}`}
+              label="Claude Code"
+            />
+            <span>{t("tokenLabel")}:</span>
+            <span className="settings-muted">
+              {t(local ? "tokenNotNeeded" : "tokenNeeded")}
+            </span>
           </div>
         )}
         {tab === 3 && (
-          <div className="settings-grid">
-            <span>{t("version")}:</span>
+          <div className="settings-grid settings-about">
+            <span>{t("version")}</span>
             <span>v{system.data?.version}</span>
-            <span>Build:</span>
+            <span>Build</span>
             <span>
               {system.data?.buildDate
                 ? new Intl.DateTimeFormat(language(), {
                     dateStyle: "medium",
                   }).format(new Date(system.data.buildDate))
-                : "?"}
+                : "—"}
             </span>
-            <span>{t("dataDir")}:</span>
-            <span>{system.data?.dataDir}</span>
-            <span>{t("database")}:</span>
-            <span>{system.data?.dbSize} B</span>
-            <span>{t("license")}:</span>
+            <span>{t("dataDir")}</span>
+            <code>{system.data?.dataDir}</code>
+            <span>{t("database")}</span>
+            <span>{system.data ? fileSize(system.data.dbSize) : "—"}</span>
+            <span>{t("license")}</span>
             <span>MIT</span>
-            <span>{t("sourceCode")}:</span>
+            <span>{t("sourceCode")}</span>
             <a href="https://github.com/Metonya/pano">
               github.com/Metonya/pano
             </a>

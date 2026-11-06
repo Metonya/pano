@@ -1,9 +1,11 @@
-import { Plus, Settings, Star } from "lucide-react";
+import { Plus, Search, Settings, Star, X } from "lucide-react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { Project } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { BoardFilter, type Filters } from "./BoardFilter";
 import type { BoardItem } from "./types";
+
 export function BoardToolbar({
   project,
   items,
@@ -21,41 +23,78 @@ export function BoardToolbar({
   onCreate: () => void;
   onSettings: () => void;
 }) {
+  const [searching, setSearching] = useState(false);
   const target = document.getElementById("page-toolbar-actions");
   if (!target) return null;
+  const clearSearch = () => {
+    setFilters({ ...filters, search: "" });
+    setSearching(false);
+  };
   return createPortal(
-    <div className="board-actions">
+    <div className="board-actions" role="toolbar" aria-label={project.name}>
       <button
         type="button"
-        className="icon"
+        className={`toolbar-icon board-star ${project.starred ? "is-starred" : ""}`}
+        aria-label={project.starred ? t("unstar") : t("star")}
+        aria-pressed={!!project.starred}
+        onClick={onStar}
+      >
+        <Star
+          size={18}
+          fill={project.starred ? "currentColor" : "none"}
+          aria-hidden="true"
+        />
+      </button>
+      <span className="board-actions-spacer" />
+      <BoardFilter items={items} filters={filters} setFilters={setFilters} />
+      {searching || filters.search ? (
+        <span className="board-search">
+          <Search size={15} aria-hidden="true" />
+          <input
+            // biome-ignore lint/a11y/noAutofocus: the field only appears after the search button is pressed.
+            autoFocus
+            aria-label={t("search")}
+            placeholder={t("search")}
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            onBlur={() => {
+              if (!filters.search) setSearching(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") clearSearch();
+            }}
+          />
+          {!!filters.search && (
+            <button type="button" aria-label={t("close")} onClick={clearSearch}>
+              <X size={14} aria-hidden="true" />
+            </button>
+          )}
+        </span>
+      ) : (
+        <button
+          type="button"
+          className="toolbar-icon"
+          aria-label={t("search")}
+          onClick={() => setSearching(true)}
+        >
+          <Search size={18} aria-hidden="true" />
+        </button>
+      )}
+      <button
+        type="button"
+        className="toolbar-icon"
         aria-label={t("projectSettings")}
         onClick={onSettings}
       >
-        <Settings size={18} />
+        <Settings size={18} aria-hidden="true" />
       </button>
       <button
         type="button"
-        className={`icon star ${project.starred ? "selected" : ""}`}
-        aria-label={project.starred ? t("unstar") : t("star")}
-        onClick={onStar}
-      >
-        <Star size={18} fill={project.starred ? "currentColor" : "none"} />
-      </button>
-      <BoardFilter items={items} filters={filters} setFilters={setFilters} />
-      <input
-        className="board-search"
-        aria-label={t("search")}
-        placeholder={t("search")}
-        value={filters.search}
-        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-      />
-      <button
-        type="button"
-        className="primary"
+        className="primary board-new"
         aria-label={t("newItem")}
         onClick={onCreate}
       >
-        <Plus size={16} />
+        <Plus size={16} aria-hidden="true" />
         <span>{t("newItem")}</span>
       </button>
     </div>,

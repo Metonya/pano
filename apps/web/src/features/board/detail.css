@@ -1,0 +1,506 @@
+/* PBI sheet: fixed header, scrolling body. Values come from docs/DESIGN.md. */
+.dialog.item-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: min(760px, calc(100% - 32px));
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-sheet);
+}
+.sheet-band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 32px;
+  background: var(--wait-bg);
+  color: var(--wait);
+  font-size: 14px;
+  font-weight: 600;
+}
+.sheet-band svg {
+  flex-shrink: 0;
+}
+.sheet-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 32px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.sheet-head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.sheet-key {
+  color: var(--muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-spacer {
+  flex: 1;
+}
+.sheet-tabs {
+  display: flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--field);
+}
+.sheet-tabs button {
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.sheet-tabs button[aria-selected="true"] {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.sheet-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+.sheet-icon:hover,
+.sheet-button:hover,
+.sheet-property-button:hover {
+  background: var(--field);
+  opacity: 1;
+}
+.sheet-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--field);
+  color: var(--text);
+}
+.sheet-button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dialog .sheet-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.sheet-properties {
+  display: grid;
+  grid-template-columns: 1.1fr 0.8fr 1.3fr 0.7fr 1.1fr;
+  gap: 12px;
+  align-items: start;
+}
+.sheet-property {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.sheet-property > span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.sheet-property strong,
+.sheet-property b {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-property strong {
+  font-weight: 600;
+}
+.sheet-property-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 28px;
+  margin-left: -6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.sheet-property-button:disabled {
+  cursor: default;
+}
+.sheet-property-button > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.sheet-assignee {
+  min-width: 0;
+}
+.sheet-unassigned {
+  color: var(--muted);
+  font-weight: 500;
+}
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding: 22px 32px 0;
+}
+.sheet-body > :last-child:not(.sheet-detail),
+.sheet-detail > :last-child:not(.test-actions) {
+  margin-bottom: 26px;
+}
+.sheet-body > .activity-history {
+  padding-bottom: 26px;
+}
+.sheet-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sheet-detail[hidden] {
+  display: none;
+}
+.sheet-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.sheet-section > * {
+  max-width: 100%;
+}
+.sheet-section h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sheet-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.sheet-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+.sheet-muted {
+  margin: 0;
+  color: var(--muted);
+}
+.sheet-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+.dialog .sheet-textarea {
+  min-height: 180px;
+  border-radius: 12px;
+  background: var(--field);
+  padding: 12px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.dialog .sheet-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 10px;
+  border-color: transparent;
+  background: var(--field);
+  font-size: 14px;
+}
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.criterion {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 36px;
+  padding: 6px 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.dialog .criterion input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.criterion-text {
+  flex: 1;
+  min-width: 0;
+}
+.criterion.is-done .criterion-text {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.criterion-tools {
+  display: flex;
+  gap: 2px;
+  margin: -4px 0;
+  opacity: 0;
+}
+.criterion:hover .criterion-tools,
+.criterion:focus-within .criterion-tools {
+  opacity: 1;
+}
+@media (hover: none) {
+  .criterion-tools {
+    opacity: 1;
+  }
+}
+.criterion-add {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.dialog .criterion-add {
+  flex-direction: row;
+}
+.recent-records {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.recent-records li {
+  display: flex;
+  gap: 12px;
+}
+.recent-records time {
+  flex: 0 0 132px;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.recent-records strong {
+  font-weight: 600;
+}
+.dialog .discard-confirmation {
+  padding: 16px 32px 20px;
+  background: var(--sheet);
+}
+.item-sheet > .discard-confirmation {
+  flex-shrink: 0;
+}
+
+/* Markdown bodies: preflight strips headings and lists. */
+.markdown {
+  font-size: 15px;
+  line-height: 1.55;
+  min-width: 0;
+}
+.markdown.is-clamped {
+  max-height: 200px;
+  overflow: hidden;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown p {
+  margin: 0 0 8px;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 14px 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li {
+  margin: 2px 0;
+}
+.markdown strong {
+  font-weight: 600;
+}
+.markdown a {
+  color: var(--accent-text);
+}
+.markdown code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--field);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+.markdown pre {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--field);
+  overflow-x: auto;
+}
+.markdown pre code {
+  padding: 0;
+  background: transparent;
+}
+
+/* Station colours, shared by status menus and history. */
+.status-backlog {
+  --tone: var(--muted);
+}
+.status-in_progress {
+  --tone: var(--accent);
+}
+.status-test {
+  --tone: var(--star);
+}
+.status-done {
+  --tone: var(--progress);
+}
+.status-cancelled {
+  --tone: var(--danger);
+}
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 11px;
+  background: var(--field);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tone);
+}
+.status-flow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.status-inline .status-chip {
+  padding: 0;
+  background: transparent;
+}
+.recent-records .status-flow {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@media (max-width: 640px) {
+  .sheet-head {
+    padding: 18px 20px 14px;
+  }
+  .sheet-band {
+    padding: 10px 20px;
+  }
+  .sheet-body {
+    padding: 18px 20px 0;
+  }
+  .dialog .sheet-title {
+    font-size: 20px;
+  }
+  .sheet-properties {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sheet-icon,
+  .sheet-close {
+    width: 44px;
+    height: 44px;
+  }
+  .sheet-tabs button {
+    height: 38px;
+  }
+  .sheet-property-button {
+    min-height: 44px;
+  }
+  .recent-records li {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .recent-records time {
+    flex-basis: auto;
+  }
+}

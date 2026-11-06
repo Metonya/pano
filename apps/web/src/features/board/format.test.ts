@@ -19,5 +19,5 @@ test("activity describes status changes", () => {
       after_json: '{"status":"test"}',
       created_at: "",
     }),
-  ).toBe("Mert durumu Test yaptı");
+  ).toBe("Mert taşıdı");
 });
