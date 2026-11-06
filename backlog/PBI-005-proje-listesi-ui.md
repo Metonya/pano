@@ -1,6 +1,6 @@
 ---
 id: PBI-005
-title: Web UI — proje listesi, yıldızlama ve arşiv
+title: Web UI, proje listesi, yıldızlama ve arşiv
 status: done
 assignee: codex
 priority: P2

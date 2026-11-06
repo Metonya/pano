@@ -1,6 +1,6 @@
 ---
 id: PBI-012
-title: İnsan testi akışı — "Seni bekliyor", test senaryoları, onayla / geri gönder
+title: İnsan testi akışı, "Seni bekliyor", test senaryoları, onayla / geri gönder
 status: done
 assignee: codex
 priority: P1

@@ -1,6 +1,6 @@
 type Row = Record<string, unknown>;
 const line = (value: unknown) =>
-  String(value ?? "—")
+  String(value ?? "-")
     .replace(/[\r\n\t]/g, " ")
     .replaceAll(String.fromCharCode(27), " ");
 export function table(rows: Row[], fields: string[]) {

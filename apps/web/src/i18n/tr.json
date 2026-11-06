@@ -1,5 +1,6 @@
 {
   "brand": "Pano",
+  "unknownValue": "-",
   "tokenTitle": "Pano token",
   "tokenInvalid": "Token geçersiz. Tekrar dene.",
   "continue": "Devam",

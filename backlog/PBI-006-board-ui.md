@@ -1,6 +1,6 @@
 ---
 id: PBI-006
-title: Web UI — kanban board ve PBI detay paneli
+title: Web UI, kanban board ve PBI detay paneli
 status: done
 assignee: codex
 priority: P2

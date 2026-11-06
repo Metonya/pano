@@ -1,4 +1,4 @@
-# Pano — Ürün
+# Pano: Ürün
 
 > Durum: v0.1 taslağı (2026-11-05). Mimari: [architecture.md](architecture.md) · Kararlar: [../backlog/decisions.md](../backlog/decisions.md)
 

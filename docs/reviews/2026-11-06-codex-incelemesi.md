@@ -1,8 +1,8 @@
-# Codex tasarım incelemesi — 2026-11-06
+# Codex tasarım incelemesi: 2026-11-06
 
 İnceleyen: codex (gpt-6.1-terra), salt okunur. Kaynak: onaylanmış canvas sürümü (1793912126-ed36), docs/product.md, backlog/decisions.md, önceki denetim. Render edilmedi.
 
-Güncel tasarım, ince proje özeti, sidebar’daki “Seni bekliyor” ve karttaki görülmedi noktasıyla Operate moduna önceki sürümden daha yakın. Proje durumu ve bekleyen test hızlıca bulunabiliyor; ancak görülme kuralı, test kararları ve verinin güncelliği henüz güvenle anlaşılmıyor. **Not: 7/10** — değerlendirme tasarım kaynaklarına dayanıyor; çalışan uygulamada veya render üzerinde davranış testi yapılmadı.
+Güncel tasarım, ince proje özeti, sidebar’daki “Seni bekliyor” ve karttaki görülmedi noktasıyla Operate moduna önceki sürümden daha yakın. Proje durumu ve bekleyen test hızlıca bulunabiliyor; ancak görülme kuralı, test kararları ve verinin güncelliği henüz güvenle anlaşılmıyor. **Not: 7/10**, değerlendirme tasarım kaynaklarına dayanıyor; çalışan uygulamada veya render üzerinde davranış testi yapılmadı.
 
 | Öncelik | Ekran            | Sorun                                                                                                        | Öneri                                                                                                                                                                                                       |
 | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

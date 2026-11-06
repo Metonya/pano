@@ -1,4 +1,4 @@
-# Tasarım denetimi — 2026-11-05
+# Tasarım denetimi: 2026-11-05
 
 Kapsam: Claude Design canvas'ındaki v0.1 ekranları (Projeler, Board, Mobil, PBI detayı, Test, Geçmiş, Proje ayarları, Dark). Yöntem: Impeccable (audit + critique, Operate modu) ve Apple HIG incelemesi. Kaynak koddan değerlendirildi, render edilmedi. Denetleyen: claude:design-review.
 

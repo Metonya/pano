@@ -1,6 +1,6 @@
 ---
 id: PBI-009
-title: Pano kendi kendini yönetsin — PO skill'ini ve md backlog'u pano'ya taşı
+title: Pano kendi kendini yönetsin, PO skill'ini ve md backlog'u pano'ya taşı
 status: done
 assignee: claude:po
 priority: P2

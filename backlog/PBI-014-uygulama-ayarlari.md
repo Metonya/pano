@@ -1,6 +1,6 @@
 ---
 id: PBI-014
-title: Uygulama ayarları — dil, görünüm, sürüm ve güncelleme
+title: Uygulama ayarları, dil, görünüm, sürüm ve güncelleme
 status: done
 assignee: codex
 priority: P2

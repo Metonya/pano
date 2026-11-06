@@ -1,6 +1,6 @@
 ---
 id: PBI-013
-title: Proje özeti — proje ne aşamada, bir bakışta
+title: Proje özeti, proje ne aşamada, bir bakışta
 status: done
 assignee: codex
 priority: P2

@@ -17,7 +17,7 @@ Claude Code, Codex, Cursor gibi agent'lar hiçbir şey kurmadan, sadece bir URL 
 
 ## Bağlam
 - Tool'ların güncel listesi: `add_note` yerine `add_record` (`note|check|decision`); `get_item` varsayılan olarak son 5 kaydı döner, `history: true` ile tamamını.
-- Tool listesi ve amaçları: `docs/architecture.md` → "MCP tool'ları". Daha fazla tool ekleme — token maliyeti kararı (`backlog/decisions.md`).
+- Tool listesi ve amaçları: `docs/architecture.md` → "MCP tool'ları". Daha fazla tool ekleme, token maliyeti kararı (`backlog/decisions.md`).
 - Tool açıklamaları kısa ve net olsun (her biri ≤ 2 cümle); input şemaları core zod şemalarından türetilsin.
 - `actor`: MCP istemcisi `X-Pano-Actor` başlığı gönderemiyorsa tool'larda opsiyonel `actor` alanı.
 - Token: REST ile aynı bearer middleware.

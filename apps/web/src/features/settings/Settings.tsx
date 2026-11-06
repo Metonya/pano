@@ -259,12 +259,14 @@ function Settings() {
                 ? new Intl.DateTimeFormat(language(), {
                     dateStyle: "medium",
                   }).format(new Date(system.data.buildDate))
-                : "—"}
+                : t("unknownValue")}
             </span>
             <span>{t("dataDir")}</span>
             <code>{system.data?.dataDir}</code>
             <span>{t("database")}</span>
-            <span>{system.data ? fileSize(system.data.dbSize) : "—"}</span>
+            <span>
+              {system.data ? fileSize(system.data.dbSize) : t("unknownValue")}
+            </span>
             <span>{t("license")}</span>
             <span>MIT</span>
             <span>{t("sourceCode")}</span>

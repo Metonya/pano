@@ -1,6 +1,6 @@
 ---
 id: PBI-010
-title: Paketleme ve dağıtım — tek dosya binary (Win/Mac/Linux) + Docker image
+title: Paketleme ve dağıtım, tek dosya binary (Win/Mac/Linux) + Docker image
 status: done
 assignee: codex
 priority: P2

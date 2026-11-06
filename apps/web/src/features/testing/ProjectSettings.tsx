@@ -139,7 +139,7 @@ export function ProjectSettings({
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                 >
-                  <option value="">—</option>
+                  <option value="">{t("unknownValue")}</option>
                   <option value="in_progress">In Progress</option>
                   <option value="done">Done</option>
                 </select>

@@ -1,4 +1,4 @@
-# Pano — Mimari
+# Pano: Mimari
 
 > Durum: v0.1 taslağı (2026-11-05). Kararlar: [`backlog/decisions.md`](../backlog/decisions.md)
 
@@ -16,7 +16,7 @@ flowchart LR
     SH["Shell'i olan agent<br/>(pano CLI veya curl)"]
   end
 
-  subgraph Bin["pano binary — bun build --compile"]
+  subgraph Bin["pano binary, bun build --compile"]
     direction TB
     H["Hono HTTP server<br/>127.0.0.1:7777"]
     WEB["/  · Web UI<br/>(React + shadcn, gömülü statik)"]

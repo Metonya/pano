@@ -1,6 +1,6 @@
 ---
 id: PBI-011
-title: Web UI — PBI aktivite geçmişi ve değişiklik karşılaştırması
+title: Web UI, PBI aktivite geçmişi ve değişiklik karşılaştırması
 status: done
 assignee: codex
 priority: P2
