@@ -11,3 +11,7 @@ scratch.*
 
 # Local editor/agent launch settings
 .claude/launch.json
+
+# Playwright output
+apps/web/test-results/
+apps/web/playwright-report/

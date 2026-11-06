@@ -298,3 +298,25 @@ test("records, scenarios, criteria and attachments retain history", () => {
     c.criteria.check("PANO-1", criterion.id, false, "mert"),
   ).toThrow();
 });
+
+test("project summaries count statuses and exclude AI assignees from waiting", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Human", assignee: "mert" }, "mert");
+  c.items.create("PANO", { title: "AI", assignee: "claude:po" }, "mert");
+  c.items.create("PANO", { title: "Unassigned" }, "mert");
+  c.items.create("PANO", { title: "Working", assignee: "codex" }, "mert");
+  for (const id of [1, 2, 3]) c.items.move(`PANO-${id}`, "test", "mert");
+  c.items.move("PANO-4", "in_progress", "mert");
+  const project = c.projects.list()[0];
+  expect(project?.counts).toEqual({
+    backlog: 0,
+    in_progress: 1,
+    test: 3,
+    done: 0,
+  });
+  expect(project?.waiting.map((item) => item.title)).toEqual([
+    "Human",
+    "Unassigned",
+  ]);
+  expect(project?.agents).toBe(1);
+});

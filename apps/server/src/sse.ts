@@ -1,17 +1,17 @@
 import type { ChangeEvent, Core } from "@pano/core";
 export function eventsResponse(
   core: Core,
-  projectKey: string,
+  projectKey: string | undefined,
   signal: AbortSignal,
 ) {
-  const project = core.projects.get(projectKey);
+  const project = projectKey ? core.projects.get(projectKey) : undefined;
   const encoder = new TextEncoder();
   let cleanup = () => {};
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const send = (text: string) => controller.enqueue(encoder.encode(text));
       const listener = (event: ChangeEvent) => {
-        if (event.projectId === project.id)
+        if (!project || event.projectId === project.id)
           send(
             `event: ${event.itemId ? "item" : "project"}.${event.kind === "created" ? "created" : event.kind === "moved" ? "moved" : "updated"}\ndata: ${JSON.stringify(event)}\n\n`,
           );

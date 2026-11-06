@@ -2,7 +2,7 @@ import { ulid } from "ulid";
 import { z } from "zod";
 import type { Context } from "../context";
 import { projectCreate, projectPatch } from "../schemas";
-import type { Values } from "../types";
+import type { Row, Values } from "../types";
 export function createProjects(context: Context) {
   const {
     db,
@@ -21,7 +21,44 @@ export function createProjects(context: Context) {
   const projects = {
     list(options: { includeArchived?: boolean } = {}) {
       return all(
-        `SELECT * FROM projects ${options.includeArchived ? "" : "WHERE archived_at IS NULL"} ORDER BY starred DESC, name COLLATE NOCASE, key`,
+        `SELECT * FROM projects ${options.includeArchived ? "" : "WHERE archived_at IS NULL"} ORDER BY starred DESC, updated_at DESC, key`,
+      ).map(
+        (
+          project,
+        ): Row & {
+          counts: Record<string, number>;
+          waiting: Row[];
+          agents: number;
+        } => {
+          const items = all(
+            "SELECT * FROM items WHERE project_id = ? AND status != 'cancelled'",
+            str(project.id),
+          );
+          const counts = Object.fromEntries(
+            ["backlog", "in_progress", "test", "done"].map((status) => [
+              status,
+              items.filter((item) => item.status === status).length,
+            ]),
+          );
+          const isAi = (assignee: string | number | null) =>
+            typeof assignee === "string" &&
+            /^(codex|claude|agent)(:|$)/i.test(assignee);
+          const waiting = items.filter(
+            (item) => item.status === "test" && !isAi(item.assignee),
+          );
+          const agents = new Set(
+            items
+              .filter(
+                (item) => item.status === "in_progress" && isAi(item.assignee),
+              )
+              .map((item) => item.assignee),
+          ).size;
+          return { ...project, counts, waiting, agents } as unknown as Row & {
+            counts: Record<string, number>;
+            waiting: Row[];
+            agents: number;
+          };
+        },
       );
     },
     get: project,

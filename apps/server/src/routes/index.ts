@@ -81,11 +81,11 @@ export function registerRoutes(
     (c) =>
       eventsResponse(
         core,
-        z.string().parse(c.req.query("project")),
+        z.string().optional().parse(c.req.query("project")),
         c.req.raw.signal,
       ),
     undefined,
-    z.object({ project: z.string() }),
+    z.object({ project: z.string().optional() }),
   );
   app.openAPIRegistry.registerPath({
     method: "get",
