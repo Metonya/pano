@@ -32,3 +32,6 @@
 | 2026-11-06 | Yeni projede sadece ad istenir; key addan otomatik üretilir, istenirse "Değiştir" ile düzenlenir | Key teknik bir ayrıntı; kullanıcı düşünmek zorunda kalmasın (Mert'in testi) |
 | 2026-11-06 | Dialog dışına tıklama / Esc: boşsa kapanır; kullanıcı bir şey yazdıysa "Yazdıkların silinsin mi?" diye sorar; kalıcı silme onayı dışarı tıklamayla kapanmaz; salt okunur pencereler her zaman kapanır | Yanlışlıkla emek kaybı olmasın, gereksiz engel de olmasın |
 | 2026-11-06 | Projeler ekranında Aktif/Arşiv seçicisi yok; arşive sol menüden gidilir | Aynı işi yapan iki kontrol gereksiz (Mert'in testi) |
+| 2026-11-06 | Kartın tamamı sürüklenir, kısa tıklama açar; ayrı tutamaç yok. Proje kartının tamamı projeyi açar | Mert'in testi: ayrı tutma yeri ve sadece yazıya tıklama iyi hissettirmedi |
+| 2026-11-06 | Dialog'lar dikey ortalanmaz, üstten sabitlenir | İçerik büyüyünce pencere zıplamasın |
+| 2026-11-06 | Dosyaları çakışmayan işler Codex'e ayrı terminallerde paralel verilir | Mert'in isteği; hız |

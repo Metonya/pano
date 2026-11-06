@@ -1,11 +1,11 @@
 ---
 id: PBI-010
 title: Paketleme ve dağıtım — tek dosya binary (Win/Mac/Linux) + Docker image
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -31,5 +31,7 @@ Herkes kendi platformunda tek adımda kurup kullanabilsin: indir-çalıştır bi
 2. Docker komutunu çalıştır, proje oluştur, container'ı yeniden başlat → proje durmalı.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po codex'e (gpt-6.1-terra, high) paralel olarak verdi.
 
 ## Done notu

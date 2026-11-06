@@ -1,11 +1,11 @@
 ---
 id: PBI-009
 title: Pano kendi kendini yönetsin — PO skill'ini ve md backlog'u pano'ya taşı
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -29,5 +29,7 @@ Md + HTML geçici sisteminden çıkıp tüm projelerin PBI'larını pano'da yön
 2. Yeni oturumda küçük bir talep ver, PBI'nın pano'da açıldığını gör.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po import komutu ve skills/pano/SKILL.md kısmını codex'e (gpt-6.1-sol) paralel olarak verdi; PO skill'i ve Pano'ya geçiş sonra.
 
 ## Done notu

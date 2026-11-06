@@ -1,8 +1,8 @@
 ---
 id: PBI-006
 title: Web UI — kanban board ve PBI detay paneli
-status: test
-assignee: mert
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -25,6 +25,10 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - Markdown render: `react-markdown` + `remark-gfm`; düzenleme basit textarea (v0.1).
 
 ## Kabul kriterleri
+- [ ] Kartın tamamı sürüklenir, kısa tıklama detayı açar; ayrı tutamaç yok.
+- [ ] Taşınan kart kaymaz, kırpılmaz; kolonda yatay scroll çıkmaz.
+- [ ] Kabul kriteri düzenlenip silinebilir (silinen geçmişte kalır).
+- [ ] Pencere içerik büyüyünce üst kenarından kaymaz.
 
 - [x] Kart sürüklenip başka kolona bırakılınca statü kalıcı olarak değişir; aktivitede "mert moved to test" görünür.
 - [x] Başka bir istemci (curl/agent) kart taşıyınca açık board yenilemeden 1 sn içinde güncellenir.
@@ -62,5 +66,7 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) terminalden verdi; dnd-kit, react-markdown ve remark-gfm önceden kuruldu.
 - 2026-11-06 codex iki turda bitirdi. claude:po: gerçek tarayıcıda sürükleme ve klavyeyle taşıma çalışıyor; e2e seçicileri gerçek kullanıma göre düzeltildi. check: lint · typecheck temiz · test 32/32 · build geçti · e2e 11/11 (iki kez).
 - Bilinen kısıt: dnd-kit ekran okuyucu duyuruları varsayılan İngilizce ve teknik ID içeriyor; PBI-014 çevirisinde ele alınacak.
+
+- 2026-11-06 mert testte geri gönderdi: tutamaç yerine tüm kart sürüklensin, taşınan kart kayıp kırpılıyor, proje kartının tamamı açsın, pencere soru çıkınca zıplıyor, detay hizaları, kriter düzenle/sil. codex'e verildi.
 
 ## Done notu
