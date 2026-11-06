@@ -61,6 +61,11 @@ test("insan testi geri gönderme, geri atama ve onay", async ({
     exact: true,
   });
   await expect(sendBackForm).toBeVisible();
+  expect(
+    await page
+      .locator(".sheet-body")
+      .evaluate((body) => body.scrollWidth <= body.clientWidth),
+  ).toBe(true);
   await expect(page.getByRole("button", { name: "Geri ata" })).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Geri gönder", exact: true }),

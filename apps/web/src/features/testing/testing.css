@@ -234,6 +234,13 @@
   font-weight: 500;
   cursor: pointer;
 }
+/* Keeps the visually hidden input from taking the general dialog field width. */
+.dialog .test-file-button input {
+  width: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
 .test-file-button:hover {
   background: var(--field);
 }
