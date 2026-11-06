@@ -38,6 +38,10 @@ test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async (
   await expect(card).toHaveCount(0);
   await page.getByRole("button", { name: "Projeler", exact: true }).click();
   await expect(card).toBeVisible();
+  const box = await card.boundingBox();
+  if (!box) throw new Error("Project card is not visible");
+  await page.mouse.click(box.x + 30, box.y + box.height - 15);
+  await expect(page).toHaveURL(/\/projects\/DP$/);
 });
 
 test("mobil görünümde yatay taşma yok ve dark sistem teması uygulanır", async ({

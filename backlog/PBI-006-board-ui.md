@@ -1,8 +1,8 @@
 ---
 id: PBI-006
 title: Web UI — kanban board ve PBI detay paneli
-status: in-progress
-assignee: codex
+status: test
+assignee: mert
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -25,10 +25,10 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - Markdown render: `react-markdown` + `remark-gfm`; düzenleme basit textarea (v0.1).
 
 ## Kabul kriterleri
-- [ ] Kartın tamamı sürüklenir, kısa tıklama detayı açar; ayrı tutamaç yok.
-- [ ] Taşınan kart kaymaz, kırpılmaz; kolonda yatay scroll çıkmaz.
-- [ ] Kabul kriteri düzenlenip silinebilir (silinen geçmişte kalır).
-- [ ] Pencere içerik büyüyünce üst kenarından kaymaz.
+- [x] Kartın tamamı sürüklenir, kısa tıklama detayı açar; ayrı tutamaç yok.
+- [x] Taşınan kart kaymaz, kırpılmaz; kolonda yatay scroll çıkmaz.
+- [x] Kabul kriteri düzenlenip silinebilir (silinen geçmişte kalır).
+- [x] Pencere içerik büyüyünce üst kenarından kaymaz.
 
 - [x] Kart sürüklenip başka kolona bırakılınca statü kalıcı olarak değişir; aktivitede "mert moved to test" görünür.
 - [x] Başka bir istemci (curl/agent) kart taşıyınca açık board yenilemeden 1 sn içinde güncellenir.
@@ -49,7 +49,7 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - [x] Playwright testi: PBI oluştur → kriter ekle → sürükle → test → done akışı geçer.
 
 ## Test senaryoları (Mert)
-1. http://localhost:5173/projects/SAMPLE → kartı tutamacından sürükleyip In Progress'e bırak; yenile → orada kalmalı.
+1. http://localhost:5173/projects/SAMPLE → kartın herhangi bir yerinden sürükleyip In Progress'e bırak; kart kaymamalı, yenilemede orada kalmalı. Kısa tıklama detayı açar.
 2. Terminalde `bun run pano task move SAMPLE-2 test` → board kendiliğinden güncellenmeli.
 3. Karta tıkla: durum, atanan, kriter ekle/işaretle, açıklama düzenle; karttaki ilerleme hemen değişmeli. Yazı varken dışarı tıklama sorar, Esc karta döner.
 4. Filtre, arama, Yeni PBI ve … menüsünden iptal (gerekçe ister).
@@ -68,5 +68,7 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 - Bilinen kısıt: dnd-kit ekran okuyucu duyuruları varsayılan İngilizce ve teknik ID içeriyor; PBI-014 çevirisinde ele alınacak.
 
 - 2026-11-06 mert testte geri gönderdi: tutamaç yerine tüm kart sürüklensin, taşınan kart kayıp kırpılıyor, proje kartının tamamı açsın, pencere soru çıkınca zıplıyor, detay hizaları, kriter düzenle/sil. codex'e verildi.
+
+- 2026-11-06 codex düzeltti. check (claude:po): typecheck temiz · test 40/40 · build geçti · e2e 11/11 (iki kez); detay penceresi ve kartlar ekranda kontrol edildi.
 
 ## Done notu

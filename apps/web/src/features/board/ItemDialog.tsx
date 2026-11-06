@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -30,6 +31,8 @@ export function ItemDialog({
   const [tab, setTab] = useState<"detail" | "history">("detail");
   const [body, setBody] = useState("");
   const [editing, setEditing] = useState(false);
+  const [editingCriterion, setEditingCriterion] = useState<string | null>(null);
+  const [criterionText, setCriterionText] = useState("");
   const [criterion, setCriterion] = useState("");
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -100,6 +103,62 @@ export function ItemDialog({
       }
     }
   }
+  async function mutateCriterion(id: string, text?: string) {
+    if (pendingCriteria.current.has(id)) return;
+    const detailKey = ["item", key];
+    const boardKey = ["board", projectKey];
+    await Promise.all([
+      qc.cancelQueries({ queryKey: detailKey }),
+      qc.cancelQueries({ queryKey: boardKey }),
+    ]);
+    const previous = qc.getQueryData<Detail>(detailKey);
+    const oldBoard = qc.getQueryData<BoardItem[]>(boardKey);
+    const entry = previous?.criteria.find((c) => c.id === id);
+    if (!entry) return;
+    pendingCriteria.current.add(id);
+    setPending([...pendingCriteria.current]);
+    qc.setQueryData<Detail>(
+      detailKey,
+      (old) =>
+        old && {
+          ...old,
+          criteria:
+            text === undefined
+              ? old.criteria.filter((c) => c.id !== id)
+              : old.criteria.map((c) => (c.id === id ? { ...c, text } : c)),
+        },
+    );
+    if (text === undefined)
+      qc.setQueryData<BoardItem[]>(boardKey, (old) =>
+        old?.map((i) =>
+          i.id === item?.id
+            ? {
+                ...i,
+                criteria_total: i.criteria_total - 1,
+                criteria_done: i.criteria_done - Number(!!entry.done),
+              }
+            : i,
+        ),
+      );
+    try {
+      await request(
+        `/items/${key}/criteria/${id}`,
+        text === undefined ? {} : { text },
+        text === undefined ? "DELETE" : "PATCH",
+      );
+      setEditingCriterion(null);
+      setError(false);
+    } catch {
+      qc.setQueryData(detailKey, previous);
+      qc.setQueryData(boardKey, oldBoard);
+      setError(true);
+    } finally {
+      pendingCriteria.current.delete(id);
+      setPending([...pendingCriteria.current]);
+      void qc.invalidateQueries({ queryKey: detailKey });
+      void qc.invalidateQueries({ queryKey: boardKey });
+    }
+  }
   async function change(path: string, data: object, method = "POST") {
     try {
       await request(path, data, method);
@@ -121,7 +180,14 @@ export function ItemDialog({
       onOpenChange={(v) => {
         if (!v) close();
       }}
-      dirty={(editing && body !== d?.body_md) || !!criterion || !!reason}
+      dirty={
+        (editing && body !== d?.body_md) ||
+        !!criterion ||
+        !!reason ||
+        (editingCriterion !== null &&
+          criterionText !==
+            d?.criteria.find((c) => c.id === editingCriterion)?.text)
+      }
     >
       <DialogTitle>
         #{item?.number} {item?.title}
@@ -263,17 +329,66 @@ export function ItemDialog({
             <div role="tabpanel">
               <h3>{t("criteria")}</h3>
               {d.criteria.map((c) => (
-                <label className="criterion" key={c.id}>
+                <div className="criterion" key={c.id}>
                   <input
                     type="checkbox"
+                    aria-label={c.text}
                     checked={!!c.done}
                     disabled={pending.includes(c.id)}
                     onChange={(e) =>
                       void checkCriterion(c.id, e.target.checked)
                     }
-                  />{" "}
-                  {c.text}
-                </label>
+                  />
+                  {editingCriterion === c.id ? (
+                    <>
+                      <input
+                        aria-label={t("editCriterion")}
+                        value={criterionText}
+                        onChange={(e) => setCriterionText(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        disabled={
+                          !criterionText.trim() || pending.includes(c.id)
+                        }
+                        onClick={() =>
+                          void mutateCriterion(c.id, criterionText.trim())
+                        }
+                      >
+                        {t("save")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCriterion(null)}
+                      >
+                        {t("cancel")}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span>{c.text}</span>
+                      <button
+                        type="button"
+                        aria-label={`${t("editCriterion")}: ${c.text}`}
+                        disabled={pending.includes(c.id)}
+                        onClick={() => {
+                          setCriterionText(c.text);
+                          setEditingCriterion(c.id);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`${t("deleteCriterion")}: ${c.text}`}
+                        disabled={pending.includes(c.id)}
+                        onClick={() => void mutateCriterion(c.id)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               ))}
               <form
                 onSubmit={async (e) => {

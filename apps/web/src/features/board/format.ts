@@ -38,6 +38,7 @@ export function activityText(entry: Detail["activity"][number]): string {
     cancelled: t("activityCancelled"),
     seen: t("activitySeen"),
     check: t("activityChecked"),
+    criterion_updated: t("activityCriterionUpdated"),
     criterion_added: t("activityCriterionAdded"),
     criterion_removed: t("activityCriterionRemoved"),
   };

@@ -20,6 +20,8 @@ export function useProjectEvents() {
         "item.moved",
         "item.check",
         "item.criterion_added",
+        "item.criterion_updated",
+        "item.criterion_removed",
         "item.seen",
         "item.assigned",
         "item.edited",

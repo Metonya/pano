@@ -760,6 +760,9 @@ section h2 {
   padding: 14px;
   min-width: 0;
   box-shadow: var(--shadow-card);
+  text-align: left;
+  width: 100%;
+  color: var(--text);
 }
 .board-card.working {
   border-color: var(--accent);
@@ -958,4 +961,55 @@ section h2 {
     max-height: none;
     overflow: visible;
   }
+}
+
+.project-card {
+  position: relative;
+}
+.project-stretched-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.project-card button,
+.project-card .wait-pill {
+  position: relative;
+  z-index: 1;
+}
+.board-column-scroll {
+  overflow-x: hidden;
+}
+.board-card {
+  cursor: grab;
+  touch-action: none;
+}
+.board-card:active {
+  cursor: grabbing;
+}
+.detail-controls label {
+  min-width: 0;
+}
+.detail-controls input,
+.detail-controls select {
+  height: 40px;
+}
+.detail-controls > button {
+  height: 40px;
+  min-width: 40px;
+}
+.item-detail form input {
+  min-width: 0;
+  flex: 1;
+}
+.item-detail form button {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.criterion span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.criterion button {
+  flex-shrink: 0;
 }

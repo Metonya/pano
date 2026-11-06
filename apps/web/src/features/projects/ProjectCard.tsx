@@ -34,7 +34,9 @@ export function ProjectCard({
         </span>
         <div className="project-title">
           <h3>
-            <Link to={`/projects/${p.key}`}>{p.name}</Link>
+            <Link className="project-stretched-link" to={`/projects/${p.key}`}>
+              {p.name}
+            </Link>
           </h3>
           <span>
             {large

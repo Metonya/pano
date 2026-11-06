@@ -21,6 +21,16 @@ export function createCriteria(context: Context) {
         "criterion_added",
       );
     },
+    update(key: string, id: string, value: string, actor: string) {
+      return childMutation(
+        "criteria",
+        key,
+        id,
+        { text: text.parse(value) },
+        actor,
+        "criterion_updated",
+      );
+    },
     check(key: string, id: string, done: boolean, actor: string) {
       return childMutation(
         "criteria",

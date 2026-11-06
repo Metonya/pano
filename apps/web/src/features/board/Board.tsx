@@ -1,6 +1,7 @@
 import {
   DndContext,
   type DragEndEvent,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -12,6 +13,7 @@ import { useParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "@/components/States";
 import { type Project, queryKey, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
+import { BoardCardOverlay } from "./BoardCard";
 import { BoardColumn } from "./BoardColumn";
 import { BoardSummary } from "./BoardSummary";
 import { BoardToolbar } from "./BoardToolbar";
@@ -25,6 +27,7 @@ export function Board({ projects }: { projects: Project[] }) {
   const project = projects.find((p) => p.key === key);
   const qc = useQueryClient();
   const opener = useRef<HTMLElement | null>(null);
+  const [dragged, setDragged] = useState<BoardItem | null>(null);
   const [selected, setSelected] = useState<BoardItem | null>(null);
   const [create, setCreate] = useState(false);
   const [filters, setFilters] = useState({
@@ -165,7 +168,17 @@ export function Board({ projects }: { projects: Project[] }) {
               </button>
             ))}
           </div>
-          <DndContext sensors={sensors} onDragEnd={(e) => void move(e)}>
+          <DndContext
+            sensors={sensors}
+            onDragStart={(e) =>
+              setDragged(all.find((i) => i.id === e.active.id) ?? null)
+            }
+            onDragCancel={() => setDragged(null)}
+            onDragEnd={(e) => {
+              setDragged(null);
+              void move(e);
+            }}
+          >
             <div className="board-columns">
               {statuses.map((s) => (
                 <BoardColumn
@@ -177,6 +190,9 @@ export function Board({ projects }: { projects: Project[] }) {
                 />
               ))}
             </div>
+            <DragOverlay dropAnimation={null}>
+              {dragged && <BoardCardOverlay item={dragged} />}
+            </DragOverlay>
           </DndContext>
           {filters.cancelled && shown.some((i) => i.status === "cancelled") && (
             <div>

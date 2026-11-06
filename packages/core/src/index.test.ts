@@ -302,6 +302,13 @@ test("records, scenarios, criteria and attachments retain history", () => {
   const c = setup();
   c.items.create("PANO", { title: "Task" }, "codex");
   const criterion = c.criteria.add("PANO-1", "accept", "codex", 2);
+  c.criteria.update("PANO-1", criterion.id, "revised", "codex");
+  expect(c.items.get("PANO-1").criteria[0]?.text).toBe("revised");
+  const update = c.activity
+    .list("PANO-1")
+    .find((entry) => entry.kind === "criterion_updated");
+  expect(update?.before_json).toContain("accept");
+  expect(update?.after_json).toContain("revised");
   c.criteria.check("PANO-1", criterion.id, true, "codex");
   c.criteria.remove("PANO-1", criterion.id, "codex");
   const s = c.scenarios.add(

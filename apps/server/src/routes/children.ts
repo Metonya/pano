@@ -17,19 +17,21 @@ export function registerChildren(route: Route, core: Core) {
     },
     criterion,
   );
-  const check = z.object({ done: z.boolean() }).strict();
+  const check = z.union([
+    z.object({ done: z.boolean() }).strict(),
+    z.object({ text }).strict(),
+  ]);
   route(
     "patch",
     "/items/:key/criteria/:id",
-    async (c) =>
-      c.json(
-        core.criteria.check(
-          key(c),
-          id(c),
-          (await json(c, check)).done,
-          actor(c),
-        ),
-      ),
+    async (c) => {
+      const data = await json(c, check);
+      return c.json(
+        "done" in data
+          ? core.criteria.check(key(c), id(c), data.done, actor(c))
+          : core.criteria.update(key(c), id(c), data.text, actor(c)),
+      );
+    },
     check,
   );
   route("delete", "/items/:key/criteria/:id", (c) =>

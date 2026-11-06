@@ -57,7 +57,13 @@ test("boş ve sıfırlanmış form kapanır; dolu form tüm kapatma yollarında 
     () => page.keyboard.press("Escape"),
     () => page.getByRole("button", { name: "Vazgeç" }).click(),
   ]) {
+    await page.waitForTimeout(250); // let the open animation settle
+    const before = await dialog.boundingBox();
+    if (!before) throw new Error("Dialog is not visible");
     await close();
+    const after = await dialog.boundingBox();
+    if (!after) throw new Error("Dialog is not visible");
+    expect(Math.abs(after.y - before.y)).toBeLessThan(1);
     await expect(
       page.getByText("Yazdıkların silinsin mi?", { exact: true }),
     ).toBeVisible();

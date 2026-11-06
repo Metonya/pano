@@ -12,21 +12,32 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await page.getByLabel("Başlık").fill("Board işi");
   await page.getByRole("button", { name: "Oluştur" }).click();
   const card = page.locator(".board-card").filter({ hasText: "Board işi" });
-  await card.getByRole("button", { name: "Board işi" }).click();
+  await card.click();
   await page.getByLabel("Yeni kriter").fill("Kontrol et");
   await page.getByRole("button", { name: "Ekle", exact: true }).click();
-  await expect(page.getByLabel("Kontrol et")).toBeVisible();
-  await page.getByLabel("Kontrol et").check();
+  await expect(
+    page.getByRole("checkbox", { name: "Kontrol et" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Kriteri düzenle: Kontrol et" })
+    .click();
+  await page
+    .getByLabel("Kriteri düzenle", { exact: true })
+    .fill("Güncel kriter");
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await page.getByLabel("Güncel kriter").check();
+  await page
+    .getByRole("button", { name: "Kriteri sil: Güncel kriter" })
+    .click();
+  await expect(page.getByLabel("Güncel kriter")).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await expect(card).toContainText("1/1");
-  await expect(card.getByRole("button", { name: "Board işi" })).toBeFocused();
+  await expect(card).not.toContainText("1/1");
+  await expect(card).toBeFocused();
   // Move in small steps like a real pointer so dnd-kit can track the target.
-  const handleBox = await card
-    .getByRole("button", { name: /Kartı taşı/ })
-    .boundingBox();
+  const handleBox = await card.boundingBox();
   const columnBox = await page
     .locator(".board-column")
-    .filter({ hasText: "In Progress" })
+    .filter({ hasText: "Test" })
     .boundingBox();
   if (!handleBox || !columnBox) throw new Error("Board is not visible");
   await page.mouse.move(
@@ -41,8 +52,17 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await page.waitForTimeout(150);
   await page.mouse.up();
   await expect(
-    page.locator(".board-column").filter({ hasText: "In Progress" }),
+    page.locator(".board-column").filter({ hasText: "Test" }),
   ).toContainText("Board işi");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(card).toHaveCSS("opacity", "1");
+  expect(
+    await page
+      .locator(".board-column-scroll")
+      .evaluateAll((columns) =>
+        columns.every((column) => column.scrollWidth <= column.clientWidth),
+      ),
+  ).toBe(true);
   await request.post("/api/v1/items/BOARD-1/move", {
     data: { status: "test" },
   });
@@ -56,7 +76,7 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
     page.locator(".board-column").filter({ hasText: "Done" }),
   ).toContainText("Board işi");
   await expect(card.getByRole("img", { name: "Görülmedi" })).toBeVisible();
-  await card.getByRole("button", { name: "Board işi" }).click();
+  await card.click();
   await page.keyboard.press("Escape");
   await expect(card.getByRole("img", { name: "Görülmedi" })).toHaveCount(0);
   await request.post("/api/v1/projects/BOARD/items", {
@@ -71,7 +91,9 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   ).toHaveCount(1);
   await page.getByLabel("Atanan").selectOption("codex");
   await expect(card).toBeVisible();
-  await expect(page.getByRole("button", { name: "Başka iş" })).toHaveCount(0);
+  await expect(
+    page.locator(".board-card").filter({ hasText: "Başka iş" }),
+  ).toHaveCount(0);
 });
 
 test("klavyeyle kolonlar arasında taşınan kart yenilemede kalır", async ({
@@ -86,7 +108,7 @@ test("klavyeyle kolonlar arasında taşınan kart yenilemede kalır", async ({
   });
   await page.goto("/projects/KEYBOARD");
   const card = page.locator(".board-card").filter({ hasText: "Klavye işi" });
-  const handle = card.getByRole("button", { name: /Kartı taşı/ });
+  const handle = card;
   await handle.focus();
   await page.keyboard.press("Space");
   await page.waitForTimeout(200);
@@ -145,8 +167,8 @@ test("kriter işareti hemen görünür ve istek başarısızsa geri alınır", a
   });
   await page.goto("/projects/CRITERIA");
   const card = page.locator(".board-card").filter({ hasText: "Kontrol" });
-  await card.getByRole("button", { name: "Kontrol" }).click();
-  const checkbox = page.getByLabel("Ölçüt");
+  await card.click();
+  const checkbox = page.getByRole("checkbox", { name: "Ölçüt" });
   await checkbox.check();
   await expect(checkbox).toBeChecked();
   await expect(card).toContainText("1/1");
