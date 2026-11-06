@@ -1,11 +1,11 @@
 ---
 id: PBI-008
 title: pano CLI (aynı binary içinde)
-status: backlog
-assignee: -
+status: done
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -21,15 +21,18 @@ Terminal kullananlar ve shell'i olan agent'lar, MCP kurmadan ve token harcamadan
 - Çıktılar insan için okunaklı tablo; `--json` ile makine için.
 
 ## Kabul kriterleri
-- [ ] `pano task create PANO "Başlık" --criteria "A" --criteria "B"` PBI oluşturur ve key'i yazdırır.
-- [ ] `pano task move PANO-3 test` board'da canlı görünür; aktivitede `PANO_ACTOR` değeri yazar.
-- [ ] `pano board PANO` 4 kolonu terminalde okunaklı gösterir.
-- [ ] Her komut `--json` ile geçerli JSON döner.
-- [ ] `pano mcp-config claude` doğru `claude mcp add` komutunu yazdırır.
+- [x] `pano task create PANO "Başlık" --criteria "A" --criteria "B"` PBI oluşturur ve key'i yazdırır.
+- [x] `pano task move PANO-3 test` board'da canlı görünür; aktivitede `PANO_ACTOR` değeri yazar.
+- [x] `pano board PANO` 4 kolonu terminalde okunaklı gösterir.
+- [x] Her komut `--json` ile geçerli JSON döner.
+- [x] `pano mcp-config claude` doğru `claude mcp add` komutunu yazdırır.
 
 ## Test planı
 1. `pano serve` aç; ikinci terminalde örnek komutları çalıştır, board'u tarayıcıda izle.
 
 ## Notlar / log
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-sol) terminalden verdi.
+- 2026-11-06 codex bitirdi; sandbox tam test çalıştıramadı. check (claude:po): lint · typecheck temiz · test 23/23 · build geçti · gerçek sunucuda proje ve PBI oluşturma (Türkçe karakterler doğru), taşıma, board, --json, mcp-config denendi; aktivitede `PANO_ACTOR` görünüyor; gerekçesiz iptal ve kapalı sunucu kısa hata ile exit 1.
 
 ## Done notu
+`bun run pano ...` ile proje ve PBI işlemleri terminalden yapılıyor; CLI sadece REST API'yi çağırıyor. Tek dosya `pano` komutu PBI-010 ile gelecek. Bilinen not: `pano board` iptal edilenleri göstermez.

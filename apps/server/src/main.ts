@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { createApp, createCore, defaultDataDir } from "./app";
+import { runCli } from "./cli";
 
 export function serverConfig(env: NodeJS.ProcessEnv) {
   const hostname = env.PANO_HOST || "127.0.0.1";
@@ -9,7 +9,8 @@ export function serverConfig(env: NodeJS.ProcessEnv) {
     throw new Error("PANO_TOKEN is required when PANO_HOST is not 127.0.0.1");
   return { hostname, token, port: Number(env.PANO_PORT ?? 7777) };
 }
-if (import.meta.main) {
+export async function serve() {
+  const { createApp, createCore, defaultDataDir } = await import("./app");
   const config = serverConfig(process.env);
   mkdirSync(defaultDataDir, { recursive: true });
   const core = createCore(join(defaultDataDir, "pano.db"));
@@ -22,4 +23,8 @@ if (import.meta.main) {
     idleTimeout: 255,
     fetch: app.fetch,
   });
+}
+
+if (import.meta.main) {
+  process.exitCode = await runCli(process.argv.slice(2));
 }

@@ -16,6 +16,27 @@ bun run dev
 
 Web adresi terminalde gösterilir; API varsayılan olarak `http://localhost:7777` adresindedir. `PANO_PORT` ile API portu değiştirilebilir. Doğrulama için `bun run lint`, `bun run typecheck` ve `bun run test`; build için `bun run build` çalıştırın.
 
+## CLI
+
+Argümansız `bun run pano` yardım gösterir. Önce ayrı terminalde `bun run pano serve` çalıştırın:
+
+```sh
+bun run pano project create PANO "Pano"
+bun run pano project list
+bun run pano task create PANO "Başlık" --criteria "A" --criteria "B" --priority high
+bun run pano task move PANO-1 test
+bun run pano board PANO
+bun run pano task show PANO-1 --json
+bun run pano task assign PANO-1 codex
+bun run pano task check PANO-1 <criterion-id>
+bun run pano task note PANO-1 "Testler geçti"
+bun run pano mcp-config claude
+```
+
+`PANO_URL` varsayılanı `http://127.0.0.1:7777`; `PANO_TOKEN` Bearer token, `PANO_ACTOR` geçmişteki aktördür. CLI yalnızca REST API kullanır. Tüm komutlarda `--help` ve `--json` kullanılabilir; hatalar stderr'e yazılır ve çıkış kodu 1 olur. `serve --json` başlangıç bilgisini yazdırıp sunucuyu açık tutar.
+
+Durumlar: `backlog`, `in_progress` (`in-progress` de geçerli), `test`, `done`, `cancelled`; iptal için `--reason "Neden"` zorunlu. `project list --all` arşivleri içerir; `project star|archive KEY --off` işlemi geri alır. `task assign KEY none` atamayı kaldırır; `task check KEY ID --undo` kriteri kaldırır. Kriter ID'si `task show` çıktısındadır. `mcp-config codex` TOML, `mcp-config cursor` JSON üretir; `PANO_TOKEN` ayarlıysa Claude/Cursor çıktısı token içerir, Codex çıktısı ortam değişkenine başvurur. `--json` çıktısı metin yapılandırmalarını JSON string olarak döndürür.
+
 ## API örnekleri (curl)
 
 Sunucu çalışırken aşağıdaki komutlarla proje ve PBI oluşturup Test'e taşıyabilirsiniz:
