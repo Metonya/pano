@@ -38,4 +38,6 @@ Herkes kendi platformunda tek adımda kurup kullanabilsin: indir-çalıştır bi
 - check (claude:po): lint · typecheck temiz · test 41/41 · e2e 11/11 · token e2e 1/1 · `dist/pano.exe` (117 MB) ayrı klasörden açıldı: UI, SPA yolu, /agents.md, CLI, token zorunluluğu çalışıyor; canlı bağlantı kurulup kopunca yeniden bağlanıyor.
 - Açık: Docker Desktop kapalı olduğu için imaj, veri kalıcılığı ve 150 MB sınırı denenmedi; release workflow tag atılmadan doğrulanamaz.
 
+- 2026-11-06 claude:po: son binary ile boş klasörde uçtan uca akış geçti. Docker Desktop 10 dk içinde açılmadı (`dockerDesktopLinuxEngine` yok); imaj, kalıcılık ve 150 MB sınırı hâlâ denenmedi, Dockerfile hiç derlenmedi. Release workflow'u tag atılana kadar doğrulanamaz.
+
 ## Done notu
