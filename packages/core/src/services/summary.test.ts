@@ -59,7 +59,7 @@ test("seed-shaped project has four remaining items and excludes other projects",
   expect(() => summary("MISSING")).toThrow("Project not found");
 });
 
-test("30 UTC days replay old completion, reopening, cancellation and restoration", () => {
+test("every UTC day since opening replays completion, reopening, cancellation and restoration", () => {
   const { core, summary, at } = setup();
   at("2026-09-01T01:00:00.000Z", () =>
     core.items.create("DEMO", { title: "Old", priority: "high" }, "seed"),
@@ -100,9 +100,15 @@ test("30 UTC days replay old completion, reopening, cancellation and restoration
     remaining_by_priority: { high: 1, medium: 0, low: 1 },
     completed_last_7_days: 1,
   });
-  expect(result.burn_up).toHaveLength(30);
+  // 2026-09-01 .. 2026-11-06, both ends included.
+  expect(result.burn_up).toHaveLength(67);
   expect(result.burn_up[0]).toEqual({
-    date: "2026-10-08",
+    date: "2026-09-01",
+    total: 1,
+    completed: 0,
+  });
+  expect(result.burn_up.find((day) => day.date === "2026-09-02")).toEqual({
+    date: "2026-09-02",
     total: 1,
     completed: 1,
   });
@@ -160,14 +166,71 @@ test("last seven days includes boundary once, excludes old and reopened completi
   expect(summary("DEMO").completed_last_7_days).toBe(1);
 });
 
-test("empty project returns thirty zero days", () => {
+test("empty project returns zero days from opening to today", () => {
   const { summary } = setup();
   const result = summary("DEMO");
   expect(result.total).toBe(0);
-  expect(result.burn_up).toHaveLength(30);
+  expect(result.burn_up).toHaveLength(67);
   expect(
     result.burn_up.every((day) => day.total === 0 && day.completed === 0),
   ).toBe(true);
+});
+
+test("project opened today returns a single point with today's state", () => {
+  const { core, summary, at } = setup();
+  core.db
+    .query("UPDATE projects SET created_at = ?")
+    .run("2026-11-06T08:00:00.000Z");
+  at("2026-11-06T09:00:00.000Z", () =>
+    core.items.create("DEMO", { title: "Bugün" }, "seed"),
+  );
+  at("2026-11-06T10:00:00.000Z", () =>
+    core.items.move("DEMO-1", "done", "seed"),
+  );
+  expect(summary("DEMO").burn_up).toEqual([
+    { date: "2026-11-06", total: 1, completed: 1 },
+  ]);
+});
+
+test("exactly 180 days stay daily, longer projects thin evenly to 180", () => {
+  const { core, summary, at } = setup();
+  const ONE_DAY = 86400000;
+  const today = Date.parse("2026-11-06T00:00:00.000Z");
+  const dates = (result: ReturnType<typeof summary>) =>
+    result.burn_up.map((day) => Date.parse(`${day.date}T00:00:00.000Z`));
+
+  const openedDaysAgo = (days: number) =>
+    core.db
+      .query("UPDATE projects SET created_at = ?")
+      .run(new Date(today - days * ONE_DAY).toISOString());
+
+  openedDaysAgo(179);
+  const daily = dates(summary("DEMO"));
+  expect(daily).toHaveLength(180);
+  expect(new Set(daily.slice(1).map((d, i) => d - (daily[i] ?? 0)))).toEqual(
+    new Set([ONE_DAY]),
+  );
+
+  openedDaysAgo(999);
+  at("2024-03-01T00:00:00.000Z", () =>
+    core.items.create("DEMO", { title: "Old" }, "seed"),
+  );
+  at("2026-11-06T11:00:00.000Z", () =>
+    core.items.move("DEMO-1", "done", "seed"),
+  );
+  const result = summary("DEMO");
+  const thinned = dates(result);
+  expect(thinned).toHaveLength(180);
+  expect(thinned[0]).toBe(today - 999 * ONE_DAY);
+  expect(thinned.at(-1)).toBe(today);
+  const gaps = thinned
+    .slice(1)
+    .map((d, i) => (d - (thinned[i] ?? 0)) / ONE_DAY);
+  // 999 days across 179 gaps: every gap is 5 or 6 days, none is skipped.
+  expect(new Set(gaps)).toEqual(new Set([5, 6]));
+  // Thinning does not lose the final state or the recent completion.
+  expect(result.burn_up.at(-1)).toMatchObject({ total: 1, completed: 1 });
+  expect(result.completed_last_7_days).toBe(1);
 });
 
 test("seven-day boundary is inclusive and an older completion is excluded", () => {

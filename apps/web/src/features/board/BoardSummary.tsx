@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useId, useState } from "react";
 import { type Project, request } from "@/lib/api";
-import { t } from "@/lib/i18n";
+import { language, t } from "@/lib/i18n";
 import { relativeTime } from "./format";
 import type { BoardItem } from "./types";
 import "./summary.css";
@@ -20,42 +20,151 @@ type Summary = {
 };
 
 function BurnUp({ data }: { data: Summary }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const hintId = useId();
+  const days = data.burn_up;
   const maximum = Math.max(1, ...data.burn_up.map((day) => day.total));
-  const points = (field: "total" | "completed") =>
-    data.burn_up
-      .map(
-        (day, i) =>
-          `${16 + (i / 29) * 288},${112 - (day[field] / maximum) * 96}`,
-      )
-      .join(" ");
-  const first = data.burn_up[0]?.date ?? "";
-  const last = data.burn_up.at(-1)?.date ?? "";
+  const first = days[0];
+  const last = days.at(-1);
+  const format = new Intl.DateTimeFormat(language(), {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+  const date = (value: string) => format.format(new Date(value));
+  if (!first || !last || days.length < 2) {
+    return (
+      <p>
+        {data.completed === 0
+          ? t("summaryOpenedTodayZero")
+          : t("summaryOpenedToday").replace("{count}", String(data.completed))}
+      </p>
+    );
+  }
+  const start = Date.parse(first.date);
+  const duration = Date.parse(last.date) - start;
+  const x = (day: Summary["burn_up"][number]) =>
+    8 + ((Date.parse(day.date) - start) / duration) * 208;
+  const y = (value: number) => 144 - (value / maximum) * 96;
+  const area = (field: "total" | "completed") =>
+    `M8 144 V${y(first[field])} ${days
+      .slice(1)
+      .map((day) => `H${x(day)} V${y(day[field])}`)
+      .join(" ")} V144 Z`;
+  const totalY = Math.max(48, Math.min(124, y(last.total)));
+  const completedY = Math.min(144, Math.max(totalY + 20, y(last.completed)));
+  const active =
+    selected === null ? undefined : days[Math.min(selected, days.length - 1)];
+  const tooltip = active
+    ? t("summaryChartDay")
+        .replace("{date}", date(active.date))
+        .replace("{completed}", String(active.completed))
+        .replace("{total}", String(active.total))
+    : "";
+  const summary = t("summaryChartLabel")
+    .replace("{start}", date(first.date))
+    .replace("{end}", date(last.date))
+    .replace("{total}", String(data.total))
+    .replace("{completed}", String(data.completed));
+  const selectAt = (clientX: number, bounds: DOMRect) => {
+    const position = ((clientX - bounds.left) / bounds.width) * 320;
+    const target = start + ((position - 8) / 208) * duration;
+    let nearest = 0;
+    let distance = Infinity;
+    days.forEach((day, index) => {
+      const candidate = Math.abs(Date.parse(day.date) - target);
+      if (candidate < distance) {
+        nearest = index;
+        distance = candidate;
+      }
+    });
+    setSelected(nearest);
+  };
   return (
     <figure className="summary-chart">
-      <figcaption>{t("summaryBurnUp")}</figcaption>
-      <svg
-        viewBox="0 0 320 128"
-        role="img"
-        aria-label={`${t("summaryBurnUp")}: ${first} – ${last}. ${t("summaryTotal")} ${data.total}, ${t("summaryCompleted")} ${data.completed}.`}
+      <button
+        type="button"
+        className="summary-chart-interaction"
+        aria-label={summary}
+        aria-describedby={hintId}
+        onFocus={() => setSelected(days.length - 1)}
+        onBlur={() => setSelected(null)}
+        onPointerMove={(event) =>
+          selectAt(event.clientX, event.currentTarget.getBoundingClientRect())
+        }
+        onPointerDown={(event) => {
+          event.currentTarget.focus();
+          event.currentTarget.setPointerCapture(event.pointerId);
+          selectAt(event.clientX, event.currentTarget.getBoundingClientRect());
+        }}
+        onPointerLeave={(event) => {
+          if (!event.currentTarget.matches(":focus")) setSelected(null);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+          event.preventDefault();
+          setSelected((current) =>
+            Math.max(
+              0,
+              Math.min(
+                days.length - 1,
+                (current ?? days.length - 1) +
+                  (event.key === "ArrowLeft" ? -1 : 1),
+              ),
+            ),
+          );
+        }}
       >
-        <path d="M16 16V112H304" className="summary-axis" />
-        <polyline points={points("total")} className="summary-total-line" />
-        <polyline
-          points={points("completed")}
-          className="summary-completed-line"
-        />
-      </svg>
+        <span className="sr-only" id={hintId}>
+          {t("summaryChartKeyboard")}
+        </span>
+        <svg viewBox="0 0 320 160" role="img" aria-label={summary}>
+          <path d={area("total")} className="summary-total-area" />
+          <path d={area("completed")} className="summary-completed-area" />
+          {active && (
+            <line
+              x1="0"
+              x2="0"
+              y1="40"
+              y2="144"
+              className="summary-cursor"
+              style={{ transform: `translateX(${x(active)}px)` }}
+            />
+          )}
+        </svg>
+        <span
+          className="summary-total-label"
+          aria-hidden="true"
+          style={{ top: `${(totalY / 160) * 100}%` }}
+        >
+          {t("summaryChartTotal").replace("{count}", String(data.total))}
+        </span>
+        <span
+          className="summary-completed-label"
+          aria-hidden="true"
+          style={{
+            top: `max(calc(${(totalY / 160) * 100}% + 20px), ${(completedY / 160) * 100}%)`,
+          }}
+        >
+          {t("summaryChartCompleted").replace(
+            "{count}",
+            String(data.completed),
+          )}
+        </span>
+        <span
+          className="summary-chart-tooltip"
+          aria-hidden="true"
+          data-visible={!!active}
+        >
+          {tooltip}
+        </span>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {tooltip}
+        </span>
+      </button>
       <div className="summary-dates">
-        <span>{first}</span>
-        <span>{last}</span>
-      </div>
-      <div className="summary-legend">
-        <span>
-          {t("summaryTotal")} ({data.total}) · {t("summaryDashed")}
-        </span>
-        <span>
-          {t("summaryCompleted")} ({data.completed}) · {t("summarySolid")}
-        </span>
+        <span>{date(first.date)}</span>
+        <span>{t("summaryToday")}</span>
       </div>
     </figure>
   );
@@ -97,7 +206,7 @@ export function BoardSummary({
       .at(-1) ?? project.updated_at;
   const started = new Date(
     query.data?.started_at ?? project.created_at,
-  ).toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+  ).toLocaleDateString(language(), { day: "numeric", month: "short" });
   return (
     <Popover.Root>
       <Popover.Trigger asChild>

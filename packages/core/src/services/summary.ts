@@ -1,6 +1,7 @@
 import type { Context } from "../context";
 
 const DAY = 86400000;
+const MAX_POINTS = 180;
 
 export function createSummary({ project, all, str, now }: Context) {
   return (key: string) => {
@@ -10,18 +11,27 @@ export function createSummary({ project, all, str, now }: Context) {
     const remaining = active.filter((item) => item.status !== "done");
     const end = new Date(now()).getTime();
     const today = new Date(end).toISOString().slice(0, 10);
-    const start = Date.parse(`${today}T00:00:00.000Z`) - 29 * DAY;
+    const lastDay = Date.parse(`${today}T00:00:00.000Z`);
+    const opened = Date.parse(
+      `${str(p.created_at).slice(0, 10)}T00:00:00.000Z`,
+    );
+    const start = Math.min(opened, lastDay);
+    const days = (lastDay - start) / DAY + 1;
+    const count = Math.min(days, MAX_POINTS);
     const history = all(
       "SELECT * FROM activity WHERE project_id = ? AND item_id IS NOT NULL ORDER BY created_at, rowid",
       str(p.id),
     );
     // Replay status changes, including creation, cancellation and reopening.
     // Days use UTC and represent the state at the end of each day (today: now).
+    // Long projects are thinned evenly; the first and last day always stay.
     const states = new Map<string, string>();
     const recent = new Set<string>();
     let cursor = 0;
-    const burn_up = Array.from({ length: 30 }, (_, index) => {
-      const day = start + index * DAY;
+    const burn_up = Array.from({ length: count }, (_, index) => {
+      const day =
+        start +
+        (count > 1 ? Math.round((index * (days - 1)) / (count - 1)) : 0) * DAY;
       const cutoff = Math.min(day + DAY - 1, end);
       while (cursor < history.length) {
         const entry = history[cursor];

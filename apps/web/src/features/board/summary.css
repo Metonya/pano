@@ -60,39 +60,85 @@
 .summary-chart {
   margin: 0;
 }
-.summary-chart figcaption {
-  font-weight: 600;
+.summary-chart-interaction {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: crosshair;
+  border-radius: 8px;
+}
+.summary-chart-interaction:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .summary-chart svg {
   display: block;
   width: 100%;
 }
-.summary-chart path,
-.summary-chart polyline {
-  fill: none;
-  stroke-width: 2;
+.summary-total-area {
+  fill: var(--track);
 }
-.summary-axis {
-  stroke: var(--muted);
+.summary-completed-area {
+  fill: var(--progress);
 }
-.summary-total-line {
-  stroke: var(--accent);
-  stroke-dasharray: 6 4;
+.summary-total-label,
+.summary-completed-label {
+  position: absolute;
+  left: 70%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
-.summary-completed-line {
-  stroke: var(--progress);
+.summary-total-label {
+  color: var(--muted);
 }
-.summary-dates,
-.summary-legend {
+.summary-completed-label {
+  color: var(--success);
+  font-weight: 600;
+}
+.summary-cursor {
+  stroke: var(--text);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.summary-chart-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+.summary-chart-tooltip[data-visible="true"] {
+  opacity: 1;
+}
+.summary-dates {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
 }
-.summary-legend {
-  margin-top: 8px;
-  flex-wrap: wrap;
+@media (prefers-reduced-motion: reduce) {
+  .summary-chart-tooltip {
+    transition: none;
+  }
 }
 @media (max-width: 639px) {
   .board-summary {

@@ -26,7 +26,8 @@ export function registerSummary(route: Route, core: Core) {
         .array(
           z.object({ date: z.string().date(), total: count, completed: count }),
         )
-        .length(30),
+        .min(1)
+        .max(180),
     }),
   );
 }
