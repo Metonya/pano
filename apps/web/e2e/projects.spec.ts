@@ -61,8 +61,11 @@ test("proje ayarları adı kaydeder, kuralları uygular ve satır içi onayla ar
     page.getByRole("button", { name: "Proje ayarları" }).click();
   const dialog = page.getByRole("dialog");
   await openSettings();
-  await expect(page.getByLabel("Key")).toHaveJSProperty("readOnly", true);
-  await expect(page.getByLabel("Key")).toHaveValue("AYAR");
+  await expect(page.getByLabel("Key", { exact: true })).toHaveJSProperty(
+    "readOnly",
+    true,
+  );
+  await expect(page.getByLabel("Key", { exact: true })).toHaveValue("AYAR");
   const save = page.getByRole("button", { name: "Kaydet", exact: true });
 
   // Closing the Test column needs a destination for the waiting card.
@@ -215,7 +218,7 @@ test("kart menüsü ayarları aynı sayfada açar, yıldız kartta kalır", asyn
 
   await menu.getByRole("menuitem", { name: "Proje ayarları" }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByLabel("Key")).toHaveValue("MENU");
+  await expect(dialog.getByLabel("Key", { exact: true })).toHaveValue("MENU");
   await expect(page).toHaveURL("/");
   await dialog.getByRole("button", { name: "Vazgeç" }).click();
   await expect(dialog).toHaveCount(0);
