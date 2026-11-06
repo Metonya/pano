@@ -89,7 +89,7 @@ test("kalıcı silmede dışarı tıklama engellenir; Esc ve Vazgeç sorusuz kap
     data: { archived: true },
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Arşiv", exact: true }).click();
+  await page.getByRole("button", { name: /^Arşiv/ }).click();
   const open = async () => {
     await page
       .locator("article")

@@ -5,13 +5,11 @@ import { t } from "@/lib/i18n";
 export function Toolbar({
   all,
   archive,
-  setArchive,
   setMobile,
   setCreate,
 }: {
   all: Project[];
   archive: boolean;
-  setArchive: (v: boolean) => void;
   setMobile: (v: boolean) => void;
   setCreate: (v: boolean) => void;
 }) {
@@ -34,26 +32,12 @@ export function Toolbar({
             : location.pathname.startsWith("/projects/")
               ? (all.find((p) => location.pathname === `/projects/${p.key}`)
                   ?.name ?? t("projects"))
-              : t("projects")}
+              : archive
+                ? t("archive")
+                : t("projects")}
       </h1>
       {location.pathname === "/" && (
         <>
-          <div className="segment">
-            <button
-              type="button"
-              aria-pressed={!archive}
-              onClick={() => setArchive(false)}
-            >
-              {t("active")}
-            </button>
-            <button
-              type="button"
-              aria-pressed={archive}
-              onClick={() => setArchive(true)}
-            >
-              {t("archive")}
-            </button>
-          </div>
           <button
             type="button"
             className="primary"

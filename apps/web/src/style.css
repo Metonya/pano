@@ -283,26 +283,6 @@ h1 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.segment {
-  display: flex;
-  background: var(--field);
-  padding: 2px;
-  border-radius: 8px;
-}
-.segment button {
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  height: 28px;
-  padding: 0 12px;
-  font-size: 13px;
-}
-.segment button[aria-pressed="true"] {
-  background: var(--card);
-  color: var(--text);
-  font-weight: 600;
-}
 .primary {
   display: inline-flex;
   align-items: center;
@@ -615,10 +595,6 @@ section h2 {
   }
   .toolbar h1 {
     font-size: 20px;
-  }
-  .segment button {
-    min-height: 44px;
-    padding: 0 8px;
   }
   .primary {
     min-height: 44px;

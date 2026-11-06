@@ -31,3 +31,4 @@
 | 2026-11-06 | Codex, Pano'yu MCP yerine terminal üzerinden (CLI/REST) kullanır; işler Codex'e terminal sekmesinden verilir ki Mert izleyebilsin | Bu makinede Codex'in MCP'si politika ile kapalı; CLI yolu çalışıyor |
 | 2026-11-06 | Yeni projede sadece ad istenir; key addan otomatik üretilir, istenirse "Değiştir" ile düzenlenir | Key teknik bir ayrıntı; kullanıcı düşünmek zorunda kalmasın (Mert'in testi) |
 | 2026-11-06 | Dialog dışına tıklama / Esc: boşsa kapanır; kullanıcı bir şey yazdıysa "Yazdıkların silinsin mi?" diye sorar; kalıcı silme onayı dışarı tıklamayla kapanmaz; salt okunur pencereler her zaman kapanır | Yanlışlıkla emek kaybı olmasın, gereksiz engel de olmasın |
+| 2026-11-06 | Projeler ekranında Aktif/Arşiv seçicisi yok; arşive sol menüden gidilir | Aynı işi yapan iki kontrol gereksiz (Mert'in testi) |

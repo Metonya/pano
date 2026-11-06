@@ -79,7 +79,6 @@ export function App() {
         <Toolbar
           all={all}
           archive={archive}
-          setArchive={setArchive}
           setMobile={setMobile}
           setCreate={setCreate}
         />

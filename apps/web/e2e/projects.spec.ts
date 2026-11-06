@@ -29,14 +29,14 @@ test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async (
     .click();
   await page.getByRole("menuitem", { name: "Arşivle", exact: true }).click();
   await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: "Arşiv", exact: true }).click();
+  await page.getByRole("button", { name: /^Arşiv/ }).click();
   await expect(card).toBeVisible();
   await card
     .getByRole("button", { name: "Diğer işlemler Deneme proje" })
     .click();
   await page.getByRole("menuitem", { name: "Arşivden çıkar" }).click();
   await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: "Aktif", exact: true }).click();
+  await page.getByRole("button", { name: "Projeler", exact: true }).click();
   await expect(card).toBeVisible();
 });
 

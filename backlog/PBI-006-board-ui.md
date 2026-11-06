@@ -1,11 +1,11 @@
 ---
 id: PBI-006
 title: Web UI — kanban board ve PBI detay paneli
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -52,4 +52,5 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 
 ## Notlar / log
 
+- 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) terminalden verdi; dnd-kit, react-markdown ve remark-gfm önceden kuruldu.
 ## Done notu

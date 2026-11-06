@@ -1,8 +1,8 @@
 ---
 id: PBI-005
 title: Web UI — proje listesi, yıldızlama ve arşiv
-status: test
-assignee: mert
+status: done
+assignee: codex
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -27,7 +27,7 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - [x] Dialog dışına tıklama ve Esc: boş formda kapanır; dolu formda sorar; kalıcı silme onayında kapanmaz.
 - [x] Projeler listelenir; yıldızlılar en üstte, her grupta son güncellenen önce.
 - [x] Yıldız ikonuna tıklayınca anında (optimistic) sıralama değişir, yenileyince kalıcıdır.
-- [x] Arşivlenen proje ana listeden kalkar, "Arşiv" filtresinde görünür ve geri alınabilir.
+- [x] Arşivlenen proje ana listeden kalkar, sol menüdeki "Arşiv" görünümünde görünür ve geri alınabilir.
 - [x] Yeni proje formu geçersiz key'i (küçük harf, tekrar eden) açıklayıcı mesajla reddeder.
 - [x] 375px genişlikte yatay scroll yok; light/dark sistemi takip eder; klavyeyle kullanılabilir.
 - [x] Playwright testi: oluştur → yıldızla → arşivle → geri al akışı geçer.
@@ -54,4 +54,7 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 
 - 2026-11-06 codex (sol) yaptı; build ve e2e'yi çalıştıramadı. claude:po e2e ile gerçek hata buldu: pencere yeniden açılınca yazılı formda dışarıya ilk tıklama çalışmıyordu; kapatma kontrolü overlay'e alındı, odak yazı alanına dönüyor. check: lint · typecheck temiz · test 28/28 · build geçti · e2e 6/6 (iki kez).
 
+- 2026-11-06 mert: toolbar'daki Aktif/Arşiv seçicisi gereksiz, sol menüdeki Arşiv yeterli. claude:po kaldırdı; arşiv görünümünde başlık "Arşiv". check: test 28/28 · e2e 6/6. mert testi kabul etti.
+
 ## Done notu
+Projeler ekranı, sidebar, toolbar, tema, otomatik key, yıldız, arşiv ve adla onaylı kalıcı silme çalışıyor. Bilinen kısıt: kartların yer değiştirme animasyonu yok.
