@@ -1,6 +1,7 @@
 export type Status = "backlog" | "in_progress" | "test" | "done" | "cancelled";
 export type Priority = "high" | "medium" | "low";
 export type BoardItem = {
+  done_at?: string | null;
   id: string;
   number: number;
   title: string;
@@ -64,3 +65,11 @@ export function agentName(id: string) {
   };
   return `${names[name.toLowerCase()] ?? name}${role ? ` · ${roles[role.toLowerCase()] ?? role}` : ""}`;
 }
+
+/** Done reads like a log: the most recently finished item comes first. */
+export const sortColumn = (status: Status, items: BoardItem[]) =>
+  status === "done"
+    ? [...items].sort((a, b) =>
+        String(b.done_at ?? "").localeCompare(String(a.done_at ?? "")),
+      )
+    : sortItems(items);

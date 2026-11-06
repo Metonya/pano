@@ -21,7 +21,13 @@ import { BoardToolbar } from "./BoardToolbar";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { ItemDialog } from "./ItemDialog";
 import { boardKeyboardCoordinates } from "./keyboard";
-import { type BoardItem, labels, type Status, sortItems } from "./types";
+import {
+  type BoardItem,
+  labels,
+  type Status,
+  sortColumn,
+  sortItems,
+} from "./types";
 
 export function Board({ projects }: { projects: Project[] }) {
   const { key = "" } = useParams();
@@ -210,7 +216,10 @@ export function Board({ projects }: { projects: Project[] }) {
                   key={s}
                   status={s}
                   mobileActive={mobileStatus === s}
-                  items={sortItems(shown.filter((i) => i.status === s))}
+                  items={sortColumn(
+                    s,
+                    shown.filter((i) => i.status === s),
+                  )}
                   open={open}
                 />
               ))}

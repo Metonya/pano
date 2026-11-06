@@ -36,3 +36,4 @@
 | 2026-11-06 | Dialog'lar dikey ortalanmaz, üstten sabitlenir | İçerik büyüyünce pencere zıplamasın |
 | 2026-11-06 | Dosyaları çakışmayan işler Codex'e ayrı terminallerde paralel verilir | Mert'in isteği; hız |
 | 2026-11-06 | Test kartı: Ne değişti, Nasıl denerim, senaryolar, AI testleri; aksiyonlar Onayla, Geri gönder, Geri ata. Erteleme ve kişi seçici yok | Yöneticinin ürünü tatması için gereken en az şey; takım gelene kadar "başkası" AI demek |
+| 2026-11-06 | Done kolonu son biten üstte sıralanır, elle sıralanmaz; diğer kolonlar öncelik ve konuma göre | Done bir kayıt defteri gibi okunur: "en son ne bitti" sorusu (Mert) |
