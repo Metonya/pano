@@ -35,3 +35,4 @@
 | 2026-11-06 | Kartın tamamı sürüklenir, kısa tıklama açar; ayrı tutamaç yok. Proje kartının tamamı projeyi açar | Mert'in testi: ayrı tutma yeri ve sadece yazıya tıklama iyi hissettirmedi |
 | 2026-11-06 | Dialog'lar dikey ortalanmaz, üstten sabitlenir | İçerik büyüyünce pencere zıplamasın |
 | 2026-11-06 | Dosyaları çakışmayan işler Codex'e ayrı terminallerde paralel verilir | Mert'in isteği; hız |
+| 2026-11-06 | Test kartı: Ne değişti, Nasıl denerim, senaryolar, AI testleri; aksiyonlar Onayla, Geri gönder, Geri ata. Erteleme ve kişi seçici yok | Yöneticinin ürünü tatması için gereken en az şey; takım gelene kadar "başkası" AI demek |

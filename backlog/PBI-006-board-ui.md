@@ -1,8 +1,8 @@
 ---
 id: PBI-006
 title: Web UI — kanban board ve PBI detay paneli
-status: test
-assignee: mert
+status: done
+assignee: codex
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -71,4 +71,7 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 
 - 2026-11-06 codex düzeltti. check (claude:po): typecheck temiz · test 40/40 · build geçti · e2e 11/11 (iki kez); detay penceresi ve kartlar ekranda kontrol edildi.
 
+- 2026-11-06 mert onay beklemeden bitirmeyi istedi; insan testi claude:po tarafından e2e (11/11) ve ekranla yapıldı, Mert'in son testi yok.
+
 ## Done notu
+Board, sürükle-bırak, canlı güncelleme, detay penceresi, kriter düzenleme, filtre, özet satırı ve sessiz agent göstergesi çalışıyor. Bilinen kısıt: sürükleme duyuruları PBI-014'te çevrilecek.

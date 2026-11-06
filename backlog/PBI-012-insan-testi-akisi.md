@@ -1,11 +1,11 @@
 ---
 id: PBI-012
 title: İnsan testi akışı — "Seni bekliyor", test senaryoları, onayla / geri gönder
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P1
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -31,6 +31,8 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 - Tasarım: `docs/DESIGN.md` + Claude Design "PBI detayı" ekranı (Test durumundaki varyantı PBI-004'te eklenecek).
 
 ## Kabul kriterleri
+- [ ] Test detayında AI'ın yazdığı "Ne değişti" ve "Nasıl denerim" görünür.
+- [ ] "Geri ata" zorunlu notla kartı Test'te bırakır, AI'a atar ve "Seni bekliyor"dan çıkarır; not `get_item` cevabının başında görünür.
 
 - [ ] AI bir kartı senaryolarla kullanıcıya atadığında kart "Seni bekliyor" listesinde ve Test kolonunda görünür.
 - [ ] Kullanıcı senaryo ekleyip düzenleyebilir; değişiklikler geçmişte görünür.
@@ -53,5 +55,7 @@ AI'ın tek başına doğrulayamadığı işler kullanıcıya açık senaryolarla
 3. CLI ile tekrar test'e al, onayla → Done ve geçmişte tüm adımlar.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po codex'e (gpt-6.1-terra, high) paralel verdi. Kapsam genişledi: Ne değişti, Nasıl denerim, Geri ata.
 
 ## Done notu

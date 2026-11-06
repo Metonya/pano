@@ -1,11 +1,11 @@
 ---
 id: PBI-013
 title: Proje özeti — proje ne aşamada, bir bakışta
-status: backlog
-assignee: -
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 ## Amaç
@@ -32,5 +32,7 @@ Kullanıcı Pano'yu açtığında "ne zaman başladım, kaç iş bitti, kaç iş
 2. Bir kartı Done'a çek → özet anında değişmeli.
 
 ## Notlar / log
+
+- 2026-11-06 claude:po codex'e (gpt-6.1-sol) paralel verdi.
 
 ## Done notu
