@@ -1,8 +1,8 @@
 ---
 id: PBI-005
 title: Web UI — proje listesi, yıldızlama ve arşiv
-status: test
-assignee: mert
+status: in-progress
+assignee: codex
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -22,6 +22,9 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - shadcn component'leri, ikonlar `lucide-react`.
 
 ## Kabul kriterleri
+- [ ] Yeni proje sadece adla açılır; key addan üretilir, çakışmaz ve "Değiştir" ile düzenlenebilir.
+- [ ] Sol üstteki Pano yazısı ana sayfaya götürür.
+- [ ] Dialog dışına tıklama ve Esc: boş formda kapanır; dolu formda sorar; kalıcı silme onayında kapanmaz.
 - [x] Projeler listelenir; yıldızlılar en üstte, her grupta son güncellenen önce.
 - [x] Yıldız ikonuna tıklayınca anında (optimistic) sıralama değişir, yenileyince kalıcıdır.
 - [x] Arşivlenen proje ana listeden kalkar, "Arşiv" filtresinde görünür ve geri alınabilir.
@@ -45,5 +48,7 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - 2026-11-06 codex bitirdi ama ekran boş açılıyordu: yanlış `cn` importu, eksik `@` alias'ı, çalışmayan e2e script'i, 686 satırlık tek dosya. Geri gönderildi, düzeltti.
 - 2026-11-06 claude:po e2e ile buldu: Codex tr.json'u bozuk encoding ile yazmış ("Ar?iv"). Dosya düzeltildi, bunu yakalayan test eklendi; BOM'lar temizlendi. Küçük düzeltmeler: sıfırda "Seni bekliyor" sade, boş "Yıldızlı" gizli.
 - check: lint · typecheck temiz · test 25/25 · build geçti · e2e 2/2 (oluştur → yıldızla → arşivle → geri al; 375px dark) · 375px'te yatay taşma yok.
+
+- 2026-11-06 mert testte geri gönderdi: key alanı gereksiz, Pano yazısı ana sayfaya gitmiyor, dialog dışına tıklama davranışı. claude:po kararları `decisions.md`'ye yazdı, işi codex'e (gpt-6.1-sol) verdi.
 
 ## Done notu

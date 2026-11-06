@@ -29,3 +29,5 @@
 | 2026-11-06 | Proje işlemleri kart üzerindeki … butonu ve sağ tık menüsünde; kalıcı silme sadece arşivdeki projede, proje adını yazarak | Yanlışlıkla geçmiş kaybolmasın |
 | 2026-11-06 | Agent'lar arayüzde okunaklı ad + rol ile görünür (Claude · PO, Claude · Tasarım, Codex, Mert); teknik kimlik (`claude:po`) API'de ve geçmiş ayrıntısında | Küçük harfli teknik kimlik kullanıcıya garip geliyor |
 | 2026-11-06 | Codex, Pano'yu MCP yerine terminal üzerinden (CLI/REST) kullanır; işler Codex'e terminal sekmesinden verilir ki Mert izleyebilsin | Bu makinede Codex'in MCP'si politika ile kapalı; CLI yolu çalışıyor |
+| 2026-11-06 | Yeni projede sadece ad istenir; key addan otomatik üretilir, istenirse "Değiştir" ile düzenlenir | Key teknik bir ayrıntı; kullanıcı düşünmek zorunda kalmasın (Mert'in testi) |
+| 2026-11-06 | Dialog dışına tıklama / Esc: boşsa kapanır; kullanıcı bir şey yazdıysa "Yazdıkların silinsin mi?" diye sorar; kalıcı silme onayı dışarı tıklamayla kapanmaz; salt okunur pencereler her zaman kapanır | Yanlışlıkla emek kaybı olmasın, gereksiz engel de olmasın |
