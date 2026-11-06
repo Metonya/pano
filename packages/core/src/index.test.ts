@@ -7,6 +7,39 @@ import { ZodError } from "zod";
 import { createCore, positionBetween } from "./index";
 
 const cores: ReturnType<typeof createCore>[] = [];
+test("project key suggestions transliterate, shorten and remain valid", () => {
+  const core = createCore(":memory:");
+  cores.push(core);
+  for (const [name, expected] of [
+    ["Pano", "PANO"],
+    ["Snakeful", "SNAKEF"],
+    ["Örnek Proje", "OP"],
+    ["ŞĞÜÖÇİIı", "SGUOCI"],
+    ["  bir iki üç dört beş  ", "BIUD"],
+    ["", "PRJ"],
+    ["123 !", "PRJ"],
+    ["a", "AP"],
+    ["İ 123", "IP"],
+  ]) {
+    expect(core.projects.suggestKey(name as string)).toBe(expected);
+  }
+});
+test("project suggestions skip active and archived keys and cap suffix length", () => {
+  const core = createCore(":memory:");
+  cores.push(core);
+  core.projects.create({ key: "OP", name: "Örnek Proje" }, "mert");
+  core.projects.archive("OP", true, "mert");
+  core.projects.create({ key: "OP2", name: "Diğer" }, "mert");
+  expect(core.projects.suggestKey("Örnek Proje")).toBe("OP3");
+  for (let suffix = 1; suffix <= 12; suffix++) {
+    core.projects.create(
+      { key: `SNAKEF${suffix === 1 ? "" : suffix}`, name: "Snakeful" },
+      "mert",
+    );
+  }
+  expect(core.projects.suggestKey("Snakeful")).toBe("SNAKEF13");
+  expect(core.projects.suggestKey("Snakeful")).toMatch(/^[A-Z0-9]{2,10}$/);
+});
 function setup() {
   const core = createCore(":memory:");
   cores.push(core);

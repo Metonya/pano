@@ -69,6 +69,33 @@ test("project, item, actor, validation, conflicts and OpenAPI", async () => {
   expect(spec.paths["/api/v1/openapi.json"].get).toBeDefined();
 });
 
+test("suggest-key is a documented GET route and creating still requires key", async () => {
+  const isolated = createCore(":memory:");
+  try {
+    const app = createApp({ core: isolated, dataDir: "test" });
+    const path = `/projects/suggest-key?name=${encodeURIComponent("Örnek Proje")}`;
+    expect(await (await request(app, path)).json()).toEqual({ key: "OP" });
+    isolated.projects.create({ key: "OP", name: "Örnek Proje" }, "mert");
+    isolated.projects.archive("OP", true, "mert");
+    expect(await (await request(app, path)).json()).toEqual({ key: "OP2" });
+    expect((await request(app, "/projects/suggest-key")).status).toBe(400);
+    expect(
+      (await request(app, "/projects", "POST", { name: "Örnek Proje" })).status,
+    ).toBe(400);
+    const spec = await (await request(app, "/openapi.json")).json();
+    const endpoint = spec.paths["/api/v1/projects/suggest-key"].get;
+    expect(endpoint.parameters).toContainEqual(
+      expect.objectContaining({ name: "name", in: "query", required: true }),
+    );
+    expect(
+      endpoint.responses[200].content["application/json"].schema.properties.key
+        .type,
+    ).toBe("string");
+  } finally {
+    isolated.close();
+  }
+});
+
 test("host security and bearer authentication", async () => {
   expect(() => serverConfig({ PANO_HOST: "0.0.0.0" })).toThrow("PANO_TOKEN");
   expect(

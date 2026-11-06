@@ -21,10 +21,16 @@ export function Sidebar({
     <>
       <aside className={`sidebar ${mobile ? "mobile-open" : ""}`}>
         <div className="brand">
-          <span className="brand-icon">
-            <FolderKanban size={18} />
-          </span>
-          Pano{" "}
+          <Link
+            className="brand-link"
+            to="/"
+            onClick={() => showArchive(false)}
+          >
+            <span className="brand-icon">
+              <FolderKanban size={18} />
+            </span>
+            {t("brand")}
+          </Link>
           <button
             type="button"
             className="icon mobile-close"

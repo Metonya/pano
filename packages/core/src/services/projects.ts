@@ -19,6 +19,33 @@ export function createProjects(context: Context) {
     get,
   } = context;
   const projects = {
+    suggestKey(name: string) {
+      const words = name
+        .replace(/[ıİ]/g, "I")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .split(/\s+/)
+        .map((word) => word.replace(/[^A-Z]/g, ""))
+        .filter(Boolean);
+      let base =
+        words.length > 1
+          ? words
+              .slice(0, 4)
+              .map((word) => word[0])
+              .join("")
+          : (words[0] ?? "PRJ").slice(0, 6);
+      if (base.length < 2) base = base.padEnd(2, "P");
+      const used = new Set(
+        all("SELECT key FROM projects").map((row) => row.key),
+      );
+      let key = base;
+      for (let suffix = 2; used.has(key); suffix++) {
+        const number = String(suffix);
+        key = base.slice(0, 10 - number.length) + number;
+      }
+      return key;
+    },
     list(options: { includeArchived?: boolean } = {}) {
       return all(
         `SELECT * FROM projects ${options.includeArchived ? "" : "WHERE archived_at IS NULL"} ORDER BY starred DESC, updated_at DESC, key`,

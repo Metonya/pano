@@ -19,6 +19,7 @@ export function registerRoutes(
     handler: (c: Context) => Response | Promise<Response>,
     body?: z.ZodType,
     query?: z.ZodObject,
+    response?: z.ZodType,
   ) => {
     const params = [...path.matchAll(/:([A-Za-z]+)/g)].map(
       (m) => m[1] as string,
@@ -59,7 +60,7 @@ export function registerRoutes(
           content:
             path === "/events"
               ? { "text/event-stream": { schema: z.string() } }
-              : { "application/json": { schema: z.unknown() } },
+              : { "application/json": { schema: response ?? z.unknown() } },
         },
         400: { description: "Invalid request" },
         401: { description: "Unauthorized" },

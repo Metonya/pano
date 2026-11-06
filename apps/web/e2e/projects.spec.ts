@@ -6,10 +6,16 @@ test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async (
   await page.goto("/");
   await page.getByRole("button", { name: "Yeni proje" }).first().click();
   await page.getByLabel("Proje adı").fill("Deneme proje");
-  await page.getByLabel("Key", { exact: true }).fill("DEMO");
+  await expect(page.getByLabel("Key", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText("PBI'lar DP-1, DP-2 diye numaralanır"),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Oluştur" }).click();
   const card = page.locator("article").filter({ hasText: "Deneme proje" });
   await expect(card).toBeVisible();
+  await expect(
+    card.getByRole("link", { name: "Deneme proje" }),
+  ).toHaveAttribute("href", "/projects/DP");
   await card.getByRole("button", { name: "Yıldızla Deneme proje" }).click();
   await expect(
     card.getByRole("button", { name: "Yıldızı kaldır Deneme proje" }),

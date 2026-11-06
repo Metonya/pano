@@ -328,6 +328,8 @@ Her bileşende: gerçek HTML elemanı, `:focus-visible { outline: 2px solid var(
 - **Hata:** wifi-off ikonu, "Sunucuya ulaşılamadı", "Pano çalışıyor mu? Terminalde `pano serve` ile başlat.", birincil "Tekrar dene". (Veri önceden yüklendiyse tam sayfa hata yerine bağlantı şeridi kullanılır.)
 - Dashed kutu sadece bırakma alanında.
 
+**Dialog/Sheet kapatma** — Boş veya değişmemiş formlar ve salt okunur pencereler dışarı tıklama ve Esc ile kapanır. Değişmiş formda dışarı tıklama, Esc ve Vazgeç aynı pencerenin içinde “Yazdıkların silinsin mi?” sorusunu gösterir: varsayılan odak “Yazmaya devam et”, diğer seçenek “Sil ve kapat”. İkinci modal açılmaz; Oluştur/Kaydet bu soruyu tetiklemez. Kalıcı silme penceresinde dışarı tıklama engellenir; Esc ve Vazgeç onay metni için soru sormadan kapatır. Ortak `ManagedDialog` bu davranışı sağlar; salt okunur kullanımda `dirty` verilmez.
+
 ## 7. Motion
 
 - Dokunulan/sürüklenen her şey **spring**: damping 1.0 (zıplama yok), response 0.3–0.4s. Momentumlu bırakmada damping 0.8. Sheet/dialog: damping 0.8, response 0.3. (Framer Motion: `type: "spring", bounce: 0, duration: 0.35`.)

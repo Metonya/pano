@@ -63,4 +63,5 @@ export type Route = (
   handler: (c: Context) => Response | Promise<Response>,
   body?: z.ZodType,
   query?: z.ZodObject,
+  response?: z.ZodType,
 ) => void;

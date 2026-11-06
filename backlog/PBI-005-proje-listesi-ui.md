@@ -1,8 +1,8 @@
 ---
 id: PBI-005
 title: Web UI — proje listesi, yıldızlama ve arşiv
-status: in-progress
-assignee: codex
+status: test
+assignee: mert
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -22,9 +22,9 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - shadcn component'leri, ikonlar `lucide-react`.
 
 ## Kabul kriterleri
-- [ ] Yeni proje sadece adla açılır; key addan üretilir, çakışmaz ve "Değiştir" ile düzenlenebilir.
-- [ ] Sol üstteki Pano yazısı ana sayfaya götürür.
-- [ ] Dialog dışına tıklama ve Esc: boş formda kapanır; dolu formda sorar; kalıcı silme onayında kapanmaz.
+- [x] Yeni proje sadece adla açılır; key addan üretilir, çakışmaz ve "Değiştir" ile düzenlenebilir.
+- [x] Sol üstteki Pano yazısı ana sayfaya götürür.
+- [x] Dialog dışına tıklama ve Esc: boş formda kapanır; dolu formda sorar; kalıcı silme onayında kapanmaz.
 - [x] Projeler listelenir; yıldızlılar en üstte, her grupta son güncellenen önce.
 - [x] Yıldız ikonuna tıklayınca anında (optimistic) sıralama değişir, yenileyince kalıcıdır.
 - [x] Arşivlenen proje ana listeden kalkar, "Arşiv" filtresinde görünür ve geri alınabilir.
@@ -33,7 +33,8 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - [x] Playwright testi: oluştur → yıldızla → arşivle → geri al akışı geçer.
 
 ## Test senaryoları (Mert)
-1. http://localhost:5173 → Örnek proje ve Demo görünür; yeni proje aç, bozuk key dene → açıklayıcı hata.
+1. http://localhost:5173 → Yeni proje aç, sadece ad yaz → altta key önerisi çıkar. "Değiştir" ile bozuk key dene → açıklayıcı hata. Sol üstteki Pano ana sayfaya götürür.
+1b. Yeni projede yazı yazıp dışarı tıkla, Esc'e bas, Vazgeç'e bas → her birinde "Yazdıkların silinsin mi?" sorulur. Boş pencere dışarı tıklayınca kapanır.
 2. Bir projeyi yıldızla → üste, büyük karta geçer; yenile → kalır.
 3. … veya sağ tıkla arşivle → listeden çıkar; Arşiv görünümünde geri al; arşivde kalıcı silme proje adını ister.
 4. Tarayıcıyı daralt ve sistem temasını koyu yap → taşma yok, renkler okunur.
@@ -50,5 +51,7 @@ Kullanıcı tüm projelerini tek ekranda görsün, önemli olanları yıldızlas
 - check: lint · typecheck temiz · test 25/25 · build geçti · e2e 2/2 (oluştur → yıldızla → arşivle → geri al; 375px dark) · 375px'te yatay taşma yok.
 
 - 2026-11-06 mert testte geri gönderdi: key alanı gereksiz, Pano yazısı ana sayfaya gitmiyor, dialog dışına tıklama davranışı. claude:po kararları `decisions.md`'ye yazdı, işi codex'e (gpt-6.1-sol) verdi.
+
+- 2026-11-06 codex (sol) yaptı; build ve e2e'yi çalıştıramadı. claude:po e2e ile gerçek hata buldu: pencere yeniden açılınca yazılı formda dışarıya ilk tıklama çalışmıyordu; kapatma kontrolü overlay'e alındı, odak yazı alanına dönüyor. check: lint · typecheck temiz · test 28/28 · build geçti · e2e 6/6 (iki kez).
 
 ## Done notu

@@ -25,6 +25,17 @@ export function registerProjects(route: Route, core: Core) {
     async (c) => c.json(core.projects.create(await json(c, project), actor(c))),
     project,
   );
+  route(
+    "get",
+    "/projects/suggest-key",
+    (c) =>
+      c.json({
+        key: core.projects.suggestKey(z.string().parse(c.req.query("name"))),
+      }),
+    undefined,
+    z.object({ name: z.string() }),
+    z.object({ key: z.string().regex(/^[A-Z0-9]{2,10}$/) }),
+  );
   route("get", "/projects/:key", (c) => c.json(core.projects.get(key(c))));
   const projectPatch = project
     .omit({ key: true })
