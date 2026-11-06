@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import { useContext, useState } from "react";
 import { LanguageContext } from "@/app/Providers";
+import { ManagedDialog } from "@/components/ManagedDialog";
 import { Switch } from "@/components/Switch";
+import { DialogTitle } from "@/components/ui/dialog";
 import { request } from "@/lib/api";
 import { type Language, language, t } from "@/lib/i18n";
 import "./settings.css";
@@ -49,7 +51,26 @@ function Copyable({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function Settings() {
+export function SettingsDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <ManagedDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      className="settings-dialog"
+      focusContent
+    >
+      <Settings />
+    </ManagedDialog>
+  );
+}
+
+function Settings() {
   const [tab, setTab] = useState(0);
   const setLanguage = useContext(LanguageContext);
   const [theme, setTheme] = useState(
@@ -81,7 +102,7 @@ export function Settings() {
   const mcpUrl = `${location.origin}/mcp`;
   return (
     <section className="app-settings">
-      <div className="settings-title">{tabs[tab]}</div>
+      <DialogTitle className="settings-title">{tabs[tab]}</DialogTitle>
       <div role="tablist" aria-label={t("settings")} className="settings-tabs">
         {tabs.map((name, i) => {
           const Icon = icons[i];

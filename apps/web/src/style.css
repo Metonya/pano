@@ -180,7 +180,8 @@ a:hover {
 }
 .app {
   display: flex;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 .sidebar {
   width: 260px;
@@ -191,9 +192,6 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 28px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   overflow-y: auto;
 }
 .brand {
@@ -303,17 +301,53 @@ a:hover {
   border-radius: 10px;
   overflow-wrap: anywhere;
 }
-.nav-project[aria-current="page"] {
+.nav-project-row {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+}
+.nav-project-row.is-active {
   background: var(--accent-soft);
   color: var(--accent-text);
+}
+.nav-project-row .nav-project {
+  flex: 1;
+  min-width: 0;
 }
 .nav-project-name {
   min-width: 0;
 }
 .nav-star {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+}
+.nav-star[aria-pressed="true"] {
   color: var(--star);
+  opacity: 1;
+}
+.nav-project-row:hover .nav-star,
+.nav-project-row:focus-within .nav-star {
+  opacity: 1;
+}
+.nav-star:hover {
+  background: var(--field);
+  opacity: 1;
+}
+@media (hover: none) {
+  .nav-star {
+    opacity: 1;
+  }
 }
 .small-icon {
   width: 22px;
@@ -342,10 +376,14 @@ a:hover {
   margin-left: auto;
 }
 main {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 .toolbar {
+  flex-shrink: 0;
   height: 52px;
   position: sticky;
   top: 0;
@@ -360,7 +398,8 @@ main {
 }
 h1 {
   font-size: 26px;
-  line-height: 1;
+  /* Leaves room for descenders; overflow below would clip them at line-height 1. */
+  line-height: 1.25;
   font-weight: 700;
   letter-spacing: -0.025em;
   margin: 0;
@@ -385,6 +424,9 @@ h1 {
   font-weight: 600;
 }
 .content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 18px 28px 64px;
   display: flex;
   flex-direction: column;
@@ -571,6 +613,7 @@ section h2 {
   background: var(--skeleton);
 }
 .notice {
+  flex-shrink: 0;
   padding: 10px 28px;
   background: var(--field);
   color: var(--muted);
@@ -679,11 +722,18 @@ section h2 {
   flex-direction: column;
   gap: 8px;
 }
+.dialog:focus-visible {
+  /* The window only holds focus for keyboard users; it is not a control. */
+  outline: none;
+}
 .dialog label {
+  display: block;
   font-size: 13px;
   font-weight: 600;
 }
-.dialog input {
+.dialog input:where(:not([type="checkbox"], [type="radio"], [type="file"])),
+:where(.dialog form) > select,
+:where(.dialog form) > textarea {
   width: 100%;
   border: 1px solid var(--line);
   background: var(--field);
@@ -691,6 +741,13 @@ section h2 {
   padding: 8px 10px;
   color: var(--text);
   min-height: 40px;
+}
+/* A field nested in its label: the gap keeps the focus ring off the text. */
+.dialog
+  label
+  > input:where(:not([type="checkbox"], [type="radio"], [type="file"])) {
+  display: block;
+  margin-top: 8px;
 }
 .dialog-actions {
   display: flex;
@@ -717,7 +774,7 @@ section h2 {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.dialog:not(.item-sheet) > [data-slot="dialog-title"] {
+.dialog > [data-slot="dialog-title"] {
   padding-right: 40px;
   font-size: 22px;
   font-weight: 700;
@@ -786,7 +843,7 @@ section h2 {
 .project-settings-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 .project-settings-field small,
@@ -842,7 +899,7 @@ section h2 {
   flex: 1;
   min-width: 0;
 }
-.project-settings-row > div > span {
+.project-settings-label {
   font-size: 15px;
   font-weight: 600;
 }
@@ -893,6 +950,23 @@ section h2 {
   display: none;
 }
 @media (max-width: 700px) {
+  /* Below 700px the page scrolls normally and the sidebar is a drawer. */
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .content {
+    overflow: visible;
+  }
+  .nav-project-row .nav-project {
+    min-height: 44px;
+  }
+  .nav-star {
+    width: 44px;
+    height: 44px;
+    margin-right: 0;
+  }
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;

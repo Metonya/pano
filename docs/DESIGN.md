@@ -217,7 +217,7 @@ Font: `-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-
 
 | Rol                          | Boyut / ağırlık                      | Satır    | Letter-spacing | Nerede                                        |
 | ---------------------------- | ------------------------------------ | -------- | -------------- | --------------------------------------------- |
-| Toolbar başlığı              | 26 / 700                             | 1        | −0.025em       | Board, Projeler toolbar'ı                     |
+| Toolbar başlığı              | 26 / 700                             | 1.25     | −0.025em       | Board, Projeler toolbar'ı                     |
 | Sheet başlığı                | 22 / 700                             | 1.25     | −0.02em        | Dialog başlığı                                |
 | Marka                        | 19 / 600                             | 1        | −0.02em        | Sidebar'daki "Pano"                           |
 | Mobil başlık                 | 34 / 700                             | 1.1      | −0.03em        | Sadece mobil (iOS Large Title)                |
@@ -266,15 +266,16 @@ Radius ölçeği: 6 (focus halkası), 8 (küçük kontrol), 10 (buton, segment),
 ```
 
 - Kök: `display: flex; flex-wrap: wrap`. Sidebar `flex: 1 1 260px`, içerik `flex: 999 1 560px; min-width: 0` (dar ekranda sidebar üste geçer).
+- **Masaüstünde kabuk ekrana sığar (100dvh):** board'da sayfa kaymaz, üst bar ve özet sabittir, yalnız kolonlar kendi içinde kayar. Diğer sayfalar içerik alanında kayar. 700px altında normal sayfa kaydırması.
 - **Sayfa hiçbir genişlikte yatay kaymaz.** Sadece board grid'i kendi `overflow-x: auto` kutusunda kayar.
 - **Mobil (< 640px):** toolbar yerine iOS tarzı üst bölüm (geri linki "Projeler", ikon butonlar, 34px başlık, özet satırı, turuncu "Seni bekliyor" satırı). Kolon görünümü tam genişlikte dört eşit segmenttir (`role="tablist"`, `grid-template-columns: repeat(4, minmax(0, 1fr))`): 390px ekranda 358×52px; üstte 17/600 sayı, altta 11px Backlog / In Progress / Test / Done etiketi (`white-space: nowrap`). Seçili segment light temada beyaz `card` zemindir; altında seçili kolonun kartları tek sütun. Kenar boşluğu 16px.
-- Proje ayarları ve PBI detayı board'un üstünde sheet; uygulama ayarları macOS Settings penceresi (720 geniş, üstte ikonlu sekmeler).
+- Proje ayarları ve PBI detayı board'un üstünde sheet; uygulama ayarları bulunulan sayfanın üstünde açılan macOS Settings penceresi; `/settings` adresi de bunu açar (720 geniş, üstte ikonlu sekmeler).
 
 ## 6. Component kuralları
 
 Her bileşende: gerçek HTML elemanı, `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px }`, `outline: none` hiçbir yerde yok.
 
-**Sidebar öğesi** — `<a>`; ikon (18px lucide veya 22px renkli proje karesi, radius 6) + ad + sağda sayı (12px, tabular). Aktif: `accent-soft` zemin, `accent-text` metin, `aria-current="page"`. "Seni bekliyor": `wait-bg` zemin, `wait` metin, sayı rozeti `wait` zemin / `on-wait` metin; proje listesinin üstünde. Tek "Projeler" listesi vardır: yıldızlılar üstte, adının yanında 12px dolu yıldız; ayrı "Yıldızlı" başlığı yoktur. Sidebar masaüstünde sticky ve 100vh'dir. Bölüm başlığı 12/600 `muted`. _shadcn:_ `Sidebar` (menu button) veya düz liste.
+**Sidebar öğesi** — `<a>`; ikon (18px lucide veya 22px renkli proje karesi, radius 6) + ad + sağda sayı (12px, tabular). Aktif: `accent-soft` zemin, `accent-text` metin, `aria-current="page"`. "Seni bekliyor": `wait-bg` zemin, `wait` metin, sayı rozeti `wait` zemin / `on-wait` metin; proje listesinin üstünde. Tek "Projeler" listesi vardır: yıldızlılar üstte; satırda sağa yaslı yıldız butonu (yıldızlıda dolu ve hep görünür, yıldızsızda hover/focus'ta boş), tıklama projeye gitmez. Bölüm başlığı 12/600 `muted`. _shadcn:_ `Sidebar` (menu button) veya düz liste.
 
 **Toolbar ve ikon buton** — `role="toolbar"` + `aria-label`. Solda `h1` (26/700) + yıldız toggle (`aria-pressed`), boşluk, sağda ikon butonlar (filtre, arama, proje ayarları) ve birincil buton. İkon butonlarda `aria-label` zorunlu. Filtre menüsü: atanan, öncelik, "İptal edilenleri göster" (checkbox item), aktifken "Filtreyi temizle"; seçim menüyü kapatmaz, aktif filtre ikonda sayı rozetiyle görünür. Arama ikonu tıklanınca alana açılır; boşken odak kaybında ve Esc ile kapanır. _shadcn:_ `Button variant="ghost" size="icon"`, `DropdownMenu`.
 

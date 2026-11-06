@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { LanguageContext } from "@/app/Providers";
 import { ErrorState, LoadingState } from "@/components/States";
 import { TokenLogin } from "@/components/TokenLogin";
 import { Board } from "@/features/board/Board";
 import { CreateProjectDialog } from "@/features/projects/CreateProjectDialog";
 import { DeleteProjectDialog } from "@/features/projects/DeleteProjectDialog";
 import { ProjectList } from "@/features/projects/ProjectList";
-import { Settings } from "@/features/settings/Settings";
+import { SettingsDialog } from "@/features/settings/Settings";
 import { Waiting } from "@/features/waiting/Waiting";
 import { Sidebar } from "@/layout/Sidebar";
 import { Toolbar } from "@/layout/Toolbar";
@@ -15,8 +16,14 @@ import { type Project, queryKey, request, sorted } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useProjectEvents } from "@/lib/sse";
 export function App() {
+  // The context value changes with the language, so every t() below re-runs
+  // without remounting the app (an open settings window stays open).
+  useContext(LanguageContext);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRoute = pathname === "/settings";
   const [archive, setArchive] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [create, setCreate] = useState(false);
@@ -75,6 +82,11 @@ export function App() {
     navigate("/");
     setMobile(false);
   };
+  const changeSettings = (open: boolean) => {
+    setSettingsOpen(open);
+    if (open) setMobile(false);
+    else if (settingsRoute) navigate("/", { replace: true });
+  };
   if (login)
     return (
       <TokenLogin
@@ -85,6 +97,18 @@ export function App() {
         }}
       />
     );
+  const home = (
+    <ProjectList
+      active={active}
+      archived={archived}
+      archive={archive}
+      act={(project, action, value) =>
+        mutation.mutate({ project, action, value })
+      }
+      onDelete={setDeleting}
+      onCreate={() => setCreate(true)}
+    />
+  );
   return (
     <div className="app">
       <Sidebar
@@ -94,6 +118,14 @@ export function App() {
         archived={archived}
         waiting={waiting}
         showArchive={showArchive}
+        onStar={(project) =>
+          mutation.mutate({
+            project,
+            action: "star",
+            value: !project.starred,
+          })
+        }
+        openSettings={() => changeSettings(true)}
       />
       <main>
         <Toolbar
@@ -124,28 +156,18 @@ export function App() {
             <ErrorState retry={() => void projects.refetch()} />
           ) : (
             <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProjectList
-                    active={active}
-                    archived={archived}
-                    archive={archive}
-                    act={(project, action, value) =>
-                      mutation.mutate({ project, action, value })
-                    }
-                    onDelete={setDeleting}
-                    onCreate={() => setCreate(true)}
-                  />
-                }
-              />
+              <Route path="/" element={home} />
               <Route path="/waiting" element={<Waiting active={active} />} />
               <Route path="/projects/:key" element={<Board projects={all} />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings" element={home} />
             </Routes>
           )}
         </div>
       </main>
+      <SettingsDialog
+        open={settingsOpen || settingsRoute}
+        onOpenChange={changeSettings}
+      />
       <CreateProjectDialog create={create} setCreate={setCreate} all={all} />
       <DeleteProjectDialog
         deleting={deleting}

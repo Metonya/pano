@@ -247,11 +247,14 @@
   width: 100%;
 }
 .dialog .sheet-textarea {
-  min-height: 180px;
+  width: 100%;
+  min-height: 220px;
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--field);
   padding: 12px 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   resize: vertical;
 }
 .dialog .sheet-input {

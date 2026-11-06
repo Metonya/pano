@@ -27,29 +27,27 @@ export function Toolbar({
       <h1>
         {location.pathname === "/waiting"
           ? t("waiting")
-          : location.pathname === "/settings"
-            ? t("settings")
-            : location.pathname.startsWith("/projects/")
-              ? (all.find((p) => location.pathname === `/projects/${p.key}`)
-                  ?.name ?? t("projects"))
-              : archive
-                ? t("archive")
-                : t("projects")}
+          : location.pathname.startsWith("/projects/")
+            ? (all.find((p) => location.pathname === `/projects/${p.key}`)
+                ?.name ?? t("projects"))
+            : archive
+              ? t("archive")
+              : t("projects")}
       </h1>
       <div id="page-toolbar-actions" />
-      {location.pathname === "/" && (
-        <>
-          <button
-            type="button"
-            className="primary"
-            onClick={() => {
-              setCreate(true);
-            }}
-          >
-            <Plus size={16} />
-            <span>{t("new")}</span>
-          </button>
-        </>
+      {/* /settings shows the settings window on top of the home page. */}
+      {(location.pathname === "/" || location.pathname === "/settings") && (
+        <button
+          type="button"
+          className="primary"
+          aria-label={t("new")}
+          onClick={() => {
+            setCreate(true);
+          }}
+        >
+          <Plus size={16} />
+          <span>{t("new")}</span>
+        </button>
       )}
     </div>
   );

@@ -9,8 +9,9 @@ import { BrowserRouter } from "react-router-dom";
 
 const client = new QueryClient();
 export function Providers({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState(language);
+  const [, setLang] = useState(language);
   return (
+    // A new function on every language change also re-renders its consumers.
     <LanguageContext.Provider
       value={(value) => {
         localStorage.setItem("pano-language", value);
@@ -19,7 +20,7 @@ export function Providers({ children }: { children: ReactNode }) {
       }}
     >
       <QueryClientProvider client={client}>
-        <BrowserRouter key={lang}>{children}</BrowserRouter>
+        <BrowserRouter>{children}</BrowserRouter>
       </QueryClientProvider>
     </LanguageContext.Provider>
   );

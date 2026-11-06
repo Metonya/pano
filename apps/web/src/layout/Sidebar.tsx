@@ -16,6 +16,8 @@ export function Sidebar({
   archived,
   waiting,
   showArchive,
+  onStar,
+  openSettings,
 }: {
   mobile: boolean;
   setMobile: (v: boolean) => void;
@@ -23,6 +25,8 @@ export function Sidebar({
   archived: Project[];
   waiting: number;
   showArchive: (v: boolean) => void;
+  onStar: (project: Project) => void;
+  openSettings: () => void;
 }) {
   const { pathname } = useLocation();
   const system = useQuery<{ updateAvailable: boolean; latestVersion?: string }>(
@@ -100,26 +104,35 @@ export function Sidebar({
           {/* `active` comes from sorted(), which puts starred projects first. */}
           {active.map((p) => {
             const to = `/projects/${p.key}`;
+            const current = pathname === to;
             return (
-              <Link
-                className="nav-project"
+              <div
+                className={`nav-project-row ${current ? "is-active" : ""}`}
                 key={p.id}
-                to={to}
-                aria-current={pathname === to ? "page" : undefined}
-                onClick={() => setMobile(false)}
               >
-                <span className="small-icon">{p.name[0]}</span>
-                <span className="nav-project-name">{p.name}</span>
-                {!!p.starred && (
-                  <span
-                    className="nav-star"
-                    role="img"
-                    aria-label={t("starred")}
-                  >
-                    <Star size={12} fill="currentColor" aria-hidden="true" />
-                  </span>
-                )}
-              </Link>
+                <Link
+                  className="nav-project"
+                  to={to}
+                  aria-current={current ? "page" : undefined}
+                  onClick={() => setMobile(false)}
+                >
+                  <span className="small-icon">{p.name[0]}</span>
+                  <span className="nav-project-name">{p.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  className="nav-star"
+                  aria-label={`${t(p.starred ? "unstar" : "star")}: ${p.name}`}
+                  aria-pressed={!!p.starred}
+                  onClick={() => onStar(p)}
+                >
+                  <Star
+                    size={12}
+                    fill={p.starred ? "currentColor" : "none"}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
             );
           })}
         </div>
@@ -148,18 +161,18 @@ export function Sidebar({
         )}
         <div className="nav-bottom">
           {system.data?.updateAvailable && (
-            <Link to="/settings">
+            <button type="button" onClick={openSettings}>
               {t("newVersion")}: {system.data.latestVersion}
-            </Link>
+            </button>
           )}
           <button type="button" onClick={() => showArchive(true)}>
             <Archive size={18} />
             {t("archive")} <span>{archived.length}</span>
           </button>
-          <Link to="/settings" onClick={() => setMobile(false)}>
+          <button type="button" onClick={openSettings}>
             <Settings size={18} />
             {t("settings")}
-          </Link>
+          </button>
         </div>
       </aside>
       {mobile && (

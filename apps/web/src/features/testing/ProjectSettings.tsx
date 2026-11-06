@@ -30,7 +30,7 @@ export function ProjectSettings({
   const opened = useRef(false);
   useEffect(() => {
     if (confirmArchive) keepButton.current?.focus();
-    // Skip the first render: the dialog focuses its first field on open.
+    // Skip the first render: the window itself takes focus on open.
     else if (opened.current) archiveButton.current?.focus();
     opened.current = true;
   }, [confirmArchive]);
@@ -41,6 +41,7 @@ export function ProjectSettings({
     <ManagedDialog
       open
       className="project-settings"
+      focusContent
       onOpenChange={(open) => {
         if (!open) close();
       }}
@@ -104,7 +105,9 @@ export function ProjectSettings({
           <div className="project-settings-box">
             <div className="project-settings-row">
               <div>
-                <span id="project-test">{t("testColumn")}</span>
+                <span id="project-test" className="project-settings-label">
+                  {t("testColumn")}
+                </span>
                 <small id="project-test-help">{t("testColumnHelp")}</small>
               </div>
               <Switch
@@ -132,7 +135,9 @@ export function ProjectSettings({
             )}
             <div className="project-settings-row">
               <div>
-                <span id="project-ai">{t("aiCanClose")}</span>
+                <span id="project-ai" className="project-settings-label">
+                  {t("aiCanClose")}
+                </span>
                 <small id="project-ai-help">{t("aiCanCloseHelp")}</small>
               </div>
               <Switch

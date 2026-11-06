@@ -13,6 +13,7 @@ export function ManagedDialog({
   describedBy,
   className = "",
   hideClose,
+  focusContent = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,6 +24,8 @@ export function ManagedDialog({
   className?: string;
   // The PBI detail sheet draws its own close button in its header.
   hideClose?: boolean;
+  // Settings windows open on the window itself; forms focus their first field.
+  focusContent?: boolean;
 }) {
   const [confirmClose, setConfirmClose] = useState(false);
   const continueButton = useRef<HTMLButtonElement>(null);
@@ -58,6 +61,14 @@ export function ManagedDialog({
         showCloseButton={false}
         className={`dialog ${className}`}
         aria-describedby={describedBy}
+        onOpenAutoFocus={
+          focusContent
+            ? (event) => {
+                event.preventDefault();
+                (event.currentTarget as HTMLElement).focus();
+              }
+            : undefined
+        }
         // Outside clicks are handled from the overlay below; Radix can miss the
         // first one after a dialog has been reopened.
         onInteractOutside={(event) => event.preventDefault()}

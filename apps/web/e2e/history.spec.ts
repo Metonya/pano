@@ -208,3 +208,42 @@ test("205 kayıtta ilk 50 kayıt açılır ve daha fazla yüklenir", async ({
   await page.getByRole("button", { name: "Daha fazla", exact: true }).click();
   await expect(rows).toHaveCount(100, { timeout: 15000 });
 });
+
+test("yüklenirken gelen canlı olay Daha fazla tıklamasını iptal etmez", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "HISTLIVE", name: "Canlı geçmiş" },
+  });
+  for (const title of ["Uzun geçmiş", "Başka iş"])
+    await request.post("/api/v1/projects/HISTLIVE/items", { data: { title } });
+  for (let i = 0; i < 55; i++)
+    await request.post("/api/v1/items/HISTLIVE-1/records", {
+      data: { kind: "note", message: `Kayıt ${i}` },
+    });
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/activity?limit=50&offset=50*", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/projects/HISTLIVE");
+  await page.locator(".board-card").filter({ hasText: "Uzun geçmiş" }).click();
+  await page.getByRole("tab", { name: "Geçmiş" }).click();
+  const rows = page.locator(".history-timeline > li");
+  await expect(rows).toHaveCount(50);
+  const nextPage = page.waitForRequest("**/activity?limit=50&offset=50*");
+  await page.getByRole("button", { name: "Daha fazla", exact: true }).click();
+  await nextPage;
+  // Any write produces an event; wait until the page has refreshed because of it.
+  const refreshed = page.waitForResponse("**/api/v1/projects?*");
+  await request.post("/api/v1/items/HISTLIVE-2/records", {
+    data: { kind: "note", message: "Başka kayıt" },
+  });
+  await refreshed;
+  release();
+  await expect(rows.filter({ hasText: "Kayıt 0" })).toHaveCount(1);
+});

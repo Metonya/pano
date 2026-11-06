@@ -263,6 +263,10 @@
   font-weight: 500;
   cursor: pointer;
 }
+/* Stays a button next to the generic block-level dialog label. */
+.dialog .test-file-button {
+  display: inline-flex;
+}
 /* Keeps the visually hidden input from taking the general dialog field width. */
 .dialog .test-file-button input {
   width: 1px;

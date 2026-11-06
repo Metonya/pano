@@ -1,27 +1,43 @@
 /* macOS Settings window: see "Uygulama ayarları penceresi" in docs/DESIGN.md. */
-.app-settings {
+.dialog.settings-dialog {
+  display: flex;
+  flex-direction: column;
   gap: 0;
   width: 100%;
-  max-width: 720px;
-  min-height: 520px;
-  margin: 8px auto;
-  border: 1px solid var(--line);
+  max-width: min(720px, calc(100% - 32px));
+  /* A fixed height so the window does not jump between tabs. */
+  height: min(540px, 80vh);
+  padding: 0;
   border-radius: 12px;
   background: var(--window);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-sheet);
   overflow: hidden;
+}
+.app-settings {
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+}
+.settings-dialog .dialog-close {
+  top: 6px;
+  right: 8px;
 }
 .settings-title {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   height: 30px;
+  margin-top: 4px;
+  padding: 0 48px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.45;
 }
 .settings-tabs {
   display: flex;
+  flex-shrink: 0;
   justify-content: center;
   gap: 4px;
   border-bottom: 1px solid var(--line);
@@ -52,11 +68,14 @@
   color: var(--accent-text);
 }
 .settings-body {
+  flex: 1;
+  min-height: 0;
   padding: 28px 56px;
+  overflow-y: auto;
 }
 .settings-grid {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-columns: 180px minmax(0, 1fr);
   column-gap: 16px;
   row-gap: 22px;
   align-items: start;
@@ -153,10 +172,12 @@
 .settings-control .settings-copy {
   align-self: stretch;
 }
-.settings-copy input {
+.dialog .settings-copy input {
   flex: 1;
+  width: auto;
   min-width: 0;
   height: 30px;
+  min-height: 0;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -179,7 +200,7 @@
 .settings-grid legend {
   float: left;
   grid-column: 1;
-  width: 150px;
+  width: 180px;
   padding-top: 2px;
   text-align: right;
 }
@@ -191,7 +212,10 @@
   display: flex;
   gap: 16px;
 }
-.settings-themes label {
+.dialog.settings-dialog label {
+  font-weight: 400;
+}
+.dialog .settings-themes label {
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -203,7 +227,7 @@
   align-items: center;
   gap: 6px;
 }
-.theme-option input {
+.dialog .theme-option input {
   margin: 0;
   accent-color: var(--primary);
 }
@@ -284,11 +308,27 @@
     padding: 16px 20px 24px;
   }
   .settings-tabs {
-    overflow-x: auto;
-    justify-content: flex-start;
+    padding: 2px 8px 10px;
   }
   .settings-tabs button {
-    flex-shrink: 0;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    line-height: 1.2;
+  }
+  .settings-title {
+    height: 44px;
+    margin-top: 0;
+  }
+  .settings-dialog .dialog-close {
+    top: 0;
+    right: 0;
+    background: transparent;
+  }
+  .settings-grid select,
+  .settings-button,
+  .dialog .settings-copy input {
+    height: 44px;
   }
   .settings-themes {
     gap: 8px;

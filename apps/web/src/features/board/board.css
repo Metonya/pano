@@ -60,6 +60,7 @@
   width: 32px;
 }
 .board-new {
+  flex-shrink: 0;
   margin-left: 8px;
   padding: 0 12px 0 10px;
   white-space: nowrap;
@@ -109,7 +110,6 @@
   grid-auto-flow: column;
   gap: 20px;
   min-width: 0;
-  align-items: start;
 }
 .board-column {
   gap: 10px;
@@ -148,13 +148,10 @@
 }
 .board-column-scroll {
   min-height: 180px;
-  max-height: calc(100vh - 200px);
-  overflow-x: hidden;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 2px 2px 8px;
+  padding: 2px 2px 16px;
   scrollbar-width: thin;
   scrollbar-color: rgba(127, 127, 127, 0.45) transparent;
 }
@@ -304,6 +301,7 @@
   font-weight: 500;
 }
 .cancelled-list {
+  flex-shrink: 0;
   gap: 8px;
 }
 .cancelled-list h2 {
@@ -319,6 +317,40 @@
   text-align: left;
   text-decoration: line-through;
 }
+/* Desktop: the page fits the screen and only the columns scroll. */
+@media (min-width: 701px) {
+  .content:has(> .board) {
+    padding-bottom: 0;
+  }
+  .board {
+    flex: 1;
+    min-height: 0;
+  }
+  .board > .state {
+    flex-shrink: 0;
+    margin-bottom: 18px;
+  }
+  .board-columns {
+    flex: 1;
+    min-height: 200px;
+    grid-auto-rows: minmax(0, 1fr);
+    overflow: auto hidden;
+  }
+  .board-column {
+    min-height: 0;
+  }
+  .board-column-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden auto;
+  }
+  .cancelled-list {
+    max-height: 168px;
+    margin-bottom: 12px;
+    padding: 2px;
+    overflow-y: auto;
+  }
+}
 @media (max-width: 700px) {
   .board-columns {
     display: block;
@@ -328,10 +360,6 @@
   }
   .board-column.mobile-active {
     display: flex;
-  }
-  .board-column-scroll {
-    max-height: none;
-    overflow: visible;
   }
   .toolbar-icon {
     width: 44px;

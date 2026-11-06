@@ -127,25 +127,31 @@ test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu göst
     sidebar.locator(".nav-label", { hasText: "Yıldızlı" }),
   ).toHaveCount(0);
   const links = sidebar.locator("a.nav-project").filter({ hasText: "panel" });
+  const rows = sidebar.locator(".nav-project-row").filter({ hasText: "panel" });
   await expect(links.nth(0)).toContainText("Yıldızlı panel");
   await expect(
-    links.nth(0).getByRole("img", { name: "Yıldızlı" }),
+    rows.nth(0).getByRole("button", { name: "Yıldızı kaldır" }),
   ).toBeVisible();
-  await expect(links.nth(1).getByRole("img", { name: "Yıldızlı" })).toHaveCount(
-    0,
+  await expect(rows.nth(1).getByRole("button", { name: "Yıldızla" })).toHaveCSS(
+    "opacity",
+    "0",
   );
   await expect(links.nth(1)).toHaveAttribute("aria-current", "page");
+  await expect(rows.nth(1)).toHaveClass(/is-active/);
   await expect(links.nth(0)).not.toHaveAttribute("aria-current", "page");
 
-  // The sidebar stays full height and pinned while a long page scrolls.
+  // The sidebar stays full height and pinned; a long page scrolls inside main.
   await page.evaluate(() => {
-    document.querySelector("main")?.append(
+    document.querySelector(".content")?.append(
       Object.assign(document.createElement("div"), {
-        style: "height: 2000px",
+        style: "height: 2000px; flex-shrink: 0",
       }),
     );
+    document.querySelector(".content")?.scrollTo(0, 1000);
     window.scrollTo(0, 1000);
   });
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(page.locator(".toolbar")).toBeInViewport();
   const box = await sidebar.boundingBox();
   expect(box?.y).toBe(0);
   expect(box?.height).toBe(600);
@@ -154,6 +160,59 @@ test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu göst
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+});
+
+test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", async ({
+  page,
+}) => {
+  await page.request.post("/api/v1/projects", {
+    data: { key: "STARZ", name: "Durak bir" },
+  });
+  // Newer and earlier in key order, so it starts above the project to star.
+  await page.request.post("/api/v1/projects", {
+    data: { key: "STARB", name: "Durak iki" },
+  });
+  await page.goto("/waiting");
+  const sidebar = page.locator("aside");
+  // Other tests share this database, so compare only this test's two rows.
+  const pair = sidebar.locator(".nav-project-row").filter({ hasText: "Durak" });
+  const row = pair.filter({ hasText: "Durak bir" });
+  await expect(pair.first()).toContainText("Durak iki");
+  const button = row.locator("button.nav-star");
+  await expect(row.locator("a button")).toHaveCount(0);
+
+  // Hidden until the row is hovered, then a real click target.
+  await expect(button).toHaveCSS("opacity", "0");
+  await row.hover();
+  await expect(button).toHaveCSS("opacity", "1");
+  const box = await button.boundingBox();
+  expect(box?.width).toBeGreaterThanOrEqual(28);
+  expect(box?.height).toBeGreaterThanOrEqual(28);
+  await expect(button).toHaveAccessibleName("Yıldızla: Durak bir");
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  await expect(button).toHaveAccessibleName("Yıldızı kaldır: Durak bir");
+  await expect(page).toHaveURL("/waiting");
+  await expect(pair.first()).toContainText("Durak bir");
+  // Stays visible without hover.
+  await page.mouse.move(800, 400);
+  await expect(button).toHaveCSS("opacity", "1");
+  await page.reload();
+  await expect(pair.first()).toContainText("Durak bir");
+
+  // Removing the star again keeps the page too.
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+  await expect(page).toHaveURL("/waiting");
+
+  // Touch size on the narrow layout.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.getByRole("button", { name: "Menüyü aç" }).click();
+  const mobile = await button.boundingBox();
+  expect(mobile?.width).toBeCloseTo(44, 1);
+  expect(mobile?.height).toBeCloseTo(44, 1);
 });
 
 test("Seni bekliyor satırı en eski önce listelenir ve kartı doğrudan açar", async ({
