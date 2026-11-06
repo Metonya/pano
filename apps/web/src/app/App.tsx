@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { ErrorState, LoadingState, Placeholder } from "@/components/States";
+import { Board } from "@/features/board/Board";
 import { CreateProjectDialog } from "@/features/projects/CreateProjectDialog";
 import { DeleteProjectDialog } from "@/features/projects/DeleteProjectDialog";
 import { ProjectList } from "@/features/projects/ProjectList";
@@ -89,6 +90,7 @@ export function App() {
               type="button"
               onClick={() => {
                 setActionError(false);
+                window.dispatchEvent(new Event("pano:retry-connection"));
                 void projects.refetch();
               }}
             >
@@ -119,10 +121,7 @@ export function App() {
                 }
               />
               <Route path="/waiting" element={<Waiting active={active} />} />
-              <Route
-                path="/projects/:key"
-                element={<Placeholder text={t("boardSoon")} />}
-              />
+              <Route path="/projects/:key" element={<Board projects={all} />} />
               <Route
                 path="/settings"
                 element={<Placeholder text={t("settingsSoon")} />}

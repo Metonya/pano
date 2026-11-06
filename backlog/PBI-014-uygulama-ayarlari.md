@@ -29,6 +29,7 @@ Pano'yu kuran herkes arayüzü kendi dilinde ve tercih ettiği görünümde kull
 - Ürün kuralları: `docs/product.md`.
 
 ## Kabul kriterleri
+- [ ] Sürükle-bırak ekran okuyucu duyuruları seçili dilde ve PBI numarasıyla okunur (teknik ID değil; PBI-006'dan devralındı).
 - [ ] Dil English yapılınca tüm arayüz (statüler, butonlar, boş durumlar, tarih biçimi) İngilizce görünür; eksik çeviri anahtarı CI'da test ile yakalanır.
 - [ ] Görünüm Açık/Koyu/Otomatik arasında anında değişir; Otomatik'te sistem teması değişince arayüz de değişir; yenilemede tema yanıp sönmez.
 - [ ] Hakkında bölümü doğru sürüm ve veri klasörünü gösterir.

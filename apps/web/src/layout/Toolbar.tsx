@@ -36,6 +36,7 @@ export function Toolbar({
                 ? t("archive")
                 : t("projects")}
       </h1>
+      <div id="page-toolbar-actions" />
       {location.pathname === "/" && (
         <>
           <button

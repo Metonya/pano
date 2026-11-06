@@ -46,6 +46,20 @@ function setup() {
   core.projects.create({ key: "PANO", name: "Pano" }, "mert");
   return core;
 }
+test("board list reports active criteria and a new completion becomes unseen", () => {
+  const c = setup();
+  c.items.create("PANO", { title: "Task", criteria: ["one", "two"] }, "mert");
+  const criterion = c.items.get("PANO-1").criteria[0];
+  c.criteria.check("PANO-1", String(criterion?.id), true, "mert");
+  const row = c.items.list("PANO")[0];
+  expect(row?.criteria_total).toBe(2);
+  expect(row?.criteria_done).toBe(1);
+  expect(row?.last_activity).toBeTruthy();
+  c.items.move("PANO-1", "done", "mert");
+  c.items.markSeen("PANO-1", "mert");
+  c.items.move("PANO-1", "backlog", "mert");
+  expect(c.items.move("PANO-1", "done", "mert").seen_at).toBeNull();
+});
 afterEach(() => {
   for (const core of cores.splice(0)) core.close();
 });

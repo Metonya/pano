@@ -1,8 +1,8 @@
 ---
 id: PBI-006
 title: Web UI — kanban board ve PBI detay paneli
-status: in-progress
-assignee: codex
+status: test
+assignee: mert
 priority: P2
 created: 2026-11-05
 updated: 2026-11-06
@@ -26,23 +26,30 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 
 ## Kabul kriterleri
 
-- [ ] Kart sürüklenip başka kolona bırakılınca statü kalıcı olarak değişir; aktivitede "mert moved to test" görünür.
-- [ ] Başka bir istemci (curl/agent) kart taşıyınca açık board yenilemeden 1 sn içinde güncellenir.
-- [ ] Kart klavyeyle (Space ile tut, ok tuşlarıyla taşı) taşınabilir.
-- [ ] Detay panelinde kriter işaretlenince karttaki ilerleme çubuğu güncellenir.
-- [ ] Assignee filtresi ile "codex" seçilince sadece Codex'e atanmış kartlar görünür.
-- [ ] Proje ayarında Test kolonu kapalıysa board 3 kolon gösterir.
-- [ ] Toolbar'daki filtre menüsünde "İptal edilenleri göster" seçeneği iptal edilen PBI'ları gösterir.
-- [ ] Kullanıcının açmadığı Done kartlarında küçük bir nokta var (metin yok, erişilebilir etiketi "Görülmedi"); kart açılınca kalkar.
-- [ ] Kartlar klavyeyle odaklanıp Enter ile açılır; tüm etkileşimli öğelerde görünür focus halkası var; metin kontrastı AA (≥ 4.5:1).
-- [ ] PBI sheet'i Esc ile kapanır; açıkken odak sheet içinde kalır, kapanınca açan karta geri döner; Detay/Geçmiş sekmeleri ok tuşlarıyla gezilir.
-- [ ] 50+ kartlı kolonda sıra sabittir (öncelik, sonra konum); kartlar kademeli yüklenir (ilk 30, kaydırdıkça devamı) ve kaydırma akıcıdır.
-- [ ] Çok uzun, boşluksuz başlıklar taşmaz (sözcük kırılır, en fazla 3 satır); tam başlık sheet'te görünür.
-- [ ] Özet satırında "Son güncelleme" zamanı görünür; SSE bağlantısı koparsa ince uyarı şeridi ve "Tekrar dene" çıkar, bağlantı dönünce kendiliğinden kalkar.
-- [ ] 30 dakikadır kayıt düşmeyen In Progress agent'ı sidebar'da "… dk'dır sessiz" olarak gösterilir ("takıldı" denmez); eşik sabit değer olarak koddadır.
-- [ ] Boş proje, yükleme ve hata durumları `docs/DESIGN.md`'deki gibi görünür.
-- [ ] Mobilde kolonlar yatay kaydırılabilir sekmeler/şerit olarak çalışır, sayfa yatay taşmaz.
-- [ ] Playwright testi: PBI oluştur → kriter ekle → sürükle → test → done akışı geçer.
+- [x] Kart sürüklenip başka kolona bırakılınca statü kalıcı olarak değişir; aktivitede "mert moved to test" görünür.
+- [x] Başka bir istemci (curl/agent) kart taşıyınca açık board yenilemeden 1 sn içinde güncellenir.
+- [x] Kart klavyeyle (Space ile tut, ok tuşlarıyla taşı) taşınabilir.
+- [x] Detay panelinde kriter işaretlenince karttaki ilerleme çubuğu güncellenir.
+- [x] Assignee filtresi ile "codex" seçilince sadece Codex'e atanmış kartlar görünür.
+- [x] Proje ayarında Test kolonu kapalıysa board 3 kolon gösterir.
+- [x] Toolbar'daki filtre menüsünde "İptal edilenleri göster" seçeneği iptal edilen PBI'ları gösterir.
+- [x] Kullanıcının açmadığı Done kartlarında küçük bir nokta var (metin yok, erişilebilir etiketi "Görülmedi"); kart açılınca kalkar.
+- [x] Kartlar klavyeyle odaklanıp Enter ile açılır; tüm etkileşimli öğelerde görünür focus halkası var; metin kontrastı AA (≥ 4.5:1).
+- [x] PBI sheet'i Esc ile kapanır; açıkken odak sheet içinde kalır, kapanınca açan karta geri döner; Detay/Geçmiş sekmeleri ok tuşlarıyla gezilir.
+- [x] 50+ kartlı kolonda sıra sabittir (öncelik, sonra konum); kartlar kademeli yüklenir (ilk 30, kaydırdıkça devamı) ve kaydırma akıcıdır.
+- [x] Çok uzun, boşluksuz başlıklar taşmaz (sözcük kırılır, en fazla 3 satır); tam başlık sheet'te görünür.
+- [x] Özet satırında "Son güncelleme" zamanı görünür; SSE bağlantısı koparsa ince uyarı şeridi ve "Tekrar dene" çıkar, bağlantı dönünce kendiliğinden kalkar.
+- [x] 30 dakikadır kayıt düşmeyen In Progress agent'ı sidebar'da "… dk'dır sessiz" olarak gösterilir ("takıldı" denmez); eşik sabit değer olarak koddadır.
+- [x] Boş proje, yükleme ve hata durumları `docs/DESIGN.md`'deki gibi görünür.
+- [x] Mobilde kolonlar yatay kaydırılabilir sekmeler/şerit olarak çalışır, sayfa yatay taşmaz.
+- [x] Playwright testi: PBI oluştur → kriter ekle → sürükle → test → done akışı geçer.
+
+## Test senaryoları (Mert)
+1. http://localhost:5173/projects/SAMPLE → kartı tutamacından sürükleyip In Progress'e bırak; yenile → orada kalmalı.
+2. Terminalde `bun run pano task move SAMPLE-2 test` → board kendiliğinden güncellenmeli.
+3. Karta tıkla: durum, atanan, kriter ekle/işaretle, açıklama düzenle; karttaki ilerleme hemen değişmeli. Yazı varken dışarı tıklama sorar, Esc karta döner.
+4. Filtre, arama, Yeni PBI ve … menüsünden iptal (gerekçe ister).
+5. Dar pencere ve koyu tema.
 
 ## Test planı
 
@@ -53,4 +60,7 @@ Bir projenin işlerini Backlog / In Progress / Test / Done kolonlarında görmek
 ## Notlar / log
 
 - 2026-11-06 claude:po işi codex'e (gpt-6.1-terra, high) terminalden verdi; dnd-kit, react-markdown ve remark-gfm önceden kuruldu.
+- 2026-11-06 codex iki turda bitirdi. claude:po: gerçek tarayıcıda sürükleme ve klavyeyle taşıma çalışıyor; e2e seçicileri gerçek kullanıma göre düzeltildi. check: lint · typecheck temiz · test 32/32 · build geçti · e2e 11/11 (iki kez).
+- Bilinen kısıt: dnd-kit ekran okuyucu duyuruları varsayılan İngilizce ve teknik ID içeriyor; PBI-014 çevirisinde ele alınacak.
+
 ## Done notu

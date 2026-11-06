@@ -1,7 +1,12 @@
+import { useQuery } from "@tanstack/react-query";
 import { Archive, FolderKanban, Inbox, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { agentName, type BoardItem } from "@/features/board/types";
 import type { Project } from "@/lib/api";
+import { request } from "@/lib/api";
 import { t } from "@/lib/i18n";
+
+const SILENT_MINUTES = 30;
 export function Sidebar({
   mobile,
   setMobile,
@@ -17,6 +22,23 @@ export function Sidebar({
   waiting: number;
   showArchive: (v: boolean) => void;
 }) {
+  const agents = useQuery<{ item: BoardItem; project: Project }[]>({
+    queryKey: ["board", "agents", active.map((p) => p.key).join(",")],
+    queryFn: async () =>
+      (
+        await Promise.all(
+          active.map(async (project) =>
+            (
+              (await request(
+                `/projects/${project.key}/items?status=in_progress`,
+              )) as BoardItem[]
+            )
+              .filter((item) => item.assignee)
+              .map((item) => ({ item, project })),
+          ),
+        )
+      ).flat(),
+  });
   return (
     <>
       <aside className={`sidebar ${mobile ? "mobile-open" : ""}`}>
@@ -89,6 +111,30 @@ export function Sidebar({
               </Link>
             ))}
         </div>
+        {!!agents.data?.length && (
+          <div className="nav-group">
+            <div className="nav-label">{t("agents")}</div>
+            {agents.data.map(({ item, project }) => {
+              const minutes = Math.floor(
+                (Date.now() - new Date(item.last_activity).getTime()) / 60000,
+              );
+              return (
+                <Link
+                  className="nav-project agent-row"
+                  key={item.id}
+                  to={`/projects/${project.key}`}
+                >
+                  <span>{agentName(item.assignee ?? "")}</span>
+                  {minutes >= SILENT_MINUTES && (
+                    <small>
+                      {minutes} {t("silent")}
+                    </small>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
         <div className="nav-bottom">
           <button type="button" onClick={() => showArchive(true)}>
             <Archive size={18} />

@@ -16,15 +16,20 @@ export type Project = {
   counts: Record<string, number>;
   waiting: Item[];
   agents: number;
+  test_column: number;
+  created_at: string;
 };
 export const queryKey = ["projects"];
-export async function request(path: string, body?: object) {
+export async function request(path: string, body?: object, method = "POST") {
   const response = await fetch(
     `/api/v1${path}`,
     body
       ? {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Pano-Actor": "mert",
+          },
           body: JSON.stringify(body),
         }
       : undefined,

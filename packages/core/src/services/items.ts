@@ -2,7 +2,7 @@ import { ulid } from "ulid";
 import type { z } from "zod";
 import type { Context } from "../context";
 import { itemCreate, itemPatch, statusSchema } from "../schemas";
-import type { Values } from "../types";
+import type { Row, Values } from "../types";
 import type { createActivity } from "./activity";
 export function createItems(
   context: Context,
@@ -33,7 +33,7 @@ export function createItems(
         options.status === undefined
           ? undefined
           : statusSchema.parse(options.status);
-      return status
+      const rows = status
         ? all(
             "SELECT * FROM items WHERE project_id = ? AND status = ? ORDER BY position, number",
             str(p.id),
@@ -43,6 +43,28 @@ export function createItems(
             "SELECT * FROM items WHERE project_id = ? AND status != 'cancelled' ORDER BY position, number",
             str(p.id),
           );
+      return rows.map(
+        (row): Row & { criteria_total: number; criteria_done: number } => ({
+          ...row,
+          criteria_total: Number(
+            get(
+              "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL",
+              str(row.id),
+            )?.n ?? 0,
+          ),
+          criteria_done: Number(
+            get(
+              "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL AND done = 1",
+              str(row.id),
+            )?.n ?? 0,
+          ),
+          last_activity:
+            get(
+              "SELECT MAX(created_at) AS time FROM activity WHERE item_id = ?",
+              str(row.id),
+            )?.time ?? row.updated_at,
+        }),
+      );
     },
     board(projectKey: string) {
       const project = context.project(projectKey);
@@ -193,6 +215,8 @@ export function createItems(
         const patch: Values = {};
         for (const [k, v] of Object.entries(fields))
           if (v !== undefined) patch[k] = v;
+        if (data.status === "done" && row.status !== "done")
+          patch.seen_at = null;
         if (data.status && data.status !== row.status)
           patch.done_at = data.status === "done" ? now() : null;
         const delta = changed(row, patch);
