@@ -12,7 +12,7 @@ import { ManagedDialog } from "@/components/ManagedDialog";
 import { Switch } from "@/components/Switch";
 import { DialogTitle } from "@/components/ui/dialog";
 import { request } from "@/lib/api";
-import { type Language, language, t } from "@/lib/i18n";
+import { type Language, language, languages, t } from "@/lib/i18n";
 import "./settings.css";
 
 type System = {
@@ -72,6 +72,7 @@ export function SettingsDialog({
 
 function Settings() {
   const [tab, setTab] = useState(0);
+  const [languageError, setLanguageError] = useState(false);
   const setLanguage = useContext(LanguageContext);
   const [theme, setTheme] = useState(
     localStorage.getItem("pano-theme") || "auto",
@@ -130,14 +131,20 @@ function Settings() {
                 value={language()}
                 onChange={(e) => {
                   const value = e.target.value as Language;
-                  save({ language: value });
-                  setLanguage(value);
+                  setLanguageError(false);
+                  void setLanguage(value)
+                    .then(() => save({ language: value }))
+                    .catch(() => setLanguageError(true));
                 }}
               >
-                <option value="tr">Türkçe</option>
-                <option value="en">English</option>
+                {languages.map((code) => (
+                  <option key={code} value={code}>
+                    {t(`languageName_${code}`)}
+                  </option>
+                ))}
               </select>
               <small>{t("languageHelp")}</small>
+              {languageError && <small role="alert">{t("failed")}</small>}
             </div>
             <span id="app-updates">{t("updatesLabel")}:</span>
             <div className="settings-control">

@@ -347,11 +347,14 @@ Her bileşende: gerçek HTML elemanı, `:focus-visible { outline: 2px solid var(
 
 ## 8. Metin ve dil
 
-- Arayüz dili: Türkçe ve English (PBI-014). Metinler `apps/web/src/i18n/{tr,en}.json` anahtarlarından gelir; koda sabit metin yazılmaz.
-- **Bilinen teknik terimler her dilde İngilizce kalır:** Backlog, In Progress, Test, Done, PBI, MCP, CLI, build. Zorlama çeviri yok.
+- Arayüz 14 dilde çalışır (PANO-27). Seçici sırası ve adları: English (en), Türkçe (tr), Azərbaycan (az), 中文 (zh, basitleştirilmiş), हिन्दी (hi), Español (es), Deutsch (de), Français (fr), Português (pt), 日本語 (ja), Nederlands (nl), 한국어 (ko), Svenska (sv), Polski (pl).
+- Açılışta önce tarayıcıdaki kayıtlı seçim kullanılır. Kayıt yoksa `navigator.languages` sırasıyla taranır ve desteklenen ilk taban dil seçilir (`pt-BR` → `pt`, `zh-TW` → `zh`). Eşleşme yoksa English kullanılır. Sunucu ayarı tarayıcı tercihini ezmez. HTML `lang` seçili dili izler.
+- Metinler `apps/web/src/i18n/<kod>.json` anahtarlarından gelir; koda sabit metin yazılmaz. English geri dönüş için gömülüdür; diğer diller yalnızca seçildiğinde dinamik yüklenir. İlk render çeviri yüklenene kadar bekler, `t()` eşzamanlı kalır. Eksik anahtar English'e döner.
+- Yeni çeviriler makine çevirisidir; doğal ve kısa bir ton hedeflenmiştir, ana dili konuşanların incelemesiyle iyileştirilebilir. Anahtar ve yer tutucu eşitliği ile karakter bozulmaları test edilir.
+- **Bilinen teknik terimler her dilde İngilizce kalır:** Backlog, In Progress, Test, Done, PBI, MCP, CLI, build, Key, Token, Definition of Done. Zorlama çeviri yok.
 - PBI numarası proje içinde (board, kart, detay ve mobil) `#N`; projeler arası listelerde ve bağlantılarda (Seni bekliyor, Projeler rozetleri), commit ve agent komutlarında `KEY-N` (`PANO-4`).
 - Sentence case ("Yeni PBI", "Seni bekliyor"); Title Case ve TAMAMI BÜYÜK yok.
-- Tarih/saat `Intl.DateTimeFormat`: TR "5 Kas 2026, 23:10", kısa "5 Kas'ta başladı"; EN "Nov 5, 2026, 11:10 PM".
+- Tarih/saat seçili dille `Intl.DateTimeFormat`, göreli zaman `Intl.RelativeTimeFormat` ile gösterilir. Türkçe kısa göreli metinler korunur ("az önce", "2 dk önce"). Özetin açılış günü ve grafiğin "Bugün" etiketi kullanıcının yerel gününe göre seçilir; grafik API'sine tarayıcının saat dilimi gönderilir. TR "5 Kas 2026, 23:10"; EN "Nov 5, 2026, 11:10 PM".
 - Ton: sakin, kısa, kullanıcıya "sen" diye hitap ("Seni bekliyor", "Ne düzeltilmeli?"). Aktörler okunaklı ad + rol ile gösterilir: `Claude · PO`, `Claude · Tasarım`, `Codex`, `Mert`; avatar baş harfi büyüktür. Teknik kimlik (`claude:po`) API’de ve geçmiş ayrıntısında küçük `muted` metin olarak kalabilir.
 - Yıkıcı aksiyon etiketleri "…" ile biter ve onay ister.
 - Dolgu metin, uydurma metrik, lorem ipsum yok; bilinmeyen değer `[yer tutucu]`.

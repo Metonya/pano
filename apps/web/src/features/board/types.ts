@@ -1,3 +1,5 @@
+import { t } from "@/lib/i18n";
+
 export type Status = "backlog" | "in_progress" | "test" | "done" | "cancelled";
 export type Priority = "high" | "medium" | "low";
 export type BoardItem = {
@@ -41,7 +43,9 @@ export const labels: Record<Status, string> = {
   in_progress: "In Progress",
   test: "Test",
   done: "Done",
-  cancelled: "İptal",
+  get cancelled() {
+    return t("cancelled");
+  },
 };
 export const rank: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 export const sortItems = (items: BoardItem[]) =>
@@ -60,8 +64,8 @@ export function agentName(id: string) {
   };
   const roles: Record<string, string> = {
     po: "PO",
-    design: "Tasarım",
-    tasarim: "Tasarım",
+    design: t("designRole"),
+    tasarim: t("designRole"),
   };
   return `${names[name.toLowerCase()] ?? name}${role ? ` · ${roles[role.toLowerCase()] ?? role}` : ""}`;
 }

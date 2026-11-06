@@ -6,14 +6,14 @@ export function relativeTime(value: string, now = Date.now()): string {
     0,
     Math.floor((now - new Date(value).getTime()) / 60000),
   );
-  if (language() === "en" && minutes >= 1) {
+  if (language() !== "tr" && minutes >= 1) {
     const [value, unit] =
       minutes < 60
         ? ([minutes, "minute"] as const)
         : minutes < 1440
           ? ([Math.floor(minutes / 60), "hour"] as const)
           : ([Math.floor(minutes / 1440), "day"] as const);
-    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    return new Intl.RelativeTimeFormat(language(), { numeric: "auto" }).format(
       -value,
       unit,
     );

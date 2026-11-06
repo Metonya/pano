@@ -1,5 +1,40 @@
 import { expect, test } from "@playwright/test";
 
+test.describe("yerel gün sınırı", () => {
+  test.use({ timezoneId: "Europe/Istanbul" });
+  test("UTC günü aynı olsa da dün açılan projede tarih gösterilir", async ({
+    page,
+    request,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-11-06T22:30:00Z"));
+    await request.post("/api/v1/projects", {
+      data: { key: "LOCALDAY", name: "Yerel gün" },
+    });
+    await page.route("**/api/v1/projects/LOCALDAY/summary*", (route) =>
+      route.fulfill({
+        json: {
+          started_at: "2026-11-06T10:00:00Z",
+          total: 25,
+          completed: 25,
+          remaining: 0,
+          cancelled: 0,
+          remaining_by_priority: { high: 0, medium: 0, low: 0 },
+          completed_last_7_days: 25,
+          burn_up: [{ date: "2026-11-06", total: 25, completed: 25 }],
+        },
+      }),
+    );
+    await page.goto("/projects/LOCALDAY");
+    await page.locator("button.board-summary").click();
+    await expect(
+      page.getByRole("dialog", { name: "Proje özeti" }),
+    ).toContainText("6 Kas'ta açıldı, 25 iş tamamlandı");
+    await expect(
+      page.getByRole("dialog", { name: "Proje özeti" }),
+    ).not.toContainText("Bugün açıldı");
+  });
+});
+
 test("özet sayıları, SSE ile Done ve popover klavye davranışı", async ({
   page,
   request,
@@ -75,6 +110,7 @@ for (const variant of ["light", "dark"] as const) {
     page,
     request,
   }) => {
+    await page.clock.setFixedTime(new Date("2026-11-06T12:00:00Z"));
     const key = variant === "light" ? "CHARTLIGHT" : "CHARTDARK";
     expect(
       (
@@ -83,7 +119,7 @@ for (const variant of ["light", "dark"] as const) {
         })
       ).ok(),
     ).toBe(true);
-    await page.route(`**/api/v1/projects/${key}/summary`, (route) =>
+    await page.route(`**/api/v1/projects/${key}/summary*`, (route) =>
       route.fulfill({
         json: {
           started_at: "2026-11-04T00:00:00.000Z",
@@ -171,6 +207,7 @@ test.describe("dokunmatik ve seçili dil", () => {
     page,
     request,
   }) => {
+    await page.clock.setFixedTime(new Date("2026-11-06T12:00:00Z"));
     expect(
       (
         await request.post("/api/v1/projects", {
@@ -180,7 +217,7 @@ test.describe("dokunmatik ve seçili dil", () => {
     ).toBe(true);
     await page.addInitScript(() => localStorage.setItem("pano-language", "en"));
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.route("**/api/v1/projects/CHARTTOUCH/summary", (route) =>
+    await page.route("**/api/v1/projects/CHARTTOUCH/summary*", (route) =>
       route.fulfill({
         json: {
           started_at: "2026-11-05T12:00:00.000Z",

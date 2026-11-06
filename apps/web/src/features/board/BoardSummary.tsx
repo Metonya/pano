@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from "react";
 import { type Project, request } from "@/lib/api";
 import { language, t } from "@/lib/i18n";
 import { relativeTime } from "./format";
+import { chartDateLabel, openedSummary } from "./summaryDates";
 import type { BoardItem } from "./types";
 import "./summary.css";
 
@@ -33,13 +34,7 @@ function BurnUp({ data }: { data: Summary }) {
   });
   const date = (value: string) => format.format(new Date(value));
   if (!first || !last || days.length < 2) {
-    return (
-      <p>
-        {data.completed === 0
-          ? t("summaryOpenedTodayZero")
-          : t("summaryOpenedToday").replace("{count}", String(data.completed))}
-      </p>
-    );
+    return <p>{openedSummary(data.started_at, data.completed)}</p>;
   }
   const start = Date.parse(first.date);
   const duration = Date.parse(last.date) - start;
@@ -164,7 +159,7 @@ function BurnUp({ data }: { data: Summary }) {
       </button>
       <div className="summary-dates">
         <span>{date(first.date)}</span>
-        <span>{t("summaryToday")}</span>
+        <span>{chartDateLabel(last.date)}</span>
       </div>
     </figure>
   );
@@ -179,10 +174,14 @@ export function BoardSummary({
 }) {
   const [now, setNow] = useState(Date.now());
   const titleId = useId();
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const query = useQuery<Summary>({
     // Existing SSE invalidation covers every query under "board".
-    queryKey: ["board", project.key, "summary"],
-    queryFn: () => request(`/projects/${project.key}/summary`),
+    queryKey: ["board", project.key, "summary", timeZone],
+    queryFn: () =>
+      request(
+        `/projects/${project.key}/summary?timeZone=${encodeURIComponent(timeZone)}`,
+      ),
   });
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);

@@ -248,3 +248,49 @@ test("seven-day boundary is inclusive and an older completion is excluded", () =
   );
   expect(summary("DEMO").completed_last_7_days).toBe(1);
 });
+
+test("local calendar days split a UTC day at the user's midnight", () => {
+  const { core, at } = setup();
+  core.db
+    .query("UPDATE projects SET created_at = ?")
+    .run("2026-11-06T10:00:00Z");
+  at("2026-11-06T11:00:00Z", () =>
+    core.items.create("DEMO", { title: "Local day" }, "seed"),
+  );
+  at("2026-11-06T21:15:00Z", () => core.items.move("DEMO-1", "done", "seed"));
+  const summary = createSummary({
+    ...createContext(core.db, core.events),
+    now: () => "2026-11-06T22:30:00Z",
+  });
+  expect(summary("DEMO").burn_up).toEqual([
+    { date: "2026-11-06", total: 1, completed: 1 },
+  ]);
+  expect(summary("DEMO", "Europe/Istanbul").burn_up).toEqual([
+    { date: "2026-11-06", total: 1, completed: 0 },
+    { date: "2026-11-07", total: 1, completed: 1 },
+  ]);
+  expect(summary("DEMO", "America/Los_Angeles").burn_up).toEqual([
+    { date: "2026-11-06", total: 1, completed: 1 },
+  ]);
+});
+
+test("day cutoffs follow daylight saving changes instead of fixed offsets", () => {
+  const { core, at } = setup();
+  core.db
+    .query("UPDATE projects SET created_at = ?")
+    .run("2026-10-31T18:00:00Z");
+  at("2026-10-31T18:01:00Z", () =>
+    core.items.create("DEMO", { title: "DST" }, "seed"),
+  );
+  // Nov 1 23:30 in Los Angeles, after the clock moved back one hour.
+  at("2026-11-02T07:30:00Z", () => core.items.move("DEMO-1", "done", "seed"));
+  const summary = createSummary({
+    ...createContext(core.db, core.events),
+    now: () => "2026-11-02T08:30:00Z",
+  });
+  expect(summary("DEMO", "America/Los_Angeles").burn_up).toEqual([
+    { date: "2026-10-31", total: 1, completed: 0 },
+    { date: "2026-11-01", total: 1, completed: 1 },
+    { date: "2026-11-02", total: 1, completed: 1 },
+  ]);
+});

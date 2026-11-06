@@ -55,7 +55,7 @@ function Thumbnail({ attachment }: { attachment: Attachment }) {
   );
 }
 
-const locale = () => (language() === "tr" ? "tr-TR" : "en-US");
+const locale = language;
 const dayOf = (value: string) =>
   new Intl.DateTimeFormat(locale(), { dateStyle: "long" }).format(
     new Date(value),

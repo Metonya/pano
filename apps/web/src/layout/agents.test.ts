@@ -1,4 +1,10 @@
-import { expect, test } from "bun:test";
+import { beforeEach, expect, test } from "bun:test";
+import { setLanguage } from "@/lib/i18n";
+
+beforeEach(async () => {
+  await setLanguage("tr", false);
+});
+
 import type { BoardItem } from "@/features/board/types";
 import { latestPerAgent, silentMinutes } from "./agents";
 

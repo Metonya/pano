@@ -45,7 +45,9 @@
 }
 .settings-tabs button {
   width: 96px;
-  height: 56px;
+  min-height: 56px;
+  overflow-wrap: anywhere;
+  min-width: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -83,6 +85,7 @@
   padding: 0;
   border: 0;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 .settings-grid > span:nth-child(odd),
 .settings-grid > label {
@@ -129,6 +132,9 @@
   align-items: center;
   gap: 10px;
   min-height: 30px;
+}
+.settings-switch-row > [role="switch"] {
+  flex-shrink: 0;
 }
 .settings-control strong {
   font-weight: 600;

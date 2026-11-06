@@ -13,7 +13,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "@/components/States";
 import { ProjectSettings } from "@/features/testing/ProjectSettings";
 import { type Project, queryKey, request } from "@/lib/api";
-import { t } from "@/lib/i18n";
+import { language, t } from "@/lib/i18n";
 import { BoardCardOverlay } from "./BoardCard";
 import { BoardColumn } from "./BoardColumn";
 import { BoardSummary } from "./BoardSummary";
@@ -76,8 +76,8 @@ export function Board({ projects }: { projects: Project[] }) {
       (!filters.assignee || i.assignee === filters.assignee) &&
       (!filters.priority || i.priority === filters.priority) &&
       i.title
-        .toLocaleLowerCase("tr")
-        .includes(filters.search.toLocaleLowerCase("tr")),
+        .toLocaleLowerCase(language())
+        .includes(filters.search.toLocaleLowerCase(language())),
   );
   function open(item: BoardItem) {
     opener.current = document.activeElement as HTMLElement;

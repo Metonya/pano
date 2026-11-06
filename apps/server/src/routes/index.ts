@@ -90,7 +90,24 @@ export function registerRoutes(
   route("patch", "/settings", async (c) => {
     const body = z
       .object({
-        language: z.enum(["tr", "en"]).optional(),
+        language: z
+          .enum([
+            "en",
+            "tr",
+            "az",
+            "zh",
+            "hi",
+            "es",
+            "de",
+            "fr",
+            "pt",
+            "ja",
+            "nl",
+            "ko",
+            "sv",
+            "pl",
+          ])
+          .optional(),
         theme: z.enum(["light", "dark", "auto"]).optional(),
         updateCheck: z.boolean().optional(),
       })

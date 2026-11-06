@@ -1,5 +1,40 @@
-import { expect, test } from "bun:test";
+import { beforeEach, expect, test } from "bun:test";
+import { setLanguage } from "@/lib/i18n";
 import { activityReason, activityText, relativeTime } from "./format";
+
+beforeEach(async () => {
+  await setLanguage("tr", false);
+});
+
+test("relative times follow the selected language", async () => {
+  const now = Date.parse("2026-11-07T12:00:00Z");
+  const twoMinutesAgo = "2026-11-07T11:58:00Z";
+  expect(relativeTime(twoMinutesAgo, now)).toBe("2 dk önce");
+  expect(relativeTime(new Date(now).toISOString(), now)).toBe("az önce");
+  for (const code of [
+    "de",
+    "ja",
+    "pt",
+    "zh",
+    "hi",
+    "es",
+    "fr",
+    "nl",
+    "ko",
+    "sv",
+    "pl",
+    "az",
+    "en",
+  ] as const) {
+    await setLanguage(code, false);
+    expect(relativeTime(twoMinutesAgo, now)).toBe(
+      new Intl.RelativeTimeFormat(code, { numeric: "auto" }).format(
+        -2,
+        "minute",
+      ),
+    );
+  }
+});
 
 const entry = (
   kind: string,

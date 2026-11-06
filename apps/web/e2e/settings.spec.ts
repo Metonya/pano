@@ -146,3 +146,156 @@ test("proje ayarları pencerede odaklı açılır; form pencereleri ilk alana od
   await page.getByRole("button", { name: "Yeni PBI" }).click();
   await expect(page.getByLabel("Başlık")).toBeFocused();
 });
+
+test.describe("14 dil", () => {
+  test.use({ timezoneId: "UTC" });
+
+  test("Deutsch ve 日本語 seçimi, tarih biçimi ve yenilemede kalıcılık", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/system", (route) =>
+      route.fulfill({ json: system }),
+    );
+    // The server's stored language must not replace this browser's choice.
+    await page.route("**/api/v1/settings", (route) =>
+      route.fulfill({ json: { language: "tr" } }),
+    );
+    await page.goto("/settings");
+    const dialog = page.getByRole("dialog");
+    const select = dialog.locator("#app-language");
+    await expect(select.locator("option")).toHaveText([
+      "English",
+      "Türkçe",
+      "Azərbaycan",
+      "中文",
+      "हिन्दी",
+      "Español",
+      "Deutsch",
+      "Français",
+      "Português",
+      "日本語",
+      "Nederlands",
+      "한국어",
+      "Svenska",
+      "Polski",
+    ]);
+    await select.selectOption("de");
+    await expect(
+      dialog.getByRole("tab", { name: "Darstellung" }),
+    ).toBeVisible();
+    await expect(page.locator(".toolbar h1")).toHaveText("Projekte");
+    await expect(dialog).toContainText("01.01.2026");
+    await expect(page.locator("html")).toHaveAttribute("lang", "de");
+    await page.reload();
+    await expect(select).toHaveValue("de");
+    await expect(
+      dialog.getByRole("tab", { name: "Darstellung" }),
+    ).toBeVisible();
+    await expect(dialog).toContainText("01.01.2026");
+    await select.selectOption("ja");
+    await expect(dialog.getByRole("tab", { name: "外観" })).toBeVisible();
+    await expect(page.locator(".toolbar h1")).toHaveText("プロジェクト");
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+    await page.reload();
+    await expect(select).toHaveValue("ja");
+    await expect(dialog.getByRole("tab", { name: "外観" })).toBeVisible();
+  });
+
+  for (const width of [375, 1280]) {
+    test(`Deutsch ayarlar ve board yatay taşmaz: ${width}`, async ({
+      page,
+      request,
+    }) => {
+      const key = `LANG${width}`;
+      await request.post("/api/v1/projects", {
+        data: { key, name: "Projekt mit einem langen Namen" },
+      });
+      await request.post(`/api/v1/projects/${key}/items`, {
+        data: {
+          title:
+            "Eine ausführliche Beschreibung zur Überprüfung der Benutzeroberfläche",
+          priority: "high",
+        },
+      });
+      await page.addInitScript(() =>
+        localStorage.setItem("pano-language", "de"),
+      );
+      await page.setViewportSize({ width, height: 812 });
+      await page.route("**/api/v1/system", (route) =>
+        route.fulfill({ json: system }),
+      );
+      await page.goto(`/projects/${key}`);
+      await expect(
+        page.getByText(
+          "Eine ausführliche Beschreibung zur Überprüfung der Benutzeroberfläche",
+          { exact: true },
+        ),
+      ).toBeVisible();
+      expect(
+        await page
+          .locator(".board")
+          .evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      if (width < 701)
+        await page.getByRole("button", { name: "Menü öffnen" }).click();
+      await page
+        .getByRole("button", { name: "Einstellungen", exact: true })
+        .click();
+      const dialog = page.getByRole("dialog");
+      for (const name of [
+        "Allgemein",
+        "Darstellung",
+        "Agent Verbindung",
+        "Über",
+      ]) {
+        await dialog.getByRole("tab", { name, exact: true }).click();
+        await expect(dialog.getByRole("heading")).toHaveText(name);
+        expect(
+          await dialog.evaluate((el) =>
+            [
+              el,
+              ...el.querySelectorAll(".settings-tabs, .settings-body"),
+            ].every((part) => part.scrollWidth <= part.clientWidth),
+          ),
+        ).toBe(true);
+        const tabs = await dialog.getByRole("tab").evaluateAll((nodes) =>
+          nodes.map((node) => ({
+            width: node.clientWidth,
+            content: node.scrollWidth,
+          })),
+        );
+        expect(tabs.every((tab) => tab.content <= tab.width)).toBe(true);
+      }
+    });
+  }
+});
+
+test.describe("ilk açılış Japonca", () => {
+  test.use({ locale: "ja-JP" });
+  test("sistem dilini kullanır, sunucu tercihini kullanmaz", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/settings", (route) =>
+      route.fulfill({ json: { language: "tr" } }),
+    );
+    await page.goto("/settings");
+    await expect(page.locator(".toolbar h1")).toHaveText("プロジェクト");
+    await expect(page.locator("#app-language")).toHaveValue("ja");
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  });
+});
+
+test.describe("desteklenmeyen sistem dili", () => {
+  test.use({ locale: "ru-RU" });
+  test("ilk açılışta English kullanır", async ({ page }) => {
+    await page.goto("/settings");
+    await expect(page.locator(".toolbar h1")).toHaveText("Projects");
+    await expect(page.locator("#app-language")).toHaveValue("en");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
+});

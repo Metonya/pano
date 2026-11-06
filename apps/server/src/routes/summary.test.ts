@@ -18,6 +18,12 @@ test("summary REST response, missing project, authentication and OpenAPI", async
     expect((await get("/projects/MISSING/summary")).status).toBe(404);
     const response = await get("/projects/DEMO/summary");
     expect(response.status).toBe(200);
+    expect(
+      (await get("/projects/DEMO/summary?timeZone=Europe%2FIstanbul")).status,
+    ).toBe(200);
+    expect(
+      (await get("/projects/DEMO/summary?timeZone=Invalid%2FZone")).status,
+    ).toBe(400);
     expect(await response.json()).toMatchObject({
       total: 4,
       completed: 0,

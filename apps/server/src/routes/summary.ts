@@ -4,12 +4,29 @@ import { key, type Route } from "./shared";
 
 export function registerSummary(route: Route, core: Core) {
   const count = z.number().int().nonnegative();
+  const query = z.object({
+    timeZone: z
+      .string()
+      .max(100)
+      .refine((value) => {
+        try {
+          new Intl.DateTimeFormat("en", { timeZone: value });
+          return true;
+        } catch {
+          return false;
+        }
+      }, "Invalid time zone")
+      .optional(),
+  });
   route(
     "get",
     "/projects/:key/summary",
-    (c) => c.json(core.projects.summary(key(c))),
+    (c) =>
+      c.json(
+        core.projects.summary(key(c), query.parse(c.req.query()).timeZone),
+      ),
     undefined,
-    undefined,
+    query,
     z.object({
       started_at: z.string().datetime(),
       total: count,

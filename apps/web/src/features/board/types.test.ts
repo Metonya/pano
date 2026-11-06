@@ -1,5 +1,10 @@
-import { expect, test } from "bun:test";
+import { beforeEach, expect, test } from "bun:test";
+import { setLanguage } from "@/lib/i18n";
 import { agentName, type BoardItem, sortColumn } from "./types";
+
+beforeEach(async () => {
+  await setLanguage("tr", false);
+});
 
 test("agent identities are readable", () => {
   expect(agentName("claude:po")).toBe("Claude · PO");

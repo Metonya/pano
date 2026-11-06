@@ -4,16 +4,40 @@ const DAY = 86400000;
 const MAX_POINTS = 180;
 
 export function createSummary({ project, all, str, now }: Context) {
-  return (key: string) => {
+  return (key: string, timeZone = "UTC") => {
+    const calendar = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const localDay = (instant: number) => {
+      const parts = calendar.formatToParts(instant);
+      const part = (name: string) => parts.find((p) => p.type === name)?.value;
+      return `${part("year")}-${part("month")}-${part("day")}`;
+    };
+    // Find the first instant of a local calendar day, including DST transitions.
+    const midnight = (day: number) => {
+      if (timeZone === "UTC") return day;
+      const target = new Date(day).toISOString().slice(0, 10);
+      let low = day - 2 * DAY;
+      let high = day + 2 * DAY;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (localDay(middle) < target) low = middle + 1;
+        else high = middle;
+      }
+      return low;
+    };
     const p = project(key);
     const items = all("SELECT * FROM items WHERE project_id = ?", str(p.id));
     const active = items.filter((item) => item.status !== "cancelled");
     const remaining = active.filter((item) => item.status !== "done");
     const end = new Date(now()).getTime();
-    const today = new Date(end).toISOString().slice(0, 10);
+    const today = localDay(end);
     const lastDay = Date.parse(`${today}T00:00:00.000Z`);
     const opened = Date.parse(
-      `${str(p.created_at).slice(0, 10)}T00:00:00.000Z`,
+      `${localDay(Date.parse(str(p.created_at)))}T00:00:00.000Z`,
     );
     const start = Math.min(opened, lastDay);
     const days = (lastDay - start) / DAY + 1;
@@ -23,7 +47,8 @@ export function createSummary({ project, all, str, now }: Context) {
       str(p.id),
     );
     // Replay status changes, including creation, cancellation and reopening.
-    // Days use UTC and represent the state at the end of each day (today: now).
+    // Date labels use the requested calendar; points show each local day's end.
+    // Clients without a timezone keep the UTC API default.
     // Long projects are thinned evenly; the first and last day always stay.
     const states = new Map<string, string>();
     const recent = new Set<string>();
@@ -32,7 +57,7 @@ export function createSummary({ project, all, str, now }: Context) {
       const day =
         start +
         (count > 1 ? Math.round((index * (days - 1)) / (count - 1)) : 0) * DAY;
-      const cutoff = Math.min(day + DAY - 1, end);
+      const cutoff = Math.min(midnight(day + DAY) - 1, end);
       while (cursor < history.length) {
         const entry = history[cursor];
         if (!entry || Date.parse(str(entry.created_at)) > cutoff) break;
