@@ -5,9 +5,14 @@ import { runCli } from "./cli";
 export function serverConfig(env: NodeJS.ProcessEnv) {
   const hostname = env.PANO_HOST || "127.0.0.1";
   const token = env.PANO_TOKEN || undefined;
-  if (hostname !== "127.0.0.1" && !token)
+  const localDocker = env.PANO_LOCAL_DOCKER === "1";
+  if (localDocker && (hostname !== "0.0.0.0" || token))
+    throw new Error(
+      "PANO_LOCAL_DOCKER requires PANO_HOST=0.0.0.0 and no PANO_TOKEN",
+    );
+  if (hostname !== "127.0.0.1" && !token && !localDocker)
     throw new Error("PANO_TOKEN is required when PANO_HOST is not 127.0.0.1");
-  return { hostname, token, port: Number(env.PANO_PORT ?? 7777) };
+  return { hostname, token, localDocker, port: Number(env.PANO_PORT ?? 7777) };
 }
 export async function serve() {
   const { createApp, createCore, defaultDataDir } = await import("./app");
@@ -18,6 +23,7 @@ export async function serve() {
     core,
     dataDir: defaultDataDir,
     token: config.token,
+    localOnly: !config.token,
     checkUpdates: true,
   });
   // SSE and MCP streams stay open; Bun's default 10s idle timeout would cut them

@@ -2,9 +2,9 @@ services:
   pano:
     image: ghcr.io/metonya/pano:latest
     ports:
-      - "7777:7777"
+      - "127.0.0.1:7777:7777"
     environment:
-      PANO_TOKEN: ${PANO_TOKEN:?Set PANO_TOKEN before starting Pano}
+      PANO_LOCAL_DOCKER: "1"
     volumes:
       - pano-data:/data
     restart: unless-stopped

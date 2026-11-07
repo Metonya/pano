@@ -6,7 +6,7 @@ import {
   Contrast,
   Settings as SettingsIcon,
 } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useId, useState } from "react";
 import { LanguageContext } from "@/app/Providers";
 import { ManagedDialog } from "@/components/ManagedDialog";
 import { Switch } from "@/components/Switch";
@@ -23,6 +23,7 @@ type System = {
   dbSize: number;
   latestVersion?: string;
   updateAvailable: boolean;
+  authRequired: boolean;
 };
 
 function fileSize(bytes: number): string {
@@ -72,6 +73,7 @@ export function SettingsDialog({
 }
 
 function Settings() {
+  const tabsId = useId();
   const [tab, setTab] = useState(0);
   const [languageError, setLanguageError] = useState(false);
   const setLanguage = useContext(LanguageContext);
@@ -126,19 +128,36 @@ function Settings() {
   ];
   const icons = [SettingsIcon, Contrast, Bot, CircleHelp];
   const updatesOn = settings.data?.updateCheck !== "false";
-  const local = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
   const mcpUrl = `${location.origin}/mcp`;
   return (
     <section className="app-settings">
       <DialogTitle className="settings-title">{tabs[tab]}</DialogTitle>
-      <div role="tablist" aria-label={t("settings")} className="settings-tabs">
+      <div
+        role="tablist"
+        aria-label={t("settings")}
+        className="settings-tabs"
+        onKeyDown={(event) => {
+          const direction =
+            event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+          if (!direction) return;
+          event.preventDefault();
+          const next = (tab + direction + tabs.length) % tabs.length;
+          setTab(next);
+          event.currentTarget
+            .querySelectorAll<HTMLButtonElement>('[role="tab"]')
+            [next]?.focus();
+        }}
+      >
         {tabs.map((name, i) => {
           const Icon = icons[i];
           return (
             <button
               type="button"
               role="tab"
+              id={`${tabsId}-tab-${i}`}
+              aria-controls={`${tabsId}-panel-${i}`}
               aria-selected={tab === i}
+              tabIndex={tab === i ? 0 : -1}
               key={name}
               onClick={() => setTab(i)}
             >
@@ -148,7 +167,24 @@ function Settings() {
           );
         })}
       </div>
-      <div role="tabpanel" aria-label={tabs[tab]} className="settings-body">
+      {tabs.map(
+        (name, i) =>
+          i !== tab && (
+            <div
+              key={name}
+              role="tabpanel"
+              id={`${tabsId}-panel-${i}`}
+              aria-labelledby={`${tabsId}-tab-${i}`}
+              hidden
+            />
+          ),
+      )}
+      <div
+        role="tabpanel"
+        id={`${tabsId}-panel-${tab}`}
+        aria-labelledby={`${tabsId}-tab-${tab}`}
+        className="settings-body"
+      >
         {tab === 0 && (
           <div className="settings-grid">
             <label htmlFor="app-user-name">{t("userName")}:</label>
@@ -298,7 +334,13 @@ function Settings() {
               </div>
               <span>{t("tokenLabel")}:</span>
               <span className="settings-muted">
-                {t(local ? "tokenNotNeeded" : "tokenNeeded")}
+                {system.data
+                  ? t(
+                      system.data.authRequired
+                        ? "tokenNeeded"
+                        : "tokenNotNeeded",
+                    )
+                  : t("unknownValue")}
               </span>
             </div>
           </>

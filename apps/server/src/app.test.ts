@@ -113,6 +113,88 @@ test("host security and bearer authentication", async () => {
   ).toBe(200);
 });
 
+test("local Docker mode restricts host and browser origins while supporting native clients", async () => {
+  const config = serverConfig({ PANO_HOST: "0.0.0.0", PANO_LOCAL_DOCKER: "1" });
+  expect(config.localDocker).toBe(true);
+  expect(() =>
+    serverConfig({
+      PANO_HOST: "0.0.0.0",
+      PANO_LOCAL_DOCKER: "1",
+      PANO_TOKEN: "secret",
+    }),
+  ).toThrow();
+  expect(() => serverConfig({ PANO_LOCAL_DOCKER: "1" })).toThrow();
+  expect(() =>
+    serverConfig({ PANO_HOST: "0.0.0.0", PANO_LOCAL_DOCKER: "true" }),
+  ).toThrow();
+  const app = createApp({ core, dataDir: "test", localOnly: true });
+  const call = (
+    path: string,
+    headers: Record<string, string>,
+    method = "GET",
+  ) => app.request(`http://localhost:7777${path}`, { method, headers });
+  for (const host of ["localhost:7777", "127.0.0.1:7777"]) {
+    expect((await call("/api/v1/projects", { host })).status).toBe(200);
+    expect(
+      (
+        await call("/api/v1/projects", {
+          host,
+          origin: `http://${host}`,
+          "sec-fetch-site": "same-origin",
+        })
+      ).status,
+    ).toBe(200);
+  }
+  for (const path of ["/", "/api/v1/projects", "/api/v1/health", "/mcp"]) {
+    expect((await call(path, { host: "evil.example:7777" })).status).toBe(403);
+    expect(
+      (
+        await call(path, {
+          host: "localhost:7777",
+          origin: "https://evil.example",
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await call(path, {
+          host: "localhost:7777",
+          "sec-fetch-site": "cross-site",
+        })
+      ).status,
+    ).toBe(403);
+  }
+  expect(
+    (
+      await call(
+        "/api/v1/projects",
+        {
+          host: "localhost:7777",
+          origin: "null",
+          "content-type": "text/plain",
+        },
+        "POST",
+      )
+    ).status,
+  ).toBe(403);
+  expect(
+    (
+      await call("/api/v1/projects", {
+        host: "localhost:7777",
+        origin: "http://localhost:9999",
+      })
+    ).status,
+  ).toBe(403);
+  expect(
+    (await call("/api/v1/projects", { host: "localhost.evil.example:7777" }))
+      .status,
+  ).toBe(403);
+  expect(
+    (await (await call("/api/v1/system", { host: "localhost:7777" })).json())
+      .authRequired,
+  ).toBe(false);
+});
+
 test("SSE sends moves promptly and releases the listener", async () => {
   const app = createApp({ core, dataDir: "test" });
   await request(app, "/projects", "POST", { key: "SSE", name: "SSE" });

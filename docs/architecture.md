@@ -1,6 +1,6 @@
 # Pano: Mimari
 
-> Durum: v0.1 taslağı (2026-11-05). Kararlar: [`backlog/decisions.md`](../backlog/decisions.md)
+> Durum: v0.1 taslağı (2026-11-05). Kararlar: [`decisions.md`](decisions.md)
 
 ## Tek cümlede
 
@@ -52,14 +52,15 @@ flowchart LR
 | `pano project list` / `pano board <KEY>` | Projeleri / board'u terminalde gösterir |
 | `pano task create\|show\|move\|assign\|check ...` | PBI işlemleri |
 | `pano mcp-config <claude\|codex\|cursor>` | İlgili istemci için MCP bağlantı komutunu/JSON'unu yazdırır |
-| Docker | `docker run -p 7777:7777 -v pano-data:/data ghcr.io/metonya/pano` |
+| Docker | `docker run -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano` |
 
 Ortam değişkenleri: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `PANO_URL` (CLI'ın bağlanacağı sunucu), `PANO_USER` (insan kimliğinin varsayılanı).
 
 ## Güvenlik (v0.1)
 
 - Varsayılan olarak yalnızca `127.0.0.1`'e bind olur; token gerekmez.
-- `PANO_HOST=0.0.0.0` (ör. Docker) ile açılırsa `PANO_TOKEN` **zorunlu**; tüm `/api` ve `/mcp` istekleri `Authorization: Bearer <token>` ister. Token yoksa sunucu başlamaz.
+- Yerel Docker: `PANO_LOCAL_DOCKER=1` ile container içinde `0.0.0.0` dinlenir ve port sadece host `127.0.0.1` üzerinde yayınlanır. Token gerekmez; Host ve Origin kontrolleri tarayıcıdan gelen çapraz kaynak ve DNS rebinding isteklerini sınırlar. Yerel süreçler ve aynı Docker ağına erişebilen container'lar güvenilir kabul edilir; bu mod LAN'a veya güvenilmeyen ağa açılmaz.
+- Diğer loopback dışı bağlantılarda `PANO_TOKEN` zorunludur; `/api` ve `/mcp` Bearer token ister. Uzaktan kullanım için HTTPS gerekir.
 - Çok kullanıcılı hesaplar v0.1 kapsamı dışında.
 
 ## Veri modeli
@@ -168,7 +169,6 @@ pano/
 ├─ packages/
 │  └─ core/          # domain servisleri, zod şemaları, SQLite (bun:sqlite) + migration'lar
 ├─ docs/             # mimari, tasarım (DESIGN.md), kurulum
-├─ backlog/          # PBI'lar (pano kendi kendini yönetene kadar md)
 └─ .github/workflows # CI + release (win/mac/linux binary, Docker image → ghcr.io)
 ```
 

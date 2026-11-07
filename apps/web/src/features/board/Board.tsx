@@ -179,16 +179,13 @@ export function Board({ projects }: { projects: Project[] }) {
         </div>
       ) : (
         <>
-          <div
-            className="mobile-columns"
-            role="tablist"
-            aria-label={t("status")}
-          >
+          {/* A group of toggle buttons, not a form fieldset. */}
+          {/* biome-ignore lint/a11y/useSemanticElements: these controls filter the board and do not submit form data. */}
+          <div className="mobile-columns" role="group" aria-label={t("status")}>
             {statuses.map((s) => (
               <button
                 type="button"
-                role="tab"
-                aria-selected={mobileStatus === s}
+                aria-pressed={mobileStatus === s}
                 key={s}
                 onClick={() => setMobileStatus(s)}
               >

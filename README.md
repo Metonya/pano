@@ -70,12 +70,12 @@ Until the registry image is published, build it locally from the repository root
 
 ```sh
 docker build -t ghcr.io/metonya/pano:latest .
-docker run -d --name pano -p 7777:7777 -e PANO_TOKEN=YOUR_TOKEN -v pano-data:/data ghcr.io/metonya/pano:latest
+docker run -d --name pano -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano:latest
 ```
 
-Replace `YOUR_TOKEN` with a strong token. Open `http://localhost:7777` and enter the same token in the web interface. Data stays in the `pano-data` volume. Once the image is published, you can pull `ghcr.io/metonya/pano:latest` instead of building it.
+Open `http://localhost:7777`. No token is needed for this local installation. Data stays in the `pano-data` volume. Once the image is published, you can pull `ghcr.io/metonya/pano:latest` instead of building it.
 
-For Compose, set `PANO_TOKEN` in your environment and use [docker-compose.example.yml](docker-compose.example.yml). With the local image already built:
+For Compose, use [docker-compose.example.yml](docker-compose.example.yml). With the local image already built:
 
 ```sh
 docker compose -f docker-compose.example.yml up -d --pull never
@@ -84,6 +84,10 @@ docker compose -f docker-compose.example.yml down
 
 After publication, `docker compose -f docker-compose.example.yml up -d` can pull the image. `down` preserves the data volume.
 
+Local Docker mode trusts local processes and containers that can reach its Docker network. Publish its port only on `127.0.0.1`, as in the examples. Host and Origin checks protect browser access; they are not authentication against other local processes or network peers. Do not publish this mode to a LAN, reverse proxy, or untrusted Docker network. For remote access, omit `PANO_LOCAL_DOCKER`, configure a strong `PANO_TOKEN`, and use an authenticated HTTPS reverse proxy.
+
+To migrate an existing Docker installation, first back up the current data volume or bind-mounted directory using a consistent SQLite backup while the server is stopped. Keep the same `/data` volume mapping, replace the published port with `127.0.0.1:7777:7777`, remove `PANO_TOKEN`, add `PANO_LOCAL_DOCKER=1`, and recreate the container using the new image. Do not delete the volume. Verify projects, cards and attachments after restarting; retain the backup until verified. A token stored in the browser is no longer needed.
+
 ### Configuration
 
 | Variable | Purpose |
@@ -91,7 +95,8 @@ After publication, `docker compose -f docker-compose.example.yml up -d` can pull
 | `PANO_PORT` | Server port, default `7777` |
 | `PANO_HOST` | Bind address, default `127.0.0.1`; Docker uses `0.0.0.0` |
 | `PANO_DATA_DIR` | Database and attachments directory, default `~/.pano`; Docker uses `/data` |
-| `PANO_TOKEN` | Bearer token for the API and MCP; required when listening beyond loopback |
+| `PANO_TOKEN` | Bearer token for the API and MCP; required beyond loopback except in local Docker mode |
+| `PANO_LOCAL_DOCKER` | Set to `1` only for local Docker with a loopback-published port; mutually exclusive with `PANO_TOKEN` |
 | `PANO_URL` | CLI server URL, default `http://127.0.0.1:7777` |
 | `PANO_ACTOR` | Actor recorded for CLI changes, as `tool:role` (`claude:po`, `codex`) |
 | `PANO_USER` | Your name until you set one under Settings, default the system account name |

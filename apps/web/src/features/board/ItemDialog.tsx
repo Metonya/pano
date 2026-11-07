@@ -7,7 +7,13 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ManagedDialog } from "@/components/ManagedDialog";
@@ -133,6 +139,7 @@ export function ItemDialog({
   close: () => void;
   statuses: Status[];
 }) {
+  const tabsId = useId();
   const qc = useQueryClient();
   const key = item ? `${projectKey}-${item.number}` : "";
   const detail = useQuery<Detail>({
@@ -513,6 +520,8 @@ export function ItemDialog({
               <button
                 type="button"
                 role="tab"
+                id={`${tabsId}-tab-${value}`}
+                aria-controls={`${tabsId}-panel-${value}`}
                 key={value}
                 data-tab={value}
                 aria-selected={tab === value}
@@ -692,10 +701,12 @@ export function ItemDialog({
       </header>
       {d && (
         <div className="sheet-body">
-          {tab === "history" && (
+          {tab === "history" ? (
             <ActivityTimeline
               key={key}
               itemKey={key}
+              panelId={`${tabsId}-panel-history`}
+              tabId={`${tabsId}-tab-history`}
               attachments={
                 (
                   d as Detail & {
@@ -708,11 +719,19 @@ export function ItemDialog({
                 ).attachments
               }
             />
+          ) : (
+            <div
+              role="tabpanel"
+              id={`${tabsId}-panel-history`}
+              aria-labelledby={`${tabsId}-tab-history`}
+              hidden
+            />
           )}
           {/* Stays mounted so a half-written send-back note survives a tab switch. */}
           <div
             role="tabpanel"
-            aria-label={t("detail")}
+            id={`${tabsId}-panel-detail`}
+            aria-labelledby={`${tabsId}-tab-detail`}
             hidden={tab !== "detail"}
             className="sheet-detail"
           >

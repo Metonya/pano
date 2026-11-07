@@ -7,6 +7,7 @@ import { agentsGuide } from "./agents";
 import { handleError } from "./errors";
 import { handleMcp } from "./mcp";
 import { auth } from "./middleware/auth";
+import { localAccess } from "./middleware/local-access";
 import { registerRoutes } from "./routes";
 import { staticResponse } from "./static";
 
@@ -14,10 +15,12 @@ export function createApp(options: {
   core: Core;
   dataDir: string;
   token?: string;
+  localOnly?: boolean;
   fetch?: typeof fetch;
   checkUpdates?: boolean;
 }) {
   const app = new OpenAPIHono();
+  if (options.localOnly) app.use("*", localAccess());
   app.onError(handleError);
   app.notFound(
     (c) =>

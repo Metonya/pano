@@ -1241,7 +1241,7 @@ section h2 {
   .mobile-columns button b {
     font-size: 17px;
   }
-  .mobile-columns button[aria-selected="true"] {
+  .mobile-columns button[aria-pressed="true"] {
     background: var(--card);
     color: var(--text);
     border-radius: 9px;

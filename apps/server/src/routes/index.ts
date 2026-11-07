@@ -15,6 +15,7 @@ export function registerRoutes(
   {
     core,
     dataDir,
+    token,
     fetch: fetcher,
     checkUpdates,
   }: {
@@ -85,7 +86,9 @@ export function registerRoutes(
   };
   route("get", "/health", (c) => c.json({ ok: true, version }));
   const system = createSystem(core, dataDir, fetcher);
-  route("get", "/system", (c) => c.json(system.info()));
+  route("get", "/system", (c) =>
+    c.json({ ...system.info(), authRequired: !!token }),
+  );
   route("get", "/settings", (c) => c.json(system.settings()));
   route("patch", "/settings", async (c) => {
     const body = z

@@ -161,9 +161,13 @@ function Row({
 export function ActivityTimeline({
   itemKey,
   attachments = [],
+  panelId,
+  tabId,
 }: {
   itemKey: string;
   attachments?: Attachment[];
+  panelId: string;
+  tabId: string;
 }) {
   const [filter, setFilter] = useState<HistoryFilter>("important");
   // Tests combine several kinds, so only decisions can be filtered by the server.
@@ -195,7 +199,12 @@ export function ActivityTimeline({
     else days.push({ day, entries: [entry] });
   }
   return (
-    <div role="tabpanel" aria-label={t("history")} className="activity-history">
+    <div
+      role="tabpanel"
+      id={panelId}
+      aria-labelledby={tabId}
+      className="activity-history"
+    >
       <fieldset aria-label={t("historyFilter")} className="history-filters">
         {(
           [
