@@ -51,7 +51,7 @@ function Install-Pano {
         Copy-Item (Join-Path $tempDir $asset) $staged
         $destination = Join-Path $dir 'pano.exe'
         try {
-            if (Test-Path $destination) { [IO.File]::Replace($staged, $destination, $null) }
+            if (Test-Path $destination) { [IO.File]::Replace($staged, $destination, [NullString]::Value) }
             else { [IO.File]::Move($staged, $destination) }
         } catch {
             throw "Could not replace $destination. If Pano is running, stop it and try again. $($_.Exception.Message)"

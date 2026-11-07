@@ -95,6 +95,13 @@ describe.skipIf(!shell || !supported)("one-line installer", () => {
       "installer-test-ok",
     );
   }, 30000);
+  test("installs over an existing copy", async () => {
+    mode = "good";
+    expect((await install("upgrade")).code).toBe(0);
+    const again = await install("upgrade");
+    expect(again.code, again.output).toBe(0);
+    expect(await Bun.file(again.path).exists()).toBe(true);
+  }, 30000);
   test("rejects a bad checksum without installing", async () => {
     mode = "bad";
     const result = await install("bad");
