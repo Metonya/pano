@@ -6,7 +6,7 @@ export function TokenLogin({ onSuccess }: Readonly<{ onSuccess: () => void }>) {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError("");

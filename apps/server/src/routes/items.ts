@@ -57,7 +57,7 @@ export function registerItems(route: Route, core: Core) {
   const move = z
     .object({
       status,
-      position: z.number().finite().optional(),
+      position: z.number().optional(),
       reason: text.optional(),
     })
     .strict();

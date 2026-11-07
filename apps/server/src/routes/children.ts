@@ -13,7 +13,7 @@ import {
 
 export function registerChildren(route: Route, core: Core) {
   const criterion = z
-    .object({ text, position: z.number().finite().optional() })
+    .object({ text, position: z.number().optional() })
     .strict();
   route(
     "post",

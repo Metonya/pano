@@ -15,7 +15,7 @@ export function createCriteria(context: Context) {
           done: 0,
           ...(position === undefined
             ? {}
-            : { position: z.number().finite().parse(position) }),
+            : { position: z.number().parse(position) }),
         },
         actor,
         "criterion_added",

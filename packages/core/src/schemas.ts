@@ -47,7 +47,7 @@ export const itemPatch = z
     status: statusSchema.optional(),
     priority: prioritySchema.optional(),
     assignee: text.nullable().optional(),
-    position: z.number().finite().optional(),
+    position: z.number().optional(),
     reason: text.optional(),
   })
   .strict();
@@ -57,7 +57,7 @@ export const scenarioCreate = z
     expected_md: text,
     author: text,
     result: z.enum(["pending", "passed", "failed"]).optional(),
-    position: z.number().finite().optional(),
+    position: z.number().optional(),
   })
   .strict();
 const usageCount = z.number().int().nonnegative().optional();

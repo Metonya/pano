@@ -258,12 +258,7 @@ export function createItems(
         if (data.status && data.status !== row.status)
           patch.done_at = data.status === "done" ? now() : null;
         const delta = changed(row, patch);
-        let kind =
-          data.assignee !== undefined && data.assignee !== row.assignee
-            ? "assigned"
-            : "edited";
-        if (data.status && data.status !== row.status)
-          kind = data.status === "cancelled" ? "cancelled" : "moved";
+        const kind = itemUpdateKind(data, row);
         if (Object.keys(delta.after).length) {
           update("items", id, { ...delta.after, updated_at: now() });
           log(
@@ -363,6 +358,15 @@ export function createItems(
       });
     },
   };
+  function itemUpdateKind(data: z.output<typeof itemPatch>, row: Row) {
+    let kind =
+      data.assignee !== undefined && data.assignee !== row.assignee
+        ? "assigned"
+        : "edited";
+    if (data.status && data.status !== row.status)
+      kind = data.status === "cancelled" ? "cancelled" : "moved";
+    return kind;
+  }
   function previousAiAssignee(key: string): string | null {
     const history = activity.list(key);
     // Back to whoever worked on it last; nobody yet leaves it unassigned.

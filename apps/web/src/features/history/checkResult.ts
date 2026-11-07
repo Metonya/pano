@@ -15,15 +15,19 @@ export function checkResult(
     "",
   );
   if (
-    /(?<![\p{L}\p{N}_])(fail(?:ed|ures?)?|errors?|kaldı|başarısız)(?![\p{L}\p{N}_])|✕|❌/iu.test(
+    /(?<![\p{L}\p{N}_])(fail(?:ed|ures?)?|errors?)(?![\p{L}\p{N}_])/iu.test(
       summary,
-    )
+    ) ||
+    /(?<![\p{L}\p{N}_])(kaldı|başarısız)(?![\p{L}\p{N}_])/iu.test(summary) ||
+    /✕|❌/u.test(summary)
   )
     return "failed";
   if (
-    /(?<![\p{L}\p{N}_])(pass(?:ed)?|success(?:ful)?|geçti|başarılı)(?![\p{L}\p{N}_])|✓|✅/iu.test(
+    /(?<![\p{L}\p{N}_])(pass(?:ed)?|success(?:ful)?)(?![\p{L}\p{N}_])/iu.test(
       summary,
-    )
+    ) ||
+    /(?<![\p{L}\p{N}_])(geçti|başarılı)(?![\p{L}\p{N}_])/iu.test(summary) ||
+    /✓|✅/u.test(summary)
   )
     return "passed";
   return "unknown";

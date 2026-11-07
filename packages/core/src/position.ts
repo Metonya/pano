@@ -1,7 +1,7 @@
 import { z } from "zod";
 export function positionBetween(before: number, after: number) {
-  z.number().finite().parse(before);
-  z.number().finite().parse(after);
+  z.number().parse(before);
+  z.number().parse(after);
   if (before >= after) throw new Error("Positions must be increasing");
   const middle = before + (after - before) / 2;
   if (middle <= before || middle >= after)

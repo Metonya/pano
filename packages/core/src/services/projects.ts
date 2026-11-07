@@ -20,6 +20,16 @@ export function createProjects(context: Context) {
     get,
     userName,
   } = context;
+  function validateTestItemDestination(status: string, entry: Row) {
+    if (
+      status === "done" &&
+      get(
+        "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed'",
+        str(entry.id),
+      )
+    )
+      throw new Error("Failed test scenarios prevent moving to Done");
+  }
   function moveTestItemsWhenDisabled(
     enabled: boolean,
     row: Row,
@@ -37,14 +47,7 @@ export function createProjects(context: Context) {
       for (const entry of testing) {
         const status = data.test_items_destination;
         if (!status) throw new Error("Choose where Test items should move");
-        if (
-          status === "done" &&
-          get(
-            "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed'",
-            str(entry.id),
-          )
-        )
-          throw new Error("Failed test scenarios prevent moving to Done");
+        validateTestItemDestination(status, entry);
         update("items", str(entry.id), {
           status,
           updated_at: now(),

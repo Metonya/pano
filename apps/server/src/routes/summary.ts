@@ -28,7 +28,7 @@ export function registerSummary(route: Route, core: Core) {
     undefined,
     query,
     z.object({
-      started_at: z.string().datetime(),
+      started_at: z.iso.datetime(),
       total: count,
       completed: count,
       remaining: count,
@@ -40,9 +40,7 @@ export function registerSummary(route: Route, core: Core) {
       }),
       completed_last_7_days: count,
       burn_up: z
-        .array(
-          z.object({ date: z.string().date(), total: count, completed: count }),
-        )
+        .array(z.object({ date: z.iso.date(), total: count, completed: count }))
         .min(1)
         .max(180),
       usage: z.object({

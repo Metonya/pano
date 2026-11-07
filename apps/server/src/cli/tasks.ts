@@ -46,6 +46,23 @@ function usageCount(
   return Number(value);
 }
 
+function moveTask(
+  p: string[],
+  values: Record<string, string | boolean | string[] | undefined>,
+  path: string,
+  api: Client,
+) {
+  requireArgs(p, 2, 'task move <KEY> <status> [--reason "Neden"]');
+  const status = p[1] === "in-progress" ? "in_progress" : p[1];
+  if (!["backlog", "in_progress", "test", "done", "cancelled"].includes(status))
+    throw new Error(
+      "Durum: backlog, in_progress (in-progress), test, done, cancelled.",
+    );
+  if (status === "cancelled" && !String(values.reason ?? "").trim())
+    throw new Error("İptal için --reason zorunlu.");
+  return api(`${path}/move`, "POST", { status, reason: values.reason });
+}
+
 export async function tasks(args: string[], api: Client) {
   const [command, ...rest] = args;
   const options = taskOptions(command);
@@ -85,21 +102,8 @@ export async function tasks(args: string[], api: Client) {
     case "show":
       requireArgs(p, 1, "task show <KEY> [--history]");
       return api(`${path}${values.history ? "?history=true" : ""}`);
-    case "move": {
-      requireArgs(p, 2, 'task move <KEY> <status> [--reason "Neden"]');
-      const status = p[1] === "in-progress" ? "in_progress" : p[1];
-      if (
-        !["backlog", "in_progress", "test", "done", "cancelled"].includes(
-          status,
-        )
-      )
-        throw new Error(
-          "Durum: backlog, in_progress (in-progress), test, done, cancelled.",
-        );
-      if (status === "cancelled" && !String(values.reason ?? "").trim())
-        throw new Error("İptal için --reason zorunlu.");
-      return api(`${path}/move`, "POST", { status, reason: values.reason });
-    }
+    case "move":
+      return moveTask(p, values, path, api);
     case "assign":
       requireArgs(p, 2, "task assign <KEY> <actor|none>");
       return api(`${path}/assign`, "POST", {

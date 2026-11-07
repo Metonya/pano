@@ -10,6 +10,19 @@ export interface UpdateOptions {
   rename?: typeof rename;
 }
 
+async function restoreUpdate(
+  moved: boolean,
+  backedUp: boolean,
+  platform: NodeJS.Platform,
+  move: typeof rename,
+  old: string,
+  path: string,
+  backup: string,
+) {
+  if (moved) await move(old, path);
+  else if (backedUp && platform !== "win32") await copyFile(backup, path);
+}
+
 async function installUpdate(
   path: string,
   platform: NodeJS.Platform,
@@ -35,8 +48,7 @@ async function installUpdate(
   } catch (error) {
     await unlink(temp).catch(() => {});
     try {
-      if (moved) await move(old, path);
-      else if (backedUp && platform !== "win32") await copyFile(backup, path);
+      await restoreUpdate(moved, backedUp, platform, move, old, path, backup);
     } catch (restoreError) {
       const previousExecutable = moved ? `; previous executable: ${old}` : "";
       throw new Error(

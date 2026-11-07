@@ -170,6 +170,7 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await page.mouse.move(columnBox.x + columnBox.width / 2, columnBox.y + 100, {
     steps: 15,
   });
+  // The drag sensor has no reliable observable settling state before release.
   await page.waitForTimeout(150);
   await page.mouse.up();
   await expect(

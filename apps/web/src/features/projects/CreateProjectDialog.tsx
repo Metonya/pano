@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 import { ManagedDialog } from "@/components/ManagedDialog";
 import { DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { type Project, queryKey, request } from "@/lib/api";
@@ -40,7 +40,7 @@ export function CreateProjectDialog({
       clearTimeout(timer);
     };
   }, [create, name, manualKey]);
-  async function submit(e: FormEvent) {
+  async function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError("");
     if (!name.trim()) return setFormError(t("required"));

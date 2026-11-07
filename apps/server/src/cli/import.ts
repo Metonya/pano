@@ -59,7 +59,7 @@ function nextFence(fence: Fence, marker: RegExpExecArray | null): Fence {
   if (!marker) return fence;
   if (!fence) return { char: marker[1][0], length: marker[1].length };
   if (
-    marker[1][0] === fence.char &&
+    marker[1].startsWith(fence.char) &&
     marker[1].length >= fence.length &&
     !marker[2].trim()
   )
@@ -99,19 +99,7 @@ function extractCriteria(body: string) {
   return { criteria, kept };
 }
 
-function splitFrontmatter(source: string) {
-  const bomOffset = source.startsWith("\uFEFF") ? 1 : 0;
-  const openingEnd = bomOffset + 3;
-  if (!source.startsWith("---", bomOffset))
-    throw new Error("PBI frontmatter bulunamadı.");
-  const openingLineEnd =
-    source[openingEnd] === "\r" ? openingEnd + 2 : openingEnd + 1;
-  if (
-    source[openingEnd] !== "\n" &&
-    !(source[openingEnd] === "\r" && source[openingEnd + 1] === "\n")
-  )
-    throw new Error("PBI frontmatter bulunamadı.");
-
+function closingFrontmatter(source: string, openingLineEnd: number) {
   let closingStart = source.indexOf("\n---", openingLineEnd);
   let closingEnd = -1;
   while (closingStart !== -1) {
@@ -132,6 +120,25 @@ function splitFrontmatter(source: string) {
     closingStart = source.indexOf("\n---", markerStart + 3);
   }
   if (closingEnd === -1) throw new Error("PBI frontmatter bulunamadı.");
+  return { closingStart, closingEnd };
+}
+
+function splitFrontmatter(source: string) {
+  const bomOffset = source.startsWith("\uFEFF") ? 1 : 0;
+  const openingEnd = bomOffset + 3;
+  if (!source.startsWith("---", bomOffset))
+    throw new Error("PBI frontmatter bulunamadı.");
+  const openingLineEnd =
+    source[openingEnd] === "\r" ? openingEnd + 2 : openingEnd + 1;
+  if (
+    source[openingEnd] !== "\n" &&
+    !(source[openingEnd] === "\r" && source[openingEnd + 1] === "\n")
+  )
+    throw new Error("PBI frontmatter bulunamadı.");
+  const { closingStart, closingEnd } = closingFrontmatter(
+    source,
+    openingLineEnd,
+  );
   const yamlEnd =
     source[closingStart - 1] === "\r" ? closingStart - 1 : closingStart;
   const yaml = source.slice(openingLineEnd, yamlEnd);

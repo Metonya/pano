@@ -27,6 +27,7 @@ test("board respects reduced motion and remains keyboard draggable", async ({
   await expect(card).toHaveCSS("translate", "none");
   await card.focus();
   await page.keyboard.press("Space");
+  // The keyboard sensor exposes no reliable observable ready state, so these waits stay.
   await page.waitForTimeout(200);
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(300);
