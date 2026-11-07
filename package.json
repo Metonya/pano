@@ -17,7 +17,9 @@
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "seed": "bun packages/core/src/seed.ts",
     "lint": "biome check .",
-    "typecheck": "tsc --noEmit -p apps/server && tsc --noEmit -p apps/web && tsc --noEmit -p packages/core"
+    "typecheck": "tsc --noEmit -p apps/server && tsc --noEmit -p apps/web && tsc --noEmit -p packages/core",
+    "site:build": "bun scripts/build-site.ts",
+    "site:check": "bun scripts/check-site-i18n.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.6",
