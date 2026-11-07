@@ -186,6 +186,18 @@
   cursor: grabbing;
   scale: 0.985;
 }
+@media (prefers-reduced-motion: reduce) {
+  .board-card {
+    /* biome-ignore lint/complexity/noImportantStyles: Sortable supplies an inline transition. */
+    transition: none !important;
+  }
+  .board-card:hover {
+    translate: none;
+  }
+  .board-card:active {
+    scale: none;
+  }
+}
 .board-card.working {
   border-color: var(--active-border);
 }
