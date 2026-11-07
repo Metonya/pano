@@ -37,7 +37,11 @@ function fetchRelease({
   downloadStatus = 200,
   missingAssets = false,
 } = {}): (input: string) => Promise<Response> {
-  const name = `pano-${options.platform}-${options.arch}${options.platform === "win32" ? ".exe" : ""}`;
+  // The names .github/workflows/release.yml publishes, written out on purpose.
+  const name =
+    options.platform === "win32"
+      ? `pano-windows-${options.arch}.exe`
+      : `pano-${options.platform}-${options.arch}`;
   return async (url) => {
     requests.push(url);
     if (url === releaseUrl)

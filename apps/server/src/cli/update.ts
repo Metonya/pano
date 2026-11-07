@@ -74,7 +74,10 @@ export async function update(
     return "Docker: docker pull ghcr.io/metonya/pano:latest; restart the container.";
   if (/^bun(?:\.exe)?$/i.test(path.split(/[\\/]/).pop() ?? ""))
     return "Run pano update from a compiled Pano binary.";
-  const name = `pano-${platform}-${options.arch ?? process.arch}${platform === "win32" ? ".exe" : ""}`;
+  const name =
+    platform === "win32"
+      ? `pano-windows-${options.arch ?? process.arch}.exe`
+      : `pano-${platform}-${options.arch ?? process.arch}`;
   const response = await fetcher(
     "https://api.github.com/repos/Metonya/pano/releases/latest",
   );
