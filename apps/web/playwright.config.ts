@@ -1,9 +1,7 @@
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
-const dataDir = mkdtempSync(join(tmpdir(), "pano-e2e-"));
+const dataDir = process.env.PANO_E2E_DATA_DIR;
+if (!dataDir) throw new Error("Run e2e tests with bun run test:e2e");
 export default defineConfig({
   testDir: "./e2e",
   use: {
