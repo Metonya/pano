@@ -1,52 +1,44 @@
 ---
 name: pano
-description: Manage project backlog items, assignments, acceptance criteria, and test records in a running Pano server through MCP or CLI.
+description: Track project work in Pano. Use when asked to plan PBIs, update a board, record verification, or hand work to a person for testing.
 ---
 
 # Pano
 
-Use this skill when asked to track work in Pano. Pano records work; it does not run agents. Stay within the user's requested project and scope.
+Pano tracks work; it does not run agents. Work within the requested project and scope.
 
 ## Connect
 
-The default server is `http://127.0.0.1:7777`. Read its `/agents.md` guide before changing items; it documents the current API and workflow. If the server is offline, start it with `pano serve` when authorized.
+Use the available Pano MCP tools, or the `pano` CLI. The default server is `http://127.0.0.1:7777`. Read its `/agents.md` guide for current tool and API details. If MCP is unavailable, use the CLI or REST; do not claim an update succeeded without checking the result. In a source checkout, `bun run pano` runs the CLI.
 
-- MCP: connect your client's Streamable HTTP transport to `<server>/mcp`. `pano mcp-config claude`, `pano mcp-config codex`, or `pano mcp-config cursor` prints client configuration. Use `list_projects`, `get_board`, `get_item`, `create_item`, `update_item`, `check_criterion`, `add_record`, and `record_usage`.
-- CLI: use `pano --help`. Set `PANO_URL` for another server, `PANO_TOKEN` when authentication is enabled, and `PANO_ACTOR` to your agent identity (`tool:role`). For MCP or REST, send `Authorization: Bearer <token>` when required; REST uses `X-Pano-Actor` for the actor. Never put tokens into item text.
-- CLI commands support `--json`. For operations beyond the CLI, use MCP or the REST endpoints described by `/agents.md`.
+Set `PANO_URL` if the server uses a different address. If the installation requires authentication, configure `PANO_TOKEN` in the client environment; do not put secrets in cards or output. Identify changes with `PANO_ACTOR` for the CLI, an MCP actor, or `X-Pano-Actor` for REST, using an identity such as `claude:po` or `codex`.
 
-## Identity
+## Workflow
 
-Introduce yourself as `tool:role`, such as `claude:po`, `codex` or `cursor:review`; there is no registration. When assigning work to an agent as a person or PO, use the tool name (`claude`); when recording yourself, use `tool:role`. Use `assignee: "human"` for the person; the server resolves it to their name.
+1. Read the board, project settings, Definition of Done, and relevant item before changing work. Create a PBI with a clear outcome and verifiable acceptance criteria when planning new work. Avoid duplicate items.
+2. Assign work to the appropriate agent by tool name, such as `codex`, and move the item to In Progress. A PO coordinates and verifies delegated work when the user requests that role.
+3. Record decisions, progress, and actual verification results in the item. Use MCP `add_record` with `kind: "check"` or REST for test results; CLI `task note` creates a note. Mark only criteria that have been verified, using their returned IDs.
+4. If a person needs to verify the result, add scenarios with steps and expected outcomes, assign to `human`, and move the item to Test. Tell the user what to try. Otherwise, move it to Done after verification if project settings allow agents to close it.
+5. Keep history. Cancel obsolete work with a reason rather than deleting it. Report usage with `record_usage` or `pano task usage` only when values are known; never invent measurements.
 
-## Example workflow
+## Commits
+
+Follow the target repository's `AGENTS.md` and its commit rules. In the Pano repository, the orchestrator writes commit titles in Turkish with the PBI number and a clear outcome, for example `PANO-39: Agent çalışma yönergesi sadeleştirildi`. Keep technical terms in English, add 2 to 5 user-facing changes in the body, and review `git status` and `git diff --staged` before committing. Delegated agents do not commit or push.
+
+## CLI examples
+
+Replace `DEMO` with the requested project key and use the item key and criterion ID returned by Pano:
 
 ```sh
 pano project list --json
 pano board DEMO --json
 pano task create DEMO "Add search" --criteria "Search finds matching titles" --priority medium --json
-# Use the returned key in subsequent commands.
 pano task assign DEMO-1 codex
 pano task move DEMO-1 in_progress
-# Later, for human verification: pano task assign DEMO-1 human
 pano task show DEMO-1 --json
 pano task check DEMO-1 <criterion-id>
 ```
 
-Read project settings and the Definition of Done. Check the current item and criteria before implementation. Use the returned criterion IDs when marking verified criteria.
+Use `pano --help` for commands and flags. MCP `list_projects`, `get_board`, and `get_item` provide equivalent reads. To report known usage, for example, use `pano task usage DEMO-1 --model MODEL --input 12000 --output 3000 --duration 120000`. Duration is in milliseconds. Only include fields you know; omit unknown values. `--total` is the run's own total, while `--context` is peak context and is not added to token usage.
 
-Record AI test results while the item remains In Progress: call MCP `add_record` with `kind: "check"` and a factual message such as `Unit tests: 12/12 passed`. Include failures and limitations. CLI `task note` creates a note, so use MCP or REST for check records.
-
-When you finish a run, report it with MCP `record_usage` or `pano task usage DEMO-1 --model gpt-6.1-sol --effort high --input 12000 --output 3000 --total 15000 --context 8000 --duration 120000` (duration in milliseconds). `--total` is the run's own total; without it Pano counts input plus output. `--context` is how full the context window got and never adds to the total. Send only what you actually know; never invent values or send zeros. Pano shows them as reported by the agent, not as measurements.
-
-If human verification is needed, add test scenarios with steps and expected results, assign the item to `human`, and move it to Test. Tell the user which item is waiting and what to verify. Test is for human verification. Otherwise move it to Done after verification, if the project's AI closing setting allows it.
-
-Cancel only with a reason, for example `pano task move DEMO-1 cancelled --reason "Replaced by DEMO-2"`. Never delete items or their history; retain changes and decisions as records.
-
-To migrate a Markdown backlog when requested:
-
-```sh
-pano import backlog --project DEMO --json
-```
-
-This imports `PBI-*.md`, creates the project if missing, and skips items with an existing source ID on repeat runs. It does not synchronize later Markdown edits.
+If asked to migrate a Markdown backlog, use `pano import backlog --project DEMO --json`. It imports `PBI-*.md`, creates a missing project, and skips source IDs already imported. It does not synchronize later Markdown edits.
