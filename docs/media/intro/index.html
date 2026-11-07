@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pano intro</title>
+<style>
+:root {
+  --bg: #f5f5f7; --sidebar: #fbfbfd; --card: #fff; --sheet: #fff; --text: #1d1d1f; --muted: #636366;
+  --line: rgba(0,0,0,.08); --field: rgba(0,0,0,.05); --track: rgba(0,0,0,.08);
+  --primary: #0071e3; --accent: #0071e3; --accent-text: #0058b0; --accent-soft: rgba(0,113,227,.1);
+  --active-border: rgba(0,113,227,.35); --wait: #8a4b00; --wait-bg: rgba(255,159,10,.14);
+  --wait-line: rgba(255,159,10,.35); --star: #ff9f0a; --progress: #248a3d; --success: #1c6e30;
+  --success-bg: rgba(52,199,89,.14); --fail: #b8001a; --fail-bg: rgba(255,59,48,.1);
+  --scrim: rgba(0,0,0,.3); --shadow-card: 0 1px 2px rgba(0,0,0,.04), 0 4px 14px rgba(0,0,0,.04);
+  --shadow-sheet: 0 30px 90px rgba(0,0,0,.3);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); overflow: hidden; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+#world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+.abs { position: absolute; }
+
+/* Shell: same proportions as the product, scaled up for 1080p reading. */
+#sidebar { position: absolute; left: 0; top: 0; width: 320px; height: 1080px; background: var(--sidebar); border-right: 1px solid var(--line); }
+#waiting { position: absolute; left: 18px; top: 104px; width: 284px; height: 64px; border-radius: 18px; }
+#waiting .state { position: absolute; inset: 0; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: 18px; font-size: 23px; white-space: nowrap; }
+#waiting .off { color: var(--muted); font-weight: 500; }
+#waiting .on { background: var(--wait-bg); color: var(--wait); font-weight: 600; }
+#waiting b { margin-left: auto; min-width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 17px; background: var(--wait); color: #fff; font-size: 22px; }
+#waitRing { position: absolute; inset: 0; border-radius: 18px; border: 3px solid var(--star); }
+.navlabel { position: absolute; left: 28px; color: var(--muted); font-size: 22px; font-weight: 600; }
+.navrow { position: absolute; left: 18px; width: 284px; display: flex; align-items: center; gap: 12px; padding: 0 10px; font-size: 23px; font-weight: 500; white-space: nowrap; }
+#navProject { top: 232px; height: 54px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-text); }
+.square { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; }
+.agentrow { height: 48px; }
+.agentrow small { margin-left: auto; color: var(--muted); font-size: 22px; }
+#toolbar { position: absolute; left: 320px; right: 0; top: 0; height: 84px; display: flex; align-items: center; gap: 14px; padding: 0 28px; border-bottom: 1px solid var(--line); }
+#toolbar h1 { margin: 0; font-size: 42px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; }
+#toolbar .spacer { flex: 1; }
+#toolbar .tool { width: 48px; height: 48px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+#newPbi { height: 50px; display: flex; align-items: center; gap: 8px; padding: 0 18px 0 14px; border-radius: 12px; background: var(--primary); color: #fff; font-size: 23px; font-weight: 600; margin-left: 8px; }
+#summary { position: absolute; left: 348px; top: 104px; display: flex; align-items: center; gap: 16px; color: var(--muted); font-size: 24px; white-space: nowrap; }
+#summary strong { color: var(--text); font-weight: 600; }
+#sumTrack { width: 200px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
+#sumFill { height: 100%; width: 0; background: var(--progress); }
+.colhead { position: absolute; top: 158px; width: 371px; display: flex; align-items: center; gap: 12px; padding: 0 8px; }
+.colhead i { width: 12px; height: 12px; border-radius: 50%; }
+.colhead h2 { flex: 1; margin: 0; font-size: 27px; font-weight: 600; letter-spacing: -.01em; }
+.colhead span { min-width: 38px; height: 34px; line-height: 34px; padding: 0 10px; border-radius: 17px; background: var(--field); color: var(--muted); font-size: 22px; font-weight: 600; text-align: center; }
+
+/* Card */
+.card { position: absolute; left: 0; top: 0; width: 371px; padding: 20px 24px; border: 2px solid var(--line); border-radius: 24px; background: var(--card);
+  box-shadow: var(--shadow-card); display: flex; flex-direction: column; overflow: hidden; }
+.card .meta { height: 34px; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 22px; white-space: nowrap; }
+.card .num { font-weight: 600; }
+.card .badge { height: 34px; line-height: 34px; padding: 0 12px; border-radius: 17px; background: var(--wait-bg); color: var(--wait); font-weight: 600; }
+.card .usage { margin-left: auto; }
+.card .title { margin-top: 10px; height: 40px; font-size: 29px; line-height: 40px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+.card .slot { overflow: hidden; flex-shrink: 0; }
+.card .rec { height: 46px; margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 13px; font-size: 24px; font-weight: 600; white-space: nowrap; }
+.card .rec.red { background: var(--fail-bg); color: var(--fail); }
+.card .rec.green { background: var(--success-bg); color: var(--success); }
+.card .act { height: 34px; margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 22px; color: var(--muted); white-space: nowrap; }
+.card .act i { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.card .act.note { color: var(--wait); font-weight: 600; }
+.card .act.note i { background: var(--star); }
+.card .foot { margin-top: 14px; height: 40px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 22px; flex-shrink: 0; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 3px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-text); font-size: 22px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.chipInner { display: inline-flex; align-items: center; gap: 8px; }
+.crit { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.crit .bar { flex: 1; min-width: 20px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
+.crit .bar span { display: block; height: 100%; background: var(--progress); }
+
+/* Avatars */
+.av { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; flex-shrink: 0; font-weight: 700; }
+.av svg { display: block; width: 75%; height: 75%; fill: #fff; }
+
+/* Actors: 120px base, scaled by the timeline. */
+#cards { position: relative; z-index: 20; }
+#actors { position: relative; z-index: 50; }
+#tools, #poBubble, #handback, #lockup { z-index: 60; }
+.actor { position: absolute; left: 0; top: 0; width: 120px; height: 120px; transform-origin: 0 0; }
+.actor .circle { width: 120px; height: 120px; font-size: 62px; box-shadow: 0 8px 26px rgba(0,0,0,.18); }
+.actor .tag { position: absolute; top: 132px; left: -100px; width: 320px; text-align: center; font-size: 36px; font-weight: 600; white-space: nowrap; }
+.actor .role { position: absolute; right: -22px; bottom: -8px; height: 56px; line-height: 48px; padding: 0 16px; border-radius: 28px; color: #fff; font-size: 36px; font-weight: 700; border: 4px solid #fff; white-space: nowrap; }
+.actor .role.po { background: var(--primary); }
+.actor .role.dev { background: #4b5563; }
+
+#tools { position: absolute; left: 0; top: 0; display: flex; gap: 10px; }
+#tools span { height: 44px; line-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--card); border: 2px solid var(--line); color: var(--muted); font-family: var(--mono); font-size: 25px; font-weight: 600; }
+#poBubble { position: absolute; left: 0; top: 0; height: 40px; line-height: 40px; padding: 0 14px; border-radius: 12px; background: #1d1d1f; color: #fff; font-size: 20px; font-weight: 600; white-space: nowrap; }
+#handback { position: absolute; left: 0; top: 0; height: 40px; line-height: 40px; padding: 0 14px; border-radius: 20px; background: #fff; border: 2px solid rgba(184,0,26,.35); color: var(--fail); font-size: 20px; font-weight: 600; white-space: nowrap; }
+
+/* Prompt */
+#promptBox { position: absolute; left: 490px; top: 395px; width: 830px; height: 110px; border: 2px solid var(--line); border-radius: 28px; background: var(--card); box-shadow: var(--shadow-card); display: flex; align-items: center; padding: 0 22px 0 36px; font-size: 42px; }
+#promptText { flex: 1; white-space: pre; }
+#caret { display: inline-block; width: 3px; height: 46px; margin-left: 3px; background: var(--primary); vertical-align: -9px; }
+#send { width: 64px; height: 64px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; }
+#msg { position: absolute; left: 0; top: 0; height: 66px; line-height: 66px; padding: 0 26px; border-radius: 33px; background: var(--primary); color: #fff; font-size: 34px; font-weight: 500; white-space: nowrap; transform-origin: 50% 50%; }
+
+/* Lockup */
+#lockup { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; transform-origin: 0 0; font-size: 32px; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
+#lockup svg { display: block; width: 46px; height: 46px; }
+
+.hero { position: absolute; left: 0; width: 1920px; text-align: center; }
+#titleLine { top: 560px; font-size: 62px; font-weight: 500; color: var(--muted); letter-spacing: -.015em; }
+#endLine { top: 545px; font-size: 68px; font-weight: 600; letter-spacing: -.02em; }
+#endUrl { top: 660px; font-size: 40px; font-family: var(--mono); color: var(--accent-text); }
+
+/* Sheets */
+#scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet { position: absolute; left: 420px; width: 1080px; border-radius: 34px; background: var(--sheet); box-shadow: var(--shadow-sheet); overflow: hidden; display: flex; flex-direction: column; visibility: hidden; }
+.sheet .banner { height: 66px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 44px; background: rgba(255,159,10,.14); color: var(--wait); font-size: 25px; font-weight: 600; }
+.sheet .head { display: flex; align-items: center; gap: 14px; padding: 24px 44px 0; font-size: 23px; color: var(--muted); font-weight: 600; }
+.segment { margin-left: auto; display: flex; padding: 4px; border-radius: 14px; background: var(--field); font-size: 22px; font-weight: 500; }
+.segment span { height: 42px; line-height: 42px; padding: 0 18px; border-radius: 11px; color: var(--muted); }
+.segment span.sel { background: #fff; color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.closeX { width: 46px; height: 46px; border-radius: 50%; background: var(--field); display: flex; align-items: center; justify-content: center; color: var(--text); }
+.sheet h2 { margin: 8px 44px 0; font-size: 44px; font-weight: 700; letter-spacing: -.02em; line-height: 1.25; }
+.sheet hr { margin: 18px 0 0; height: 1px; border: 0; background: var(--line); flex-shrink: 0; }
+.sheet .body { flex: 1; min-height: 0; padding: 18px 44px 0; }
+.sheet h3 { margin: 0 0 8px; font-size: 26px; font-weight: 600; }
+.sheet p { margin: 0 0 20px; font-size: 25px; line-height: 1.4; }
+.scen { display: flex; align-items: center; gap: 16px; padding: 16px 20px; margin-bottom: 12px; border: 2px solid var(--line); border-radius: 20px; }
+.scen .n { color: var(--muted); font-size: 23px; }
+.scen .txt { flex: 1; min-width: 0; }
+.scen .step { font-size: 25px; }
+.scen .exp { margin-top: 2px; font-size: 22px; color: var(--muted); }
+.res { height: 48px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border: 2px solid var(--line); border-radius: 12px; font-size: 22px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+.res svg { width: 20px; height: 20px; }
+.res.pass.on { background: var(--success-bg); color: var(--success); border-color: transparent; font-weight: 600; }
+.res.failb.on { background: var(--fail-bg); color: var(--fail); border-color: transparent; font-weight: 600; }
+.note label { display: block; margin: 4px 0 8px; font-size: 23px; font-weight: 600; }
+.note .ta { height: 66px; padding: 0 18px; line-height: 62px; border: 2px solid var(--focus, #0071e3); border-radius: 16px; background: rgba(0,0,0,.03); font-size: 25px; white-space: pre; }
+.sheet .foot2 { height: 88px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 44px; border-top: 1px solid var(--line); }
+.sheet .foot2 .info { flex: 1; font-size: 23px; color: var(--muted); white-space: nowrap; }
+.sheet .foot2 .info.bad { color: var(--fail); font-weight: 600; }
+.btn { height: 54px; line-height: 50px; padding: 0 24px; border-radius: 14px; border: 2px solid var(--line); font-size: 24px; font-weight: 500; white-space: nowrap; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+.btn.disabled { color: var(--muted); }
+.hrow { display: flex; align-items: center; gap: 14px; height: 54px; font-size: 25px; white-space: nowrap; }
+.hrow b { font-weight: 600; }
+.hrow time { margin-left: auto; color: var(--muted); font-size: 22px; }
+.hrow .st { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 12px; background: var(--field); font-size: 22px; font-weight: 500; }
+.hrow .st i { width: 10px; height: 10px; border-radius: 50%; }
+.hrow .pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 20px; font-size: 24px; font-weight: 600; }
+.hrow .pill.red { background: var(--fail-bg); color: var(--fail); }
+.hrow .pill.green { background: var(--success-bg); color: var(--success); }
+.hrow .pill svg { width: 20px; height: 20px; }
+.usagebox { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 16px; margin-top: 14px; padding: 18px 24px; border: 2px solid var(--line); border-radius: 20px; }
+.usagebox small { display: block; font-size: 22px; color: var(--muted); }
+.usagebox strong { display: block; margin-top: 2px; font-size: 32px; font-weight: 600; letter-spacing: -.01em; }
+
+/* Caption */
+#band { position: absolute; left: 0; right: 0; bottom: 0; height: 132px; background: var(--bg); border-top: 1px solid var(--line); }
+#caption { position: absolute; left: 0; right: 0; bottom: 0; height: 132px; line-height: 132px; text-align: center; font-size: 50px; font-weight: 600; letter-spacing: -.015em; }
+#cursor { position: absolute; left: 0; top: 0; width: 44px; height: 60px; transform-origin: 0 0; filter: drop-shadow(0 3px 5px rgba(0,0,0,.3)); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world">
+    <div id="shell">
+      <div id="sidebar">
+        <div id="waiting">
+          <div class="state off" data-w="off"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Waiting for you</div>
+          <div class="state on" data-w="on"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Waiting for you<b>1</b></div>
+          <div id="waitRing"></div>
+        </div>
+        <div class="navlabel" style="top:196px">Projects</div>
+        <div class="navrow" id="navProject"><span class="square">D</span>Driftwood<svg style="margin-left:auto" width="24" height="24" viewBox="0 0 24 24" fill="#ff9f0a"><path d="M12 2.5l2.95 6.3 6.9.85-5.1 4.7 1.35 6.8L12 16.7l-6.1 3.45 1.35-6.8-5.1-4.7 6.9-.85z"/></svg></div>
+        <div class="navlabel" style="top:310px">Agents</div>
+        <div class="navrow agentrow" id="rowPo" style="top:344px"></div>
+        <div class="navrow agentrow" id="rowCodex" style="top:396px"></div>
+        <div class="navrow agentrow" id="rowOpencode" style="top:448px"></div>
+        <div class="navrow agentrow" id="rowCdev" style="top:500px"></div>
+        <div class="navrow agentrow" id="rowYou" style="top:872px"></div>
+      </div>
+      <div id="toolbar">
+        <h1>Driftwood</h1>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="#ff9f0a"><path d="M12 2.5l2.95 6.3 6.9.85-5.1 4.7 1.35 6.8L12 16.7l-6.1 3.45 1.35-6.8-5.1-4.7 6.9-.85z"/></svg>
+        <div class="spacer"></div>
+        <div class="tool"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg></div>
+        <div class="tool"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+        <div id="newPbi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New PBI</div>
+      </div>
+      <div id="summary"><div id="sumTrack"><div id="sumFill"></div></div><span id="sumText"></span></div>
+      <div id="heads"></div>
+    </div>
+    <div id="cards"></div>
+    <div id="promptBox"><div id="promptText"></div><div id="send"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div></div>
+    <div id="msg">Add search to my app.</div>
+    <div id="handback">Fix 1 test</div>
+    <div id="actors"></div>
+    <div id="tools"><span>MCP</span><span>CLI</span></div>
+    <div id="poBubble"></div>
+    <div id="lockup"><svg viewBox="0 0 30 30"><rect width="30" height="30" rx="9" fill="#0071e3"/><g transform="translate(6 6) scale(.75)" fill="#fff"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></g></svg><span>Pano</span></div>
+  </div>
+
+  <div id="titleLine" class="hero">A board for your AI agents.</div>
+  <div id="endLine" class="hero">You stay in control.</div>
+  <div id="endUrl" class="hero">github.com/Metonya/pano</div>
+
+  <div id="scrim"></div>
+
+  <!-- Test sheet, first card -->
+  <div class="sheet" id="sa" style="top:90px;height:730px">
+    <div class="banner"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.3"/></svg>Claude · PO wants you to test this</div>
+    <div class="head">#1<div class="segment"><span class="sel">Details</span><span>History</span></div><div class="closeX"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></div></div>
+    <h2>Search API</h2>
+    <hr>
+    <div class="body">
+      <h3>What changed</h3>
+      <p>Added a search endpoint that returns ranked results.</p>
+      <h3>Test scenarios</h3>
+      <div class="scen"><span class="n">1</span><div class="txt"><div class="step">Search for a word in your notes.</div><div class="exp">Matching notes appear.</div></div><span class="res pass" id="sa-p1"></span><span class="res failb" id="sa-f1"></span></div>
+      <div class="scen"><span class="n">2</span><div class="txt"><div class="step">Search with an empty box.</div><div class="exp">The full list stays.</div></div><span class="res pass" id="sa-p2"></span><span class="res failb" id="sa-f2"></span></div>
+    </div>
+    <div class="foot2"><div class="info" id="sa-info">Some scenarios are unmarked.</div><div class="btn" id="sa-send">Send back</div><div class="btn primary" id="sa-approve">Approve</div></div>
+  </div>
+
+  <!-- Test sheet, second card -->
+  <div class="sheet" id="sb" style="top:40px;height:880px">
+    <div class="banner"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.3"/></svg>Claude · PO wants you to test this</div>
+    <div class="head">#2<div class="segment"><span class="sel">Details</span><span>History</span></div><div class="closeX"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></div></div>
+    <h2>Search bar</h2>
+    <hr>
+    <div class="body">
+      <h3>What changed</h3>
+      <p>Added a search bar that shows results as you type.</p>
+      <h3>Test scenarios</h3>
+      <div class="scen"><span class="n">1</span><div class="txt"><div class="step">Type a word in the search bar.</div><div class="exp">Results appear as you type.</div></div><span class="res pass" id="sb-p1"></span><span class="res failb" id="sb-f1"></span></div>
+      <div class="scen"><span class="n">2</span><div class="txt"><div class="step">Check the order of the results.</div><div class="exp">The best match comes first.</div></div><span class="res pass" id="sb-p2"></span><span class="res failb" id="sb-f2"></span></div>
+      <div class="note" id="sb-note"><label>Send back note</label><div class="ta" id="sb-ta"></div></div>
+    </div>
+    <div class="foot2"><div class="info" id="sb-info"></div><div class="btn" id="sb-send">Send back</div><div class="btn primary" id="sb-approve">Approve</div></div>
+  </div>
+
+  <!-- History sheet -->
+  <div class="sheet" id="sh" style="top:130px;height:670px">
+    <div class="head">#1<div class="segment"><span>Details</span><span class="sel">History</span></div><div class="closeX"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></div></div>
+    <h2>Search API</h2>
+    <hr>
+    <div class="body" id="sh-body"></div>
+  </div>
+
+  <div id="band"></div>
+  <div id="caption"></div>
+  <svg id="cursor" viewBox="0 0 22 30"><path d="M1.5 1.5v22.6l6-5.6 3.9 9 4-1.7-3.9-8.9h8.2z" fill="#111" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+</div>
+
+<script>
+"use strict";
+// Illustrative project. Every figure on screen is made up.
+const LOGO_BOX = "-1.0909 -1.0909 26.1818 26.1818";
+const P = {
+  claude: "m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z",
+  codex: "M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z",
+  opencode: "M22 24H2V0h20zM17 4.8H7v14.4h10z",
+};
+const WHO = {
+  po: { name: "Claude · PO", logo: "claude", bg: "#bc5a36", role: "PO", cls: "po", tag: "Claude" },
+  codex: { name: "Codex", logo: "codex", bg: "#000", tag: "Codex" },
+  opencode: { name: "OpenCode", logo: "opencode", bg: "#000", tag: "OpenCode" },
+  cdev: { name: "Claude · dev", logo: "claude", bg: "#bc5a36", role: "dev", cls: "dev", tag: "Claude" },
+  you: { name: "You", initial: "Y", bg: "#0071e3", tag: "You" },
+};
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M5 12.5 10 17.5 19 7"/></svg>',
+  cross: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="22" height="22"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+};
+function avatar(key, size) {
+  const w = WHO[key];
+  const inner = w.logo
+    ? `<svg viewBox="${LOGO_BOX}"><path d="${P[w.logo]}"/></svg>`
+    : w.initial;
+  const font = size ? `width:${size}px;height:${size}px;font-size:${Math.round(size * .52)}px;` : "";
+  return `<span class="av${size ? "" : " circle"}" style="${font}background:${w.bg}">${inner}</span>`;
+}
+
+// Timing: every beat is relative to its start, so a beat can be stretched in one place.
+const B2 = 3.1, B3 = 6.4, B4 = 9.3, B5 = 13.7, B6 = 18.9, B7 = 22.9, B8 = 30.1, B9 = 37.3, B10 = 48.0, B11 = 52.3, END = 56.1;
+
+const CAPTIONS = [
+  [B2 + .3, B3 - .1, "You ask for one thing."],
+  [B3 + .15, B4 - .1, "One agent becomes the Product Owner."],
+  [B4 + .15, B5 - .1, "It plans the work on a board."],
+  [B5 + .15, B6 - .1, "It hands cards to other agents."],
+  [B6 + .15, B7 - .1, "They work. You see it live."],
+  [B7 + .15, B8 - .1, "The PO verifies. Failed work goes back."],
+  [B8 + .15, B9 - .1, "You test what only a person can judge."],
+  [B9 + .15, B10 - .1, "Or send it back with a note."],
+  [B10 + .15, B11 - .1, "Every step and every token, on record."],
+];
+
+// Maths
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const io = (p) => { p = clamp(p); return p * p * p * (p * (6 * p - 15) + 10); };
+const out = (p) => { p = clamp(p); return 1 - Math.pow(1 - p, 3); };
+const ramp = (t, a, b) => (b === a ? (t >= a ? 1 : 0) : clamp((t - a) / (b - a)));
+const win = (t, a, b, fade = .3) => io(ramp(t, a, a + fade)) * (1 - io(ramp(t, b - fade, b)));
+const bump = (t, c, d) => { const x = Math.abs(t - c) / d; return x >= 1 ? 0 : .5 + .5 * Math.cos(Math.PI * x); };
+function K(t, keys, ease = (p) => p) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    if (t <= keys[i][0]) return lerp(keys[i - 1][1], keys[i][1], ease((t - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0] || 1)));
+  }
+  return keys[keys.length - 1][1];
+}
+const stepAt = (t, keys, dflt) => { let v = dflt; for (const k of keys) if (t >= k[0]) v = k[1]; return v; };
+const lastKey = (t, keys) => { let found = null; for (const k of keys) if (t >= k[0]) found = k; return found; };
+const val = (p) => (typeof p === "function" ? p() : p);
+function path(t, keys, ease = io) {
+  if (t <= keys[0][0]) { const a = val(keys[0][1]); return { x: a.x, y: a.y, s: keys[0][2] }; }
+  for (let i = 1; i < keys.length; i++) {
+    if (t <= keys[i][0]) {
+      const a = val(keys[i - 1][1]), b = val(keys[i][1]);
+      const p = ease((t - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0] || 1));
+      return { x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p), s: lerp(keys[i - 1][2], keys[i][2], p) };
+    }
+  }
+  const z = keys[keys.length - 1], b = val(z[1]);
+  return { x: b.x, y: b.y, s: z[2] };
+}
+const pt = (x, y) => ({ x, y });
+
+// Board layout
+const COLS = [{ n: "Backlog", c: "#636366" }, { n: "In Progress", c: "#0071e3" }, { n: "Test", c: "#ff9f0a" }, { n: "Done", c: "#248a3d" }];
+const COL_X = [348, 739, 1130, 1521], COL_TOP = 208, GAP = 16, CARD_W = 371, BASE_H = 20 + 34 + 10 + 40 + 14 + 40 + 20 + 4;
+const SLOT_ACT = 44, SLOT_REC = 58;
+
+const A = 0, BB = 1, C = 2;
+const LAND = { A: B5 + 2.6, B: B5 + 3.9, C: B5 + 5.1 };
+const AY = { land: B8 + 2.0, approve: B8 + 5.2 };
+const BY = { land: B9 + 1.4, sent: B9 + 5.4, back: B9 + 6.5, again: B9 + 8.2, approve: B9 + 9.6 };
+
+const CARDS = [
+  {
+    n: 1, title: "Search API", appear: B4 + 1.25,
+    moves: [[B5 + 1.3, B5 + 2.2, 0, 1], [B8 + .4, B8 + 1.2, 1, 2], [B8 + 5.6, B8 + 6.4, 2, 3]],
+    owner: [[B4 + 1.25, "po"], [LAND.A, "codex"], [AY.land, "you"], [AY.approve, "codex"]],
+    crit: [[B6 + 1.2, 1], [B6 + 2.4, 2], [B6 + 3.5, 3], [B7 + 3.3, 2], [B7 + 4.7, 3]],
+    tok: [[LAND.A, 0], [B6 + 3.6, 31.2], [B7 + 3.3, 31.2], [B7 + 4.7, 42.8]],
+    act: [[B6 + .5, "Added search endpoint"], [B6 + 2.1, "Ranked results by match"], [B6 + 3.5, "All criteria done"], [B7 + 2.7, "Back to Codex: 1 test failed"], [B7 + 3.4, "Codex is fixing it"], [B7 + 4.5, "Fixed empty query crash"], [B8 + .15, null]],
+    red: [B7 + 2.0, B8 + .15], green: [B7 + 5.6, B8 + .15],
+    wait: [[AY.land, AY.approve]],
+  },
+  {
+    n: 2, title: "Search bar", appear: B4 + 2.05,
+    moves: [[B5 + 2.6, B5 + 3.5, 0, 1], [B9, B9 + .8, 1, 2], [B9 + 5.8, B9 + 6.5, 2, 1], [B9 + 7.6, B9 + 8.2, 1, 2], [B9 + 9.95, B9 + 10.5, 2, 3]],
+    owner: [[B4 + 2.05, "po"], [LAND.B, "opencode"], [BY.land, "you"], [BY.sent, "opencode"], [BY.again, "you"], [BY.approve, "opencode"]],
+    crit: [[B6 + 1.7, 1], [B6 + 3.4, 2], [B7 + 6, 3], [BY.back, 2], [B9 + 7.4, 3]],
+    tok: [[LAND.B, 0], [B7 + 6, 24.9], [BY.back, 24.9], [B9 + 7.5, 28.3]],
+    act: [[B6 + .9, "Added search input"], [B6 + 2.7, "Results update as you type"], [B9 - .1, null], [B9 + 6.3, "You: Results are not sorted", "note"], [B9 + 7.1, "Sorted by relevance"], [B9 + 7.55, null]],
+    wait: [[BY.land, BY.sent], [BY.again, BY.approve]],
+  },
+  {
+    n: 3, title: "Search tests", appear: B4 + 2.85,
+    moves: [[B5 + 3.9, B5 + 4.8, 0, 1], [B10 + .2, B10 + 1, 1, 3]],
+    owner: [[B4 + 2.85, "po"], [LAND.C, "cdev"]],
+    crit: [[B6 + 2.0, 1], [B7 + 1, 2], [B8 + 2, 3]],
+    tok: [[LAND.C, 0], [B8 + 2, 19.6]],
+    act: [[B6 + 1.3, "Wrote search API tests"], [B6 + 3.1, "Added edge cases"], [B10 + .1, null]],
+    wait: [],
+  },
+];
+
+const G = []; // Per-frame card geometry.
+function layoutCards(t) {
+  const n = CARDS.length;
+  const weights = [], heights = [];
+  CARDS.forEach((c, i) => {
+    const w = [0, 0, 0, 0];
+    const app = io(ramp(t, c.appear, c.appear + .55));
+    let col = 0, fly = null, p = 0;
+    for (const m of c.moves) {
+      if (t < m[0]) break;
+      if (t < m[1]) { fly = m; p = io((t - m[0]) / (m[1] - m[0])); break; }
+      col = m[3];
+    }
+    if (fly) { w[fly[2]] = 1 - p; w[fly[3]] = p; } else w[col] = app;
+    weights[i] = w;
+    // Activity line.
+    const cur = lastKey(t, c.act) || [0, null];
+    const idx = c.act.indexOf(cur);
+    const prev = idx > 0 ? c.act[idx - 1][1] : null;
+    let actH;
+    if (cur[1] === null) actH = idx < 0 ? 0 : 1 - io((t - cur[0]) / .35);
+    else actH = prev === null ? io((t - cur[0]) / .35) : 1;
+    if (cur[1] === null && prev === null) actH = 0;
+    const red = c.red ? win(t, c.red[0], c.red[1], .35) : 0;
+    const green = c.green ? win(t, c.green[0], c.green[1], .35) : 0;
+    heights[i] = BASE_H + actH * SLOT_ACT + red * SLOT_REC + green * SLOT_REC;
+    G[i] = { w, fly, p, col, app, actH, red, green, cur, h: heights[i] };
+  });
+  const stackY = (col, i) => {
+    let y = COL_TOP;
+    for (let j = 0; j < i; j++) y += weights[j][col] * (heights[j] + GAP);
+    return y;
+  };
+  for (let i = 0; i < n; i++) {
+    const g = G[i];
+    if (g.fly) {
+      const a = g.fly[2], b = g.fly[3];
+      g.x = lerp(COL_X[a], COL_X[b], g.p);
+      g.y = lerp(stackY(a, i), stackY(b, i), g.p) - 26 * Math.sin(Math.PI * g.p);
+      g.lift = Math.sin(Math.PI * g.p);
+    } else { g.x = COL_X[g.col]; g.y = stackY(g.col, i); g.lift = 0; }
+  }
+}
+const chipPt = (i) => () => ({ x: G[i].x + 2 + 24 + 3 + 17, y: G[i].y + G[i].h - 2 - 20 - 20 });
+const grabPt = (i) => () => ({ x: G[i].x + CARD_W + 8, y: G[i].y + 56 });
+const beside = (i) => () => ({ x: G[i].x + CARD_W + 96, y: G[i].y + 92 });
+const backlogBeside = (i) => () => ({ x: COL_X[1] + 60, y: COL_TOP + 90 + i * (BASE_H + GAP) });
+const ROW = { po: pt(47, 368), codex: pt(47, 420), opencode: pt(47, 472), cdev: pt(47, 524), you: pt(47, 896) };
+
+// Actors
+const ACTORS = {
+  you: {
+    op: (t) => { let o = win(t, B2 - .1, B4 + 1.0, .45); if (t >= B4 + .3) o = t < B4 + 1 ? 1 : 0; return Math.max(o, t > B8 + 1.3 && t < AY.land + .12 ? 1 : 0, t > B9 + .8 && t < BY.land + .12 ? 1 : 0); },
+    keys: [[B2, pt(330, 450), 150], [B3 + .8, pt(330, 450), 150], [B3 + 1.4, pt(600, 450), 150], [B4 + .1, pt(600, 450), 150], [B4 + 1, ROW.you, 38], [B8 + 1.3, ROW.you, 38], [AY.land, chipPt(A), 34], [AY.land + .13, chipPt(A), 34], [AY.land + .14, ROW.you, 38], [B9 + .8, ROW.you, 38], [BY.land, chipPt(BB), 34]],
+  },
+  po: {
+    op: (t) => io(ramp(t, B3 + .1, B3 + .6)),
+    keys: [
+      [B3, pt(1590, 450), 150], [B3 + .8, pt(1590, 450), 150], [B3 + 1.4, pt(1320, 450), 150], [B4 + .1, pt(1320, 450), 150], [B4 + 1.1, backlogBeside(0), 96],
+      [B4 + 1.75, backlogBeside(0), 96], [B4 + 2.05, backlogBeside(1), 96], [B4 + 2.55, backlogBeside(1), 96], [B4 + 2.85, backlogBeside(2), 96], [B5, backlogBeside(2), 96],
+      [B5 + 1.3, grabPt(A), 72], [B5 + 2.2, grabPt(A), 72], [B5 + 2.6, grabPt(BB), 72], [B5 + 3.5, grabPt(BB), 72], [B5 + 3.9, grabPt(C), 72], [B5 + 4.8, grabPt(C), 72],
+      [B6 + .4, ROW.po, 38], [B7 + .2, ROW.po, 38], [B7 + .9, beside(A), 112], [B8 + .1, beside(A), 112],
+      [B8 + .4, grabPt(A), 72], [B8 + 1.2, grabPt(A), 72], [B8 + 1.8, ROW.po, 38], [B9 - .45, ROW.po, 38],
+      [B9, grabPt(BB), 72], [B9 + .8, grabPt(BB), 72], [B9 + 1.4, ROW.po, 38], [B10 - .25, ROW.po, 38],
+      [B10 + .2, grabPt(C), 72], [B10 + 1, grabPt(C), 72], [B10 + 1.6, ROW.po, 38],
+    ],
+  },
+  codex: {
+    op: (t) => (t > B5 && t < LAND.A + .12 ? 1 : 0),
+    keys: [[B5 + .15, pt(2010, 250), 96], [B5 + 1, pt(1706, 250), 96], [B5 + 2.0, pt(1706, 250), 96], [LAND.A, chipPt(A), 34]],
+  },
+  opencode: {
+    op: (t) => (t > B5 && t < LAND.B + .12 ? 1 : 0),
+    keys: [[B5 + .3, pt(2010, 450), 96], [B5 + 1.15, pt(1706, 450), 96], [B5 + 3.3, pt(1706, 450), 96], [LAND.B, chipPt(BB), 34]],
+  },
+  cdev: {
+    op: (t) => (t > B5 && t < LAND.C + .12 ? 1 : 0),
+    keys: [[B5 + .45, pt(2010, 650), 96], [B5 + 1.3, pt(1706, 650), 96], [B5 + 4.5, pt(1706, 650), 96], [LAND.C, chipPt(C), 34]],
+  },
+};
+
+// Camera
+const CAM = [
+  [0, 960, 540, 1],
+  [B6 + .1, 960, 540, 1], [B6 + 1, 1090, 582, 1.22], [B7, 1090, 582, 1.22], [B7 + .9, 925, 441, 1.6], [B8 + .1, 925, 441, 1.6], [B8 + 1, 960, 540, 1], [END, 960, 540, 1],
+];
+function camAt(t) {
+  return { x: K(t, CAM.map((k) => [k[0], k[1]]), io), y: K(t, CAM.map((k) => [k[0], k[2]]), io), s: K(t, CAM.map((k) => [k[0], k[3]]), io) };
+}
+
+// Cursor: tip position in stage coordinates.
+const center = (sel) => () => { const r = document.querySelector(sel).getBoundingClientRect(); return { x: r.left + r.width * .55, y: r.top + r.height * .6 }; };
+const cardTitle = (i) => () => ({ x: G[i].x + 110, y: G[i].y + 88 });
+const CURSOR = {
+  op: (t) => Math.max(win(t, B8 + 2.2, B8 + 5.5), win(t, B9 + 1.5, B9 + 5.6), win(t, B9 + 8.25, B9 + 9.8), win(t, B10 + 1.0, B10 + 2.2)),
+  keys: [
+    [B8 + 2.2, pt(1600, 930), 1], [B8 + 2.7, cardTitle(A), 1], [B8 + 3.7, cardTitle(A), 1], [B8 + 4.05, center("#sa-p1"), 1], [B8 + 4.25, center("#sa-p1"), 1], [B8 + 4.55, center("#sa-p2"), 1], [B8 + 4.8, center("#sa-p2"), 1], [B8 + 5.15, center("#sa-approve"), 1], [B8 + 5.5, center("#sa-approve"), 1],
+    [B9 + 1.4, pt(1600, 900), 1], [B9 + 1.8, cardTitle(BB), 1], [B9 + 2.5, cardTitle(BB), 1], [B9 + 2.85, center("#sb-p1"), 1], [B9 + 3.05, center("#sb-p1"), 1], [B9 + 3.35, center("#sb-f2"), 1], [B9 + 3.55, center("#sb-f2"), 1], [B9 + 3.8, center("#sb-ta"), 1], [B9 + 5.05, center("#sb-ta"), 1], [B9 + 5.35, center("#sb-send"), 1], [B9 + 5.6, center("#sb-send"), 1],
+    [B9 + 8.2, pt(1500, 800), 1], [B9 + 8.55, cardTitle(BB), 1], [B9 + 8.8, cardTitle(BB), 1], [B9 + 9.15, center("#sb-p2"), 1], [B9 + 9.25, center("#sb-p2"), 1], [B9 + 9.55, center("#sb-approve"), 1], [B9 + 9.8, center("#sb-approve"), 1],
+    [B10 + 1.0, pt(1300, 900), 1], [B10 + 1.25, cardTitle(A), 1], [B10 + 2.2, cardTitle(A), 1],
+  ],
+  clicks: [B8 + 2.9, B8 + 4.1, B8 + 4.6, B8 + 5.2, B9 + 1.85, B9 + 2.9, B9 + 3.4, B9 + 3.85, B9 + 5.4, B9 + 8.6, B9 + 9.2, B9 + 9.6, B10 + 1.3],
+};
+
+// Sheets
+const SHEETS = [
+  { el: "sa", windows: [[B8 + 2.95, B8 + 5.3], ], origin: A },
+  { el: "sb", windows: [[B9 + 1.9, B9 + 5.5], [B9 + 8.65, B9 + 9.7]], origin: BB },
+  { el: "sh", windows: [[B10 + 1.35, B11 - .25]], origin: A },
+];
+const HIST = [
+  `<div class="hrow">${avatar("po", 34)}<span><b>Claude · PO</b> created PBI</span><time>10:02</time></div>`,
+  `<div class="hrow">${avatar("po", 34)}<span><b>Claude · PO</b> moved</span><span class="st"><i style="background:#636366"></i>Backlog</span><span>→</span><span class="st"><i style="background:#0071e3"></i>In Progress</span><time>10:04</time></div>`,
+  `<div class="hrow">${avatar("po", 34)}<span class="pill red">${ICON.cross}Tests: 11/12 failed</span><time>10:21</time></div>`,
+  `<div class="hrow">${avatar("po", 34)}<span class="pill green">${ICON.check}Tests: 12/12 passed</span><time>10:28</time></div>`,
+  `<div class="hrow">${avatar("you", 34)}<span><b>You</b> approved</span><span class="st"><i style="background:#ff9f0a"></i>Test</span><span>→</span><span class="st"><i style="background:#248a3d"></i>Done</span><time>10:36</time></div>`,
+  `<div class="usagebox"><div><small>Model</small><strong>gpt-6.1-sol</strong></div><div><small>Tokens</small><strong>42.8k</strong></div><div><small>Context</small><strong>128k</strong></div><div><small>Duration</small><strong>34 min</strong></div></div>`,
+];
+
+// Build
+const $ = (id) => document.getElementById(id);
+const worldEl = $("world");
+COLS.forEach((c, i) => {
+  const d = document.createElement("div");
+  d.className = "colhead"; d.id = "col" + i; d.style.left = COL_X[i] + "px";
+  d.innerHTML = `<i style="background:${c.c}"></i><h2>${c.n}</h2><span>0</span>`;
+  $("heads").appendChild(d);
+});
+const CARD_EL = CARDS.map((c) => {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<div class="meta"><span class="num">#${c.n}</span><span class="badge">Waiting for you</span><span class="usage"></span></div>
+    <div class="title">${c.title}</div>
+    <div class="slot rs"><div class="rec red">${ICON.cross}Tests: 11/12 failed</div></div>
+    <div class="slot gs"><div class="rec green">${ICON.check}Tests: 12/12 passed</div></div>
+    <div class="slot as"><div class="act"><i></i><span></span></div></div>
+    <div class="foot"><span class="chip"><span class="chipInner"></span></span><span class="crit"><span class="bar"><span></span></span><span class="cn"></span></span></div>`;
+  $("cards").appendChild(el);
+  return { el, badge: el.querySelector(".badge"), usage: el.querySelector(".usage"), rs: el.querySelector(".rs"), gs: el.querySelector(".gs"), as: el.querySelector(".as"), act: el.querySelector(".act"), actText: el.querySelector(".act span"), chip: el.querySelector(".chip"), chipInner: el.querySelector(".chipInner"), bar: el.querySelector(".bar span"), cn: el.querySelector(".cn"), lastOwner: null, lastAct: null };
+});
+const ACTOR_EL = {};
+for (const key of Object.keys(ACTORS)) {
+  const w = WHO[key];
+  const el = document.createElement("div");
+  el.className = "actor";
+  el.innerHTML = `${avatar(key)}<div class="tag">${w.tag}</div>${w.role ? `<div class="role ${w.cls}">${w.role}</div>` : ""}`;
+  $("actors").appendChild(el);
+  ACTOR_EL[key] = { el, tag: el.querySelector(".tag"), role: el.querySelector(".role") };
+}
+for (const [id, key, right] of [["rowPo", "po", ""], ["rowCodex", "codex", "#1"], ["rowOpencode", "opencode", "#2"], ["rowCdev", "cdev", "#3"], ["rowYou", "you", ""]]) {
+  $(id).innerHTML = `${avatar(key, 38)}<span>${WHO[key].name}</span>${right ? `<small>${right}</small>` : ""}`;
+}
+$("sh-body").innerHTML = HIST.map((h, i) => `<div class="hr" id="hr${i}">${h}</div>`).join("");
+for (const id of ["sa-p1", "sa-p2", "sb-p1", "sb-p2"]) $(id).innerHTML = ICON.check + "Passed";
+for (const id of ["sa-f1", "sa-f2", "sb-f1", "sb-f2"]) $(id).innerHTML = ICON.cross + "Failed";
+const lockW = (() => $("lockup").getBoundingClientRect().width)();
+const PROMPT = "Add search to my app.";
+const NOTE = "Results are not sorted";
+
+function setPressed(id, t, times) {
+  let s = 1;
+  for (const c of times) s = Math.min(s, 1 - .04 * bump(t, c, .14));
+  $(id).style.transform = s === 1 ? "" : `scale(${s})`;
+}
+
+function seek(raw) {
+  const t = clamp(raw, 0, END);
+  layoutCards(t);
+
+  // Shell, with the board fading away only for the end card.
+  const shellIn = io(ramp(t, B4 + .1, B4 + 1.0));
+  const shellOut = io(ramp(t, B11 + .05, B11 + .8));
+  const shellOp = shellIn * (1 - shellOut);
+  const camera = camAt(t);
+  worldEl.style.transform = `translate(${960 - camera.x * camera.s}px, ${540 - camera.y * camera.s}px) scale(${camera.s})`;
+  $("shell").style.opacity = shellOp;
+  $("sidebar").style.transform = `translateX(${(1 - shellIn) * -40}px)`;
+  $("toolbar").style.transform = `translateY(${(1 - shellIn) * -20}px)`;
+  $("summary").style.opacity = io(ramp(t, B4 + .35, B4 + 1.05));
+  COLS.forEach((c, i) => {
+    const p = io(ramp(t, B4 + .4 + i * .08, B4 + 1 + i * .08));
+    const el = $("col" + i);
+    el.style.opacity = p;
+    el.style.transform = `translateY(${(1 - p) * 14}px)`;
+    el.lastChild.textContent = Math.round(G.reduce((sum, g) => sum + g.w[i], 0));
+  });
+  const doneCount = CARDS.filter((c) => { const m = c.moves.at(-1); return m[3] === 3 && t >= m[1]; }).length;
+  const doneBar = (CARDS[0].moves.at(-1)[1] <= t ? 1 : 0) + (CARDS[1].moves.at(-1)[1] <= t ? 1 : 0) + (CARDS[2].moves.at(-1)[1] <= t ? 1 : 0);
+  $("sumText").innerHTML = `<strong>${doneCount} / 3 completed</strong> · ${3 - doneCount} remaining · Last updated just now`;
+  $("sumFill").style.width = ((doneBar / 3) * 100) + "%";
+
+  // Sidebar rows.
+  const rowOp = (id, a) => { $(id).style.opacity = io(ramp(t, a, a + .4)); };
+  rowOp("rowPo", B4 + .6); rowOp("rowYou", B4 + .6);
+  rowOp("rowCodex", LAND.A - .2); rowOp("rowOpencode", LAND.B - .2); rowOp("rowCdev", LAND.C - .2);
+
+  // Waiting for you.
+  const litWindows = [[AY.land, AY.approve], [BY.land, BY.sent], [BY.again, BY.approve]];
+  let lit = 0;
+  for (const w of litWindows) lit = Math.max(lit, win(t, w[0], w[1], .3));
+  document.querySelector('[data-w="off"]').style.opacity = 1 - lit;
+  document.querySelector('[data-w="on"]').style.opacity = lit;
+  let ring = 0, ringP = 0;
+  for (const w of litWindows) { const p = ramp(t, w[0], w[0] + .9); if (p > 0 && p < 1) { ring = 1 - p; ringP = out(p); } }
+  $("waitRing").style.opacity = ring * .9;
+  $("waitRing").style.transform = `scale(${1 + ringP * .08}, ${1 + ringP * .22})`;
+
+  // Cards.
+  CARDS.forEach((c, i) => {
+    const g = G[i], e = CARD_EL[i];
+    const appeared = t >= c.appear;
+    const cardOp = appeared ? io(ramp(t, c.appear, c.appear + .45)) * (1 - shellOut) : 0;
+    e.el.style.visibility = appeared ? "visible" : "hidden";
+    e.el.style.opacity = cardOp;
+    const slide = (1 - io(ramp(t, c.appear, c.appear + .55))) * 70;
+    const sc = (1 + .025 * g.lift) * lerp(.96, 1, io(ramp(t, c.appear, c.appear + .55)));
+    e.el.style.transform = `translate(${g.x + slide}px, ${g.y}px) scale(${sc})`;
+    e.el.style.height = g.h + "px";
+    e.el.style.zIndex = g.fly ? 30 : 10;
+    e.el.style.boxShadow = g.lift > .01 ? `0 ${6 + 18 * g.lift}px ${16 + 34 * g.lift}px rgba(0,0,0,${.05 + .15 * g.lift})` : "";
+    const waiting = c.wait.some((w) => t >= w[0] && t < w[1]);
+    const inProgress = !g.fly && g.col === 1;
+    e.el.style.borderColor = waiting ? "rgba(255,159,10,.55)" : inProgress ? "rgba(0,113,227,.35)" : "";
+    e.badge.style.display = waiting ? "" : "none";
+    // Tokens.
+    const tk = K(t, c.tok);
+    const showTok = tk >= .1 && !waiting;
+    e.usage.textContent = showTok ? `${tk.toFixed(1)}k tokens` : "";
+    // Slots.
+    e.rs.style.height = g.red * SLOT_REC + "px"; e.rs.style.opacity = g.red;
+    e.gs.style.height = g.green * SLOT_REC + "px"; e.gs.style.opacity = g.green;
+    e.as.style.height = g.actH * SLOT_ACT + "px";
+    const cur = g.cur;
+    const keyStr = cur[1] ?? e.lastAct;
+    if (cur[1] && e.actText.textContent !== cur[1]) e.actText.textContent = cur[1];
+    if (!cur[1]) {
+      const idx = c.act.indexOf(cur);
+      const prev = idx > 0 ? c.act[idx - 1][1] : "";
+      if (prev && e.actText.textContent !== prev) e.actText.textContent = prev;
+    }
+    e.act.classList.toggle("note", cur[2] === "note" || (!cur[1] && c.act[c.act.indexOf(cur) - 1]?.[2] === "note"));
+    const rise = cur[1] ? io((t - cur[0]) / .3) : 1;
+    e.act.style.opacity = cur[1] ? rise : g.actH;
+    e.act.style.transform = `translateY(${(1 - rise) * 10}px)`;
+    e.as.querySelector("i").style.opacity = .55 + .45 * Math.cos(t * 4);
+    // Owner chip.
+    const ownerKey = lastKey(t, c.owner);
+    const owner = ownerKey ? ownerKey[1] : "po";
+    if (owner !== e.lastOwner) { e.chipInner.innerHTML = avatar(owner, 34) + `<span>${WHO[owner].name}</span>`; e.lastOwner = owner; }
+    const since = ownerKey ? t - ownerKey[0] : 9;
+    e.chipInner.style.opacity = io(since / .22);
+    const pulse = ownerKey && ownerKey !== c.owner[0] ? bump(since, 0.25, .55) : 0;
+    const back = i === A ? bump(t, B7 + 3.35, .5) : 0;
+    const ringAmount = Math.max(pulse, back);
+    e.chip.style.boxShadow = ringAmount > 0 ? `0 0 0 ${5 * ringAmount}px rgba(0,113,227,${.22 * ringAmount})` : "";
+    // Criteria.
+    const n = stepAt(t, c.crit, 0);
+    e.cn.textContent = `${n}/3`;
+    const prevN = (() => { let last = null, before = 0; for (const k of c.crit) { if (t >= k[0]) { before = last ? last[1] : 0; last = k; } } return { before, at: last ? last[0] : -9 }; })();
+    e.bar.style.width = lerp(prevN.before, n, out((t - prevN.at) / .4)) / 3 * 100 + "%";
+  });
+
+  // Actors.
+  for (const key of Object.keys(ACTORS)) {
+    const a = ACTORS[key], el = ACTOR_EL[key];
+    const p = path(t, a.keys);
+    const scale = p.s / 120;
+    el.el.style.transform = `translate(${p.x - p.s / 2}px, ${p.y - p.s / 2}px) scale(${scale})`;
+    el.el.style.opacity = a.op(t) * (1 - shellOut);
+    el.tag.style.opacity = clamp((p.s - 78) / 14);
+    if (el.role) el.role.style.opacity = clamp((p.s - 44) / 14);
+    a.pos = p;
+  }
+  // The PO's role badge is earned on screen.
+  if (t < B3 + 1.1) ACTOR_EL.po.role.style.opacity = 0;
+  else if (t < B3 + 1.6) { const q = io(ramp(t, B3 + 1.1, B3 + 1.5)); ACTOR_EL.po.role.style.opacity = q; ACTOR_EL.po.role.style.transform = `scale(${lerp(.7, 1, q)})`; }
+  else ACTOR_EL.po.role.style.transform = "";
+
+  // Tools the PO drives the board with.
+  const po = ACTORS.po.pos;
+  const toolsOp = win(t, B4 + 1.05, B5 - .05, .35) * (1 - shellOut);
+  $("tools").style.opacity = toolsOp;
+  $("tools").style.transform = `translate(${po.x + po.s / 2 + 18}px, ${po.y - 22}px)`;
+  const bubbleOp = Math.max(win(t, B7 + .9, B7 + 2.0, .2), win(t, B7 + 4.9, B7 + 5.6, .2));
+  $("poBubble").style.opacity = bubbleOp;
+  $("poBubble").textContent = "Running tests" + ".".repeat(1 + Math.floor(t * 3) % 3);
+  $("poBubble").style.transform = `translate(${po.x + po.s / 2 + 18}px, ${po.y - 20}px)`;
+
+  // Handback: the PO returns a failing test to the card's agent.
+  const hp = ramp(t, B7 + 2.7, B7 + 3.3);
+  const chipTarget = chipPt(A)();
+  $("handback").style.opacity = hp > 0 && hp < 1 ? Math.min(1, hp * 6) * (1 - io(ramp(hp, .75, 1))) : 0;
+  $("handback").style.transform = `translate(${lerp(po.x - 40, chipTarget.x, io(hp))}px, ${lerp(po.y + 30, chipTarget.y - 20, io(hp))}px)`;
+
+  // Prompt scene.
+  const typed = Math.round(lerp(0, PROMPT.length, ramp(t, B2 + .7, B2 + 2.2)));
+  const boxIn = io(ramp(t, B2 + .05, B2 + .55));
+  const sent = B2 + 2.7;
+  const boxOut = io(ramp(t, B3 + .05, B3 + .6));
+  $("promptBox").style.opacity = boxIn * (1 - boxOut);
+  $("promptBox").style.transform = `translateY(${(1 - boxIn) * 18}px)`;
+  const showCaret = t < sent && Math.floor(t * 2.4) % 2 === 0;
+  $("promptText").innerHTML = (t < sent ? PROMPT.slice(0, typed) : "") + (showCaret ? '<span id="caret"></span>' : "");
+  $("send").style.opacity = typed === PROMPT.length ? 1 : .35;
+  $("send").style.transform = `scale(${1 - .08 * bump(t, sent - .05, .14)})`;
+  const msgP = ramp(t, sent, B3 + .75);
+  const msgOp = msgP > 0 && msgP < 1 ? 1 - io(ramp(msgP, .82, 1)) : 0;
+  const mx = lerp(800, 1460, io(msgP));
+  $("msg").style.opacity = msgOp;
+  $("msg").style.transform = `translate(${mx - 190}px, ${450 - 33}px) scale(${lerp(1, .55, io(ramp(msgP, .6, 1)))})`;
+
+  // Logo: title, then it settles into the sidebar; back to centre at the end.
+  const toSide = io(ramp(t, B2 - .25, B2 + .4));
+  const toEnd = io(ramp(t, B11 + .15, B11 + 1));
+  const bigS = 3.4;
+  const center0 = { x: 960 - lockW * bigS / 2, y: 400 - 23 * bigS };
+  const side = { x: 28, y: 28 };
+  const q = toEnd > 0 ? 1 - toEnd : toSide;
+  const blend = toEnd > 0 ? 1 - toEnd : toSide;
+  const lx = lerp(center0.x, side.x, blend), ly = lerp(center0.y, side.y, blend), ls = lerp(bigS, 1, blend);
+  const lockIn = io(ramp(t, .15, .9));
+  $("lockup").style.transform = `translate(${lx}px, ${ly + (1 - lockIn) * 16}px) scale(${ls})`;
+  $("lockup").style.opacity = lockIn;
+
+  // Hero lines.
+  const titleOp = win(t, .4, B2 - .1, .4);
+  $("titleLine").style.opacity = titleOp;
+  $("titleLine").style.transform = `translateY(${(1 - io(ramp(t, .4, .9))) * 14}px)`;
+  const endOp = io(ramp(t, B11 + .75, B11 + 1.25));
+  $("endLine").style.opacity = endOp;
+  $("endLine").style.transform = `translateY(${(1 - endOp) * 14}px)`;
+  const urlOp = io(ramp(t, B11 + 1.05, B11 + 1.55));
+  $("endUrl").style.opacity = urlOp;
+  $("endUrl").style.transform = `translateY(${(1 - urlOp) * 14}px)`;
+
+  // Sheets.
+  let scrimOp = 0;
+  for (const s of SHEETS) {
+    let p = 0;
+    for (const w of s.windows) p = Math.max(p, Math.min(io(ramp(t, w[0], w[0] + .38)), 1 - io(ramp(t, w[1], w[1] + .28))));
+    const el = $(s.el);
+    el.style.visibility = p > 0.001 ? "visible" : "hidden";
+    el.style.opacity = Math.min(1, p * 1.6);
+    const g = G[s.origin];
+    const fromX = g.x + CARD_W / 2 - 960, fromY = g.y + g.h / 2 - 480;
+    el.style.transform = `translate(${fromX * (1 - p)}px, ${fromY * (1 - p)}px) scale(${lerp(.72, 1, p)})`;
+    scrimOp = Math.max(scrimOp, p);
+  }
+  $("scrim").style.opacity = scrimOp;
+  $("scrim").style.visibility = scrimOp > 0.001 ? "visible" : "hidden";
+
+  // First test sheet state.
+  const onOff = (id, on) => $(id).classList.toggle("on", on);
+  onOff("sa-p1", t >= B8 + 4.1); onOff("sa-p2", t >= B8 + 4.6);
+  $("sa-info").textContent = t >= B8 + 4.6 ? "" : t >= B8 + 4.1 ? "1 scenario is unmarked." : "2 scenarios are unmarked.";
+  setPressed("sa-approve", t, [B8 + 5.2]);
+
+  // Second test sheet state.
+  const round2 = t >= B9 + 7;
+  onOff("sb-p1", t >= B9 + 2.9);
+  onOff("sb-f2", t >= B9 + 3.4 && !round2);
+  onOff("sb-p2", t >= B9 + 9.2);
+  const failing = t >= B9 + 3.4 && !round2;
+  const noteP = failing ? io(ramp(t, B9 + 3.45, B9 + 3.8)) : 0;
+  $("sb-note").style.opacity = noteP;
+  $("sb-note").style.transform = `translateY(${(1 - noteP) * 10}px)`;
+  const nt = Math.round(lerp(0, NOTE.length, ramp(t, B9 + 3.9, B9 + 5.0)));
+  const noteCaret = t >= B9 + 3.85 && t < B9 + 5.2 && Math.floor(t * 2.4) % 2 === 0;
+  $("sb-ta").innerHTML = NOTE.slice(0, nt) + (noteCaret ? '<span id="caret" style="height:30px;vertical-align:-6px"></span>' : "");
+  const info = $("sb-info");
+  info.classList.toggle("bad", failing);
+  info.textContent = failing ? "1 scenario failed: send it back." : round2 ? (t >= B9 + 9.2 ? "" : "1 scenario is unmarked.") : t >= B9 + 2.9 ? "1 scenario is unmarked." : "2 scenarios are unmarked.";
+  $("sb-approve").className = failing ? "btn disabled" : "btn primary";
+  $("sb-send").className = failing ? "btn primary" : "btn";
+  setPressed("sb-send", t, [B9 + 5.4]);
+  setPressed("sb-approve", t, [B9 + 9.6]);
+
+  // History rows arrive one by one, in the order they happened.
+  HIST.forEach((_, i) => {
+    const p = io(ramp(t, B10 + 1.75 + i * .22, B10 + 2.1 + i * .22));
+    $("hr" + i).style.opacity = p;
+    $("hr" + i).style.transform = `translateY(${(1 - p) * 10}px)`;
+  });
+
+  // Cursor (reads sheet geometry, so it comes after the sheets).
+  const c = path(t, CURSOR.keys);
+  let press = 1;
+  for (const k of CURSOR.clicks) press = Math.min(press, 1 - .14 * bump(t, k, .12));
+  $("cursor").style.transform = `translate(${c.x}px, ${c.y}px) scale(${press})`;
+  $("cursor").style.opacity = CURSOR.op(t);
+
+  // Caption: one line at a time.
+  const bandOp = win(t, B2 + .1, B11 - .02, .35);
+  $("band").style.opacity = bandOp;
+  let text = "", capOp = 0;
+  for (const cap of CAPTIONS) {
+    if (t >= cap[0] && t < cap[1]) { text = cap[2]; capOp = io(ramp(t, cap[0], cap[0] + .25)) * (1 - io(ramp(t, cap[1] - .2, cap[1]))); }
+  }
+  if ($("caption").textContent !== text) $("caption").textContent = text;
+  $("caption").style.opacity = capOp;
+}
+
+window.seek = seek;
+window.DURATION = END;
+window.CAPTIONS = CAPTIONS;
+seek(parseFloat(location.hash.slice(1)) || 0);
+</script>
+</body>
+</html>
