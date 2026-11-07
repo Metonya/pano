@@ -24,6 +24,8 @@ export async function tasks(args: string[], api: Client) {
                   input: { type: "string" },
                   output: { type: "string" },
                   cache: { type: "string" },
+                  total: { type: "string" },
+                  context: { type: "string" },
                   duration: { type: "string" },
                   note: { type: "string" },
                 }
@@ -96,9 +98,11 @@ export async function tasks(args: string[], api: Client) {
       requireArgs(
         p,
         1,
-        'task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--duration ms] [--note "Not"]',
+        'task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Not"]',
       );
-      const count = (flag: "input" | "output" | "cache" | "duration") => {
+      const count = (
+        flag: "input" | "output" | "cache" | "total" | "context" | "duration",
+      ) => {
         const value = values[flag];
         if (value === undefined) return undefined;
         if (!/^\d+$/.test(String(value)))
@@ -111,6 +115,8 @@ export async function tasks(args: string[], api: Client) {
         input_tokens: count("input"),
         output_tokens: count("output"),
         cache_tokens: count("cache"),
+        total_tokens: count("total"),
+        context_tokens: count("context"),
         duration_ms: count("duration"),
         note: values.note,
       };

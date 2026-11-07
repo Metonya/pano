@@ -68,6 +68,8 @@ export const usageFields = z.object({
   input_tokens: usageCount,
   output_tokens: usageCount,
   cache_tokens: usageCount,
+  total_tokens: usageCount,
+  context_tokens: usageCount,
   duration_ms: usageCount,
   note: text.optional(),
 });

@@ -234,6 +234,7 @@
   "usageInput": "wejście: {value}",
   "usageOutput": "wyjście: {value}",
   "usageCache": "pamięć podręczna: {value}",
+  "usageContext": "context: {value}",
   "usageReported": "Wartości zgłoszone przez agenta",
   "summaryUsageTokens": "Tokeny łącznie (zgłoszone)",
   "historyEditedTitle": "zmieniono tytuł",

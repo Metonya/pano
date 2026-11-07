@@ -127,7 +127,7 @@ export async function handleMcp(request: Request, core: Core) {
     "record_usage",
     {
       description:
-        "When a run ends, report its model, effort, tokens and duration. At least one field is required; omit what you do not know.",
+        "When a run ends, report its model, effort, tokens, context and duration. At least one field is required; omit what you do not know.",
       inputSchema: {
         key: itemKeySchema,
         ...usageFields.shape,

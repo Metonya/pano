@@ -34,15 +34,25 @@ test("usage lines follow the language and leave out what was not reported", asyn
     `gpt-6.1-sol · high · ${compact(12000, "tr")} giriş · ${compact(3000, "tr")} çıkış · ${new Intl.NumberFormat("tr", { style: "unit", unit: "minute", unitDisplay: "short" }).format(2)}`,
   );
   expect(usageRecordLine({ note: "Sadece not" })).toBe("");
+  expect(usageRecordLine({ total_tokens: 90000, context_tokens: 45000 })).toBe(
+    `${compact(90000, "tr")} token · ${compact(45000, "tr")} context`,
+  );
   const usage = {
     total_tokens: 42000,
     runs: 3,
     models: ["gpt-6.1-sol"],
     actors: ["codex"],
     efforts: ["high"],
+    peak_context: 0,
+    duration_ms: 0,
   };
   expect(usageSummaryLine(usage)).toBe(
-    `Codex · gpt-6.1-sol · yüksek · ${compact(42000, "tr")} token · 3 çalışma`,
+    `gpt-6.1-sol · yüksek · ${compact(42000, "tr")} token · 3 çalışma`,
+  );
+  expect(
+    usageSummaryLine({ ...usage, peak_context: 45000, duration_ms: 420000 }),
+  ).toBe(
+    `gpt-6.1-sol · yüksek · ${compact(42000, "tr")} token · ${compact(45000, "tr")} context · ${new Intl.NumberFormat("tr", { style: "unit", unit: "minute", unitDisplay: "short" }).format(7)} · 3 çalışma`,
   );
   expect(
     usageSummaryLine({
@@ -52,10 +62,13 @@ test("usage lines follow the language and leave out what was not reported", asyn
       models: [],
       efforts: [],
     }),
-  ).toBe("Codex · 1 çalışma");
+  ).toBe("1 çalışma");
   await setLanguage("en", false);
   expect(usageSummaryLine({ ...usage, runs: 1 })).toBe(
-    "Codex · gpt-6.1-sol · high · 42K tokens · 1 run",
+    "gpt-6.1-sol · high · 42K tokens · 1 run",
+  );
+  expect(usageSummaryLine({ ...usage, peak_context: 45000, runs: 1 })).toBe(
+    "gpt-6.1-sol · high · 42K tokens · 45K context · 1 run",
   );
   expect(activityText({ ...record, kind: "usage" })).toBe(
     "Codex recorded a run",

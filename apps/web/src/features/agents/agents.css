@@ -11,10 +11,13 @@
   font-size: 9px;
   font-weight: 700;
 }
-/* Menus size every icon inside them; a logo must stay inside its circle. */
+/*
+ * Menus size every icon inside them; a logo must stay inside its circle. An even
+ * size keeps it a whole number of pixels from the edge, see LOGO_VIEW_BOX.
+ */
 .assignee-avatar svg {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
 }
 :root[data-theme="dark"] .assignee-avatar {
   background: var(--avatar-bg-dark, var(--avatar-bg, var(--primary)));

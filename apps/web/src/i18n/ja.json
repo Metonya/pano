@@ -234,6 +234,7 @@
   "usageInput": "入力 {value}",
   "usageOutput": "出力 {value}",
   "usageCache": "キャッシュ {value}",
+  "usageContext": "{value} context",
   "usageReported": "agent が報告した値",
   "summaryUsageTokens": "token 合計(報告値)",
   "historyEditedTitle": "タイトルを変更した",

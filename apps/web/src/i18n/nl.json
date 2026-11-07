@@ -234,6 +234,7 @@
   "usageInput": "{value} invoer",
   "usageOutput": "{value} uitvoer",
   "usageCache": "{value} cache",
+  "usageContext": "{value} context",
   "usageReported": "Door de agent gemelde waarden",
   "summaryUsageTokens": "Totaal aantal tokens (gemeld)",
   "historyEditedTitle": "heeft de titel gewijzigd",

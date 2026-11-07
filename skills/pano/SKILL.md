@@ -37,7 +37,7 @@ Read project settings and the Definition of Done. Check the current item and cri
 
 Record AI test results while the item remains In Progress: call MCP `add_record` with `kind: "check"` and a factual message such as `Unit tests: 12/12 passed`. Include failures and limitations. CLI `task note` creates a note, so use MCP or REST for check records.
 
-When you finish a run, report it with MCP `record_usage` or `pano task usage DEMO-1 --model gpt-6.1-sol --effort high --input 12000 --output 3000 --duration 120000` (duration in milliseconds). Send only what you actually know; never invent values or send zeros. Pano shows them as reported by the agent, not as measurements.
+When you finish a run, report it with MCP `record_usage` or `pano task usage DEMO-1 --model gpt-6.1-sol --effort high --input 12000 --output 3000 --total 15000 --context 8000 --duration 120000` (duration in milliseconds). `--total` is the run's own total; without it Pano counts input plus output. `--context` is how full the context window got and never adds to the total. Send only what you actually know; never invent values or send zeros. Pano shows them as reported by the agent, not as measurements.
 
 If human verification is needed, add test scenarios with steps and expected results, assign the item to `human`, and move it to Test. Tell the user which item is waiting and what to verify. Test is for human verification. Otherwise move it to Done after verification, if the project's AI closing setting allows it.
 

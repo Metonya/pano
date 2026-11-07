@@ -56,13 +56,53 @@ test("agent'ın bildirdiği kullanım veri varken görünür, yokken hiç görü
   await card.click();
   const line = page.locator(".sheet-usage");
   await expect(line).toContainText(
-    /Codex · gpt-6\.1-sol · yüksek · 42\sB token · 3 çalışma/,
+    /^gpt-6\.1-sol · yüksek · 42\sB token · 3 çalışma/,
   );
+  await expect(line).not.toContainText("Codex");
+  await expect(line).not.toContainText("context");
   await expect(line).toContainText("Agent'ın bildirdiği değerler");
   await page.keyboard.press("Escape");
   await page.locator(".board-summary").click();
   await expect(page.locator(".summary-popover")).toContainText(
     /Toplam token \(bildirilen\)\s*42\sB/,
+  );
+  await page.keyboard.press("Escape");
+
+  // The agent's own total wins over input + output, and the largest context shows.
+  await request.post("/api/v1/projects/USAGE/items", {
+    data: { title: "Context'li iş", assignee: "claude:po" },
+  });
+  for (const data of [
+    {
+      model: "claude-opus-5-5",
+      effort: "high",
+      input_tokens: 1000,
+      output_tokens: 1000,
+      total_tokens: 100000,
+      context_tokens: 45000,
+      duration_ms: 240000,
+    },
+    { total_tokens: 88000, context_tokens: 20000, duration_ms: 180000 },
+  ])
+    await request.post("/api/v1/items/USAGE-3/usage", {
+      data,
+      headers: { "X-Pano-Actor": "claude:po" },
+    });
+  const reported = page
+    .locator(".board-card")
+    .filter({ hasText: "Context'li iş" });
+  await expect(reported.locator(".card-usage")).toHaveText(/^188\sB token$/);
+  await reported.click();
+  await expect(line).toContainText(
+    /^claude-opus-5-5 · yüksek · 188\sB token · 45\sB context · 7 dk\.? · 2 çalışma/,
+  );
+  await expect(line).not.toContainText("Claude");
+  await expect(line).not.toContainText("PO");
+  await expect(line).toContainText("Agent'ın bildirdiği değerler");
+  await page.keyboard.press("Escape");
+  await page.locator(".board-summary").click();
+  await expect(page.locator(".summary-popover")).toContainText(
+    /Toplam token \(bildirilen\)\s*230\sB/,
   );
 });
 
@@ -694,7 +734,7 @@ test("atanan listesi araç düzeyinde: üç Claude rolü tek satır", async ({
     page
       .getByRole("menuitemradio", { name: "Claude" })
       .locator(".assignee-avatar svg"),
-  ).toHaveCSS("width", "11px");
+  ).toHaveCSS("width", "12px");
   await expect(page.getByRole("menuitemradio", { name: "Mert" })).toHaveCount(
     1,
   );

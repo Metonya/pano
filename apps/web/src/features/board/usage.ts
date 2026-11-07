@@ -1,5 +1,5 @@
 import { language, t } from "@/lib/i18n";
-import { agentName, type Detail } from "./types";
+import type { Detail } from "./types";
 
 type Snapshot = Record<string, unknown>;
 
@@ -12,6 +12,9 @@ export const formatTokens = (value: number) =>
 /** "42K tokens" in the selected language. */
 export const tokensLabel = (value: number) =>
   t("usageTokens").replace("{value}", formatTokens(value));
+
+const contextLabel = (value: number) =>
+  t("usageContext").replace("{value}", formatTokens(value));
 
 function formatDuration(ms: number): string {
   const unit = (value: number, name: "second" | "minute" | "hour") =>
@@ -45,6 +48,10 @@ export function usageRecordLine(after: Snapshot): string {
     ...token("input_tokens", "usageInput"),
     ...token("output_tokens", "usageOutput"),
     ...token("cache_tokens", "usageCache"),
+    ...(amount("total_tokens") ? [tokensLabel(amount("total_tokens"))] : []),
+    ...(amount("context_tokens")
+      ? [contextLabel(amount("context_tokens"))]
+      : []),
     ...(amount("duration_ms") ? [formatDuration(amount("duration_ms"))] : []),
   ].join(" · ");
 }
@@ -54,14 +61,15 @@ const effortLabel = (effort: string) =>
     ? t(effort).toLocaleLowerCase(language())
     : effort;
 
-/** The item's totals: "Codex · gpt-6.1-sol · high · 42K tokens · 3 runs". */
+/** The item's totals: "gpt-6.1-sol · high · 42K tokens · 8K context · 7 min · 3 runs". */
 export function usageSummaryLine(usage: NonNullable<Detail["usage"]>): string {
   const list = (values: string[]) => (values.length ? [values.join(", ")] : []);
   return [
-    ...list(usage.actors.map(agentName)),
     ...list(usage.models),
     ...list(usage.efforts.map(effortLabel)),
     ...(usage.total_tokens > 0 ? [tokensLabel(usage.total_tokens)] : []),
+    ...(usage.peak_context > 0 ? [contextLabel(usage.peak_context)] : []),
+    ...(usage.duration_ms > 0 ? [formatDuration(usage.duration_ms)] : []),
     t(usage.runs === 1 ? "usageRunOne" : "usageRunMany").replace(
       "{count}",
       String(usage.runs),

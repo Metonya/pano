@@ -100,6 +100,17 @@ test("MCP client exercises all tools, actor precedence and history", async () =>
       models: ["gpt-6.1-sol"],
       actors: ["header"],
       efforts: ["high"],
+      peak_context: 0,
+      duration_ms: 0,
+    });
+    await call("record_usage", {
+      key: "MCP-1",
+      total_tokens: 100,
+      context_tokens: 45,
+    });
+    expect((await call("get_item", { key: "MCP-1" })).usage).toMatchObject({
+      total_tokens: 115,
+      peak_context: 45,
     });
     const empty = await client.callTool({
       name: "record_usage",

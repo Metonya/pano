@@ -143,7 +143,7 @@ pano task move APP-1 test
 
 Statuses are `backlog`, `in_progress` (also `in-progress`), `test`, `done` and `cancelled`. Cancellation requires `--reason "Reason"`. Use `task show` to find criterion IDs; `task check KEY ID --undo` unchecks one. `task assign KEY none` clears an assignment. `project list --all` includes archives; `project star|archive KEY --off` reverses that action.
 
-When an agent finishes a run, it can report what it used: `pano task usage APP-1 --model gpt-6.1-sol --effort high --input 12000 --output 3000 --duration 120000` (duration in milliseconds), MCP `record_usage`, or `POST /api/v1/items/APP-1/usage`. All fields are optional, but at least one is required. The card and its history then show the tokens, model and effort, marked as values reported by the agent: Pano does not run agents, so it does not measure them.
+When an agent finishes a run, it can report what it used: `pano task usage APP-1 --model gpt-6.1-sol --effort high --input 12000 --output 3000 --total 15000 --context 8000 --duration 120000` (duration in milliseconds), MCP `record_usage`, or `POST /api/v1/items/APP-1/usage`. All fields are optional, but at least one is required. `--total` is the run's own total; without it Pano counts input plus output. `--context` is how full the context window got: the item shows its largest value and it never adds to the total. The card and its history then show the tokens, context, model and effort, marked as values reported by the agent: Pano does not run agents, so it does not measure them.
 
 Commands support `--help` and `--json`; errors go to stderr with exit code 1. `serve --json` prints startup information and keeps the server running. The CLI uses REST, so the web board updates as it works.
 

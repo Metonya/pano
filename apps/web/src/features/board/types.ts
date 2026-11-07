@@ -28,7 +28,12 @@ export type UsageTotals = {
   models: string[];
 };
 export type Detail = Omit<BoardItem, "usage"> & {
-  usage?: UsageTotals & { actors: string[]; efforts: string[] };
+  usage?: UsageTotals & {
+    actors: string[];
+    efforts: string[];
+    peak_context: number;
+    duration_ms: number;
+  };
   body_md: string;
   what_changed_md: string;
   how_to_test_md: string;

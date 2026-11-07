@@ -224,6 +224,16 @@ test("kullanım kaydı Tümü'nde görünür, Önemli ve Testler'de görünmez",
     /^gpt-6\.1-sol · high · 12\sB giriş · 3\sB çıkış · 2 dk\.?$/,
   );
   await expect(row).toContainText("İlk tur");
+  await request.post("/api/v1/items/HISTUSE-1/usage", {
+    data: { total_tokens: 90000, context_tokens: 45000 },
+    headers: { "X-Pano-Actor": "claude" },
+  });
+  const withContext = history
+    .locator(".history-timeline > li")
+    .filter({ hasText: "Claude çalışmayı kaydetti" });
+  await expect(withContext.locator(".history-usage")).toHaveText(
+    /^90\sB token · 45\sB context$/,
+  );
 });
 
 test("205 kayıtta ilk 50 kayıt açılır ve daha fazla yüklenir", async ({

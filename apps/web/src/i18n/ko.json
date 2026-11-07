@@ -234,6 +234,7 @@
   "usageInput": "입력 {value}",
   "usageOutput": "출력 {value}",
   "usageCache": "캐시 {value}",
+  "usageContext": "{value} context",
   "usageReported": "agent가 보고한 값",
   "summaryUsageTokens": "총 token (보고값)",
   "historyEditedTitle": "제목을 바꿨어",

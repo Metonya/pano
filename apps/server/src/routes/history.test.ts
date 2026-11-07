@@ -35,12 +35,20 @@ test("usage API records reports, validates them and adds up the totals", async (
       {},
       { input_tokens: -1 },
       { output_tokens: 1.5 },
+      { total_tokens: -1 },
+      { context_tokens: 1.5 },
       { input_tokens: "12" },
       { model: " " },
       { unknown: 1 },
     ])
       expect((await post(invalid)).status).toBe(400);
     expect((await post({ note: "x" }, "USAGE-99")).status).toBe(404);
+    expect(
+      (await post({ total_tokens: 100, context_tokens: 45 }, "USAGE-2")).status,
+    ).toBe(200);
+    expect(
+      (await post({ context_tokens: 20, duration_ms: 5 }, "USAGE-2")).status,
+    ).toBe(200);
     const items = await (
       await app.request("/api/v1/projects/USAGE/items")
     ).json();
@@ -49,22 +57,27 @@ test("usage API records reports, validates them and adds up the totals", async (
       runs: 2,
       models: ["gpt-6.1-sol"],
     });
-    expect(items[1].usage).toEqual({ total_tokens: 0, runs: 0, models: [] });
+    expect(items[1].usage).toEqual({ total_tokens: 100, runs: 2, models: [] });
+    expect(
+      (await (await app.request("/api/v1/items/USAGE-2")).json()).usage,
+    ).toMatchObject({ total_tokens: 100, peak_context: 45, duration_ms: 5 });
     const detail = await (await app.request("/api/v1/items/USAGE-1")).json();
     expect(detail.usage).toMatchObject({
       actors: ["codex"],
       efforts: ["high"],
+      peak_context: 0,
+      duration_ms: 120000,
     });
     const summary = await (
       await app.request("/api/v1/projects/USAGE/summary")
     ).json();
-    expect(summary.usage.total_tokens).toBe(15000);
+    expect(summary.usage.total_tokens).toBe(15100);
     const openapi = await (await app.request("/api/v1/openapi.json")).json();
     expect(
       openapi.paths["/api/v1/items/{key}/usage"].post.requestBody.content[
         "application/json"
       ].schema.properties,
-    ).toHaveProperty("input_tokens");
+    ).toContainKeys(["input_tokens", "total_tokens", "context_tokens"]);
   } finally {
     core.db.close();
   }

@@ -224,9 +224,14 @@
   font-size: 12px;
   font-weight: 400;
 }
+/* Measured from the line, not the baseline: a logo and a letter differ there. */
+.recent-records li > span {
+  line-height: 20px;
+}
 .recent-records .assignee-avatar {
+  margin-top: 2px;
   margin-right: 6px;
-  vertical-align: -3px;
+  vertical-align: top;
 }
 .sheet-unassigned {
   color: var(--muted);

@@ -234,6 +234,7 @@
   "usageInput": "{value} इनपुट",
   "usageOutput": "{value} आउटपुट",
   "usageCache": "{value} कैश",
+  "usageContext": "{value} context",
   "usageReported": "agent के बताए हुए मान",
   "summaryUsageTokens": "कुल token (बताए गए)",
   "historyEditedTitle": "शीर्षक बदला",

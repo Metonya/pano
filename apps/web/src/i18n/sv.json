@@ -234,6 +234,7 @@
   "usageInput": "{value} indata",
   "usageOutput": "{value} utdata",
   "usageCache": "{value} cache",
+  "usageContext": "{value} context",
   "usageReported": "Värden som agenten har rapporterat",
   "summaryUsageTokens": "Totalt antal token (rapporterat)",
   "historyEditedTitle": "ändrade titeln",

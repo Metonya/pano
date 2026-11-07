@@ -234,6 +234,7 @@
   "usageInput": "{value} de entrada",
   "usageOutput": "{value} de salida",
   "usageCache": "{value} en caché",
+  "usageContext": "{value} context",
   "usageReported": "Valores informados por el agente",
   "summaryUsageTokens": "Tokens totales (informados)",
   "historyEditedTitle": "cambió el título",

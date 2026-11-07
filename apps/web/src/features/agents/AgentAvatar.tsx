@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { agentInfo } from "./agentInfo";
 import "./agents.css";
+import { LOGO_VIEW_BOX } from "./logos";
 
 /** The one avatar for people and agents. Decorative: the name sits beside it. */
 export function AgentAvatar({ id }: { id: string }) {
@@ -12,7 +13,7 @@ export function AgentAvatar({ id }: { id: string }) {
   return (
     <span className="assignee-avatar" aria-hidden="true" style={style}>
       {logo ? (
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+        <svg aria-hidden="true" viewBox={LOGO_VIEW_BOX} fill="currentColor">
           <path d={logo} />
         </svg>
       ) : (

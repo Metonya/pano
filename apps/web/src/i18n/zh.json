@@ -234,6 +234,7 @@
   "usageInput": "输入 {value}",
   "usageOutput": "输出 {value}",
   "usageCache": "缓存 {value}",
+  "usageContext": "{value} context",
   "usageReported": "agent 上报的数值",
   "summaryUsageTokens": "token 总量(上报)",
   "historyEditedTitle": "更改了标题",

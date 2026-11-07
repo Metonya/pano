@@ -187,17 +187,39 @@ test("task usage sends only the given values and rejects bad ones", async () => 
     duration_ms: 3,
   });
   expect(core.items.get("PANO-1").usage.total_tokens).toBe(3);
+  const totals = await run([
+    "task",
+    "usage",
+    "PANO-1",
+    "--total",
+    "100",
+    "--context",
+    "45",
+    "--json",
+  ]);
+  expect(totals.code).toBe(0);
+  expect(JSON.parse(JSON.parse(totals.out).after_json)).toEqual({
+    total_tokens: 100,
+    context_tokens: 45,
+  });
+  expect(core.items.get("PANO-1").usage).toMatchObject({
+    total_tokens: 103,
+    peak_context: 45,
+    runs: 2,
+  });
   for (const args of [
     ["task", "usage", "PANO-1"],
     ["task", "usage", "PANO-1", "--input", "-1"],
     ["task", "usage", "PANO-1", "--output", "many"],
+    ["task", "usage", "PANO-1", "--total", "-1"],
+    ["task", "usage", "PANO-1", "--context", "many"],
     ["task", "usage", "--model", "x"],
   ]) {
     const failed = await run(args);
     expect(failed.code).toBe(1);
     expect(failed.out).toBe("");
   }
-  expect(core.items.get("PANO-1").usage.runs).toBe(1);
+  expect(core.items.get("PANO-1").usage.runs).toBe(2);
 });
 
 test("help is offline; serve JSON dispatch is injectable; default URL and headers", async () => {

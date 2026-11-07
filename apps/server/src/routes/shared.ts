@@ -58,6 +58,8 @@ export const usage = z
     input_tokens: usageCount,
     output_tokens: usageCount,
     cache_tokens: usageCount,
+    total_tokens: usageCount,
+    context_tokens: usageCount,
     duration_ms: usageCount,
     note: text.optional(),
   })

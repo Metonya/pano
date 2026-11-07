@@ -1,6 +1,7 @@
 /**
  * Marks that identify which tool an agent runs on. They belong to their owners;
  * see Trademarks in the README. Paths are unedited and use a 24x24 viewBox.
+ * Each is centred in that box to within 0.001 units, so none needs an offset.
  *
  * The mark is always white, so every background carries white at AA (4.5:1) and
  * stands 3:1 off the darkest surface it sits on, the dark sheet. See
@@ -13,6 +14,13 @@ export type ToolLogo = {
   /** Only where `background` would disappear on dark surfaces. */
   darkBackground?: string;
 };
+
+/**
+ * The svg element is 12px, so it sits a whole 2px inside the 16px circle: the
+ * browser snaps svg elements to whole pixels, and an 11px one, 2.5px inside,
+ * landed half a pixel off. This box keeps the mark at its 11px size: 24 * 12 / 11.
+ */
+export const LOGO_VIEW_BOX = "-1.0909 -1.0909 26.1818 26.1818";
 
 const BLACK = "#000000";
 const BLACK_ON_DARK = "#767679";

@@ -223,7 +223,12 @@
     min-height: 44px;
   }
 }
+/* Measured from the line, not the baseline: a logo and a letter differ there. */
+.history-line > div {
+  line-height: 20px;
+}
 .history-line .assignee-avatar {
+  margin-top: 2px;
   margin-right: 6px;
-  vertical-align: -3px;
+  vertical-align: top;
 }

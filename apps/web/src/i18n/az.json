@@ -234,6 +234,7 @@
   "usageInput": "{value} giriş",
   "usageOutput": "{value} çıxış",
   "usageCache": "{value} keş",
+  "usageContext": "{value} context",
   "usageReported": "Agent-in bildirdiyi dəyərlər",
   "summaryUsageTokens": "Ümumi token (bildirilən)",
   "historyEditedTitle": "başlığı dəyişdi",

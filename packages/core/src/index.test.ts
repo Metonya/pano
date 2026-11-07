@@ -75,6 +75,9 @@ test("usage reports need one valid field; totals skip cache and add up per item"
     for (const invalid of [
       {},
       { input_tokens: -1 },
+      { total_tokens: -1 },
+      { context_tokens: -1 },
+      { context_tokens: 1.5 },
       { duration_ms: 1.5 },
       { model: "  " },
       { cost: 3 },
@@ -119,11 +122,43 @@ test("usage reports need one valid field; totals skip cache and add up per item"
       models: ["gpt-6.1-sol", "opus"],
       actors: ["codex", "claude:dev"],
       efforts: ["high", "low"],
+      peak_context: 0,
+      duration_ms: 0,
     });
     expect(core.projects.summary("USE").usage.total_tokens).toBe(16);
+    // A reported total replaces input + output for that record only. Context
+    // takes the largest value, duration adds up, and neither changes the total.
+    core.items.create("USE", { title: "Totals" }, "codex");
+    core.records.usage(
+      "USE-3",
+      {
+        input_tokens: 10,
+        output_tokens: 5,
+        total_tokens: 100,
+        context_tokens: 45,
+        duration_ms: 4,
+      },
+      "codex",
+    );
+    core.records.usage(
+      "USE-3",
+      { input_tokens: 2, context_tokens: 20, duration_ms: 3 },
+      "codex",
+    );
+    core.records.usage("USE-3", { total_tokens: 0 }, "codex");
+    core.records.usage("USE-3", { context_tokens: 7 }, "codex");
+    expect(core.items.get("USE-3").usage).toMatchObject({
+      total_tokens: 102,
+      runs: 4,
+      peak_context: 45,
+      duration_ms: 7,
+    });
+    expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
+    core.items.move("USE-3", "cancelled", "mert", undefined, "Sayma testi");
+    expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
     // Tokens already spent still count after the item is cancelled.
     core.items.move("USE-1", "cancelled", "mert", undefined, "Gerek kalmadı");
-    expect(core.projects.summary("USE").usage.total_tokens).toBe(16);
+    expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
   } finally {
     core.close();
   }

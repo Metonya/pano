@@ -21,7 +21,7 @@ pano task move <KEY> <backlog|in_progress|test|done|cancelled> [--reason "Neden"
 pano task assign <KEY> <actor|none>
 pano task check <KEY> <criterion-id> [--undo]
 pano task note <KEY> "Not"
-pano task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--duration ms] [--note "Not"]
+pano task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Not"]
 pano mcp-config <claude|codex|cursor>
 --help (-h) yardım; --json JSON çıktı (hatalar stderr).
 PANO_URL=http://127.0.0.1:7777; PANO_TOKEN=Bearer token; PANO_ACTOR=işlemi yapan.
@@ -78,6 +78,8 @@ export async function runCli(
       input: { type: "string" },
       output: { type: "string" },
       cache: { type: "string" },
+      total: { type: "string" },
+      context: { type: "string" },
       duration: { type: "string" },
       note: { type: "string" },
     });
