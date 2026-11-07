@@ -35,7 +35,7 @@ test("seed-shaped project has four remaining items and excludes other projects",
     at("2026-09-01T01:00:00.000Z", () =>
       core.items.create(
         "DEMO",
-        { title: `Örnek iş ${i}`, criteria: ["Kabul kriteri"] },
+        { title: `Example item ${i}`, criteria: ["Acceptance criterion"] },
         "seed",
       ),
     );
@@ -182,7 +182,7 @@ test("project opened today returns a single point with today's state", () => {
     .query("UPDATE projects SET created_at = ?")
     .run("2026-11-06T08:00:00.000Z");
   at("2026-11-06T09:00:00.000Z", () =>
-    core.items.create("DEMO", { title: "Bugün" }, "seed"),
+    core.items.create("DEMO", { title: "Today" }, "seed"),
   );
   at("2026-11-06T10:00:00.000Z", () =>
     core.items.move("DEMO-1", "done", "seed"),

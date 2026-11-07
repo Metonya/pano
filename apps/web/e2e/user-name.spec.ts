@@ -1,19 +1,19 @@
 import { expect, test } from "@playwright/test";
 
-test("bilinmeyen agent'a atanan Test kartı beklemez, human ve boş bekler; ad ayarlardan değişir", async ({
+test("Test waits for human and unassigned cards, excludes unknown agents and follows name changes", async ({
   page,
   request,
 }) => {
-  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
+  await page.addInitScript(() => localStorage.setItem("pano-language", "en"));
   const headers = { "X-Pano-Actor": "cursor:review" };
   await request.post("/api/v1/projects", {
-    data: { key: "IDENT", name: "Kimlik" },
+    data: { key: "IDENT", name: "Identity" },
     headers,
   });
   for (const [title, assignee] of [
-    ["Cursor işi", "cursor:review"],
-    ["İnsan işi", "human"],
-    ["Boş iş", null],
+    ["Cursor item", "cursor:review"],
+    ["Human item", "human"],
+    ["Unassigned item", null],
   ]) {
     const item = await (
       await request.post("/api/v1/projects/IDENT/items", {
@@ -34,18 +34,18 @@ test("bilinmeyen agent'a atanan Test kartı beklemez, human ve boş bekler; ad a
       .locator(".board-card")
       .filter({ hasText: title })
       .locator(".awaiting-badge");
-  await expect(awaiting("Cursor işi")).toHaveCount(0);
-  await expect(awaiting("İnsan işi")).toHaveCount(1);
-  await expect(awaiting("Boş iş")).toHaveCount(1);
-  await page.locator(".board-card").filter({ hasText: "İnsan işi" }).click();
+  await expect(awaiting("Cursor item")).toHaveCount(0);
+  await expect(awaiting("Human item")).toHaveCount(1);
+  await expect(awaiting("Unassigned item")).toHaveCount(1);
+  await page.locator(".board-card").filter({ hasText: "Human item" }).click();
   await expect(page.locator(".sheet-band")).toContainText(
-    "Cursor · Review bu işi test etmeni istiyor",
+    "Cursor · Review wants you to test this",
   );
   await page.keyboard.press("Escape");
 
   // Writes carry the name from settings, here with a letter a raw header cannot hold.
-  await page.getByRole("button", { name: "Ayarlar", exact: true }).click();
-  const name = page.getByLabel("Adın:");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  const name = page.getByLabel("Your name:");
   await expect(name).toHaveValue("mert");
   await name.fill("Şükrü");
   await name.press("Enter");
@@ -55,12 +55,15 @@ test("bilinmeyen agent'a atanan Test kartı beklemez, human ve boş bekler; ad a
     )
     .toBe("Şükrü");
   await page.keyboard.press("Escape");
-  await expect(awaiting("İnsan işi")).toHaveCount(0);
-  await page.locator(".board-card").filter({ hasText: "Boş iş" }).click();
-  await page.getByRole("button", { name: /^Atanan:/ }).click();
+  await expect(awaiting("Human item")).toHaveCount(0);
+  await page
+    .locator(".board-card")
+    .filter({ hasText: "Unassigned item" })
+    .click();
+  await page.getByRole("button", { name: /^Assignee:/ }).click();
   await page.getByRole("menuitemradio", { name: "Şükrü" }).click();
   await expect(
-    page.getByRole("button", { name: "Atanan: Şükrü" }),
+    page.getByRole("button", { name: "Assignee: Şükrü" }),
   ).toBeVisible();
   const saved = await (
     await request.get("/api/v1/items/IDENT-3?history=true")

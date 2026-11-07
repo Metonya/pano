@@ -25,6 +25,6 @@ Tests are required for behavior changes: add or update tests that cover the chan
 
 Decisions in [docs/](docs/) are binding. Follow [AGENTS.md](AGENTS.md) and the [design system](docs/DESIGN.md). Never use the em dash character (U+2014) in UI text, documentation, code, comments, tests, or commit messages. Use a period, colon, or comma instead. Save text as UTF-8 without a BOM.
 
-Maintainer commits follow the Turkish commit-message rules in `AGENTS.md`. Contributors may write commit messages in English.
+Commit messages are written in English and follow the rules in `AGENTS.md`.
 
 Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).

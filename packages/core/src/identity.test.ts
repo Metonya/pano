@@ -58,7 +58,7 @@ test("an unknown agent counts as an agent on the project card", () => {
 test("the project card counts agents per tool: three Claude roles and Codex are two", () => {
   const c = setup();
   for (const assignee of [
-    "claude:kimlik",
+    "claude:identity",
     "claude:kullanim",
     "Claude:po",
     "codex",

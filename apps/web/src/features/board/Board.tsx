@@ -88,7 +88,7 @@ export function Board({ projects }: Readonly<{ projects: Project[] }>) {
         .then(() => qc.invalidateQueries({ queryKey: boardKey }))
         .catch(() => setError(true));
   }
-  // Links such as the "Seni bekliyor" rows open a card with ?item=N.
+  // Links such as the "Waiting for you" rows open a card with ?item=N.
   const openRef = useRef(open);
   openRef.current = open;
   const requested = params.get("item");

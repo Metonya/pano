@@ -33,7 +33,7 @@ test("usage lines follow the language and leave out what was not reported", asyn
   ).toBe(
     `gpt-6.1-sol · high · ${compact(12000, "tr")} giriş · ${compact(3000, "tr")} çıkış · ${new Intl.NumberFormat("tr", { style: "unit", unit: "minute", unitDisplay: "short" }).format(2)}`,
   );
-  expect(usageRecordLine({ note: "Sadece not" })).toBe("");
+  expect(usageRecordLine({ note: "Note only" })).toBe("");
   expect(usageRecordLine({ total_tokens: 90000, context_tokens: 45000 })).toBe(
     `${compact(90000, "tr")} token · ${compact(45000, "tr")} context`,
   );
@@ -120,29 +120,30 @@ const entry = (
   created_at: "",
 });
 
-test("scenario records say what happened to which scenario", () => {
-  const steps = { id: "s", steps_md: "Sepeti aç" };
+test("scenario records say what happened to which scenario", async () => {
+  await setLanguage("en", false);
+  const steps = { id: "s", steps_md: "Open the cart" };
   expect(
     activityText(
       entry("scenario_removed", { ...steps, expected_md: "x" }, { id: "s" }),
     ),
-  ).toBe("Mert senaryoyu sildi: Sepeti aç");
+  ).toBe("Mert deleted the scenario: Open the cart");
   expect(activityText(entry("scenario_added", null, steps))).toBe(
-    "Mert senaryo ekledi: Sepeti aç",
+    "Mert added a scenario: Open the cart",
   );
   expect(
     activityText(
       entry(
         "scenario_edited",
-        { ...steps, expected_md: "Eski" },
-        { ...steps, expected_md: "Yeni" },
+        { ...steps, expected_md: "Old" },
+        { ...steps, expected_md: "New" },
       ),
     ),
-  ).toBe("Mert senaryoyu düzenledi: Sepeti aç");
+  ).toBe("Mert edited the scenario: Open the cart");
   for (const [result, text] of [
-    ["failed", "Mert senaryoyu Kaldı işaretledi: Sepeti aç"],
-    ["passed", "Mert senaryoyu Geçti işaretledi: Sepeti aç"],
-    ["pending", "Mert senaryonun işaretini kaldırdı: Sepeti aç"],
+    ["failed", "Mert marked the scenario Failed: Open the cart"],
+    ["passed", "Mert marked the scenario Passed: Open the cart"],
+    ["pending", "Mert cleared the scenario result: Open the cart"],
   ])
     expect(
       activityText(
@@ -155,15 +156,16 @@ test("scenario records say what happened to which scenario", () => {
     ).toBe(text);
 });
 
-test("criterion records carry their text", () => {
+test("criterion records carry their text", async () => {
+  await setLanguage("en", false);
   expect(
-    activityText(entry("criterion_added", null, { id: "c", text: "Hızlı" })),
-  ).toBe("Mert kriter ekledi: Hızlı");
+    activityText(entry("criterion_added", null, { id: "c", text: "Fast" })),
+  ).toBe("Mert added criterion: Fast");
   expect(
     activityText(
-      entry("criterion_removed", { id: "c", text: "Hızlı" }, { id: "c" }),
+      entry("criterion_removed", { id: "c", text: "Fast" }, { id: "c" }),
     ),
-  ).toBe("Mert kriteri sildi: Hızlı");
+  ).toBe("Mert deleted criterion: Fast");
   expect(
     activityText(
       entry(
@@ -172,53 +174,54 @@ test("criterion records carry their text", () => {
         { id: "c", text: "B" },
       ),
     ),
-  ).toBe("Mert kriteri düzenledi");
+  ).toBe("Mert edited criterion");
 });
 
-test("long multi-line scenario steps stay one line in the summary", () => {
+test("long multi-line scenario steps stay one line in the summary", async () => {
+  await setLanguage("en", false);
   expect(
     activityText(
       entry(
         "scenario_removed",
-        { steps_md: `\n${"a".repeat(150)}\nikinci` },
+        { steps_md: `\n${"a".repeat(150)}\nsecond` },
         {},
       ),
     ),
-  ).toBe(`Mert senaryoyu sildi: ${"a".repeat(100)}…`);
+  ).toBe(`Mert deleted the scenario: ${"a".repeat(100)}…`);
 });
 
-test("edit records name the changed fields", () => {
+test("edit records name the changed fields", async () => {
+  await setLanguage("en", false);
   const edited = (before: unknown, after: unknown) =>
     activityText(entry("edited", before, after, "Item updated"));
-  expect(edited({ title: "A" }, { title: "B" })).toBe(
-    "Mert başlığı değiştirdi",
-  );
+  expect(edited({ title: "A" }, { title: "B" })).toBe("Mert changed the title");
   expect(edited({ body_md: "A" }, { body_md: "B" })).toBe(
-    "Mert açıklamayı değiştirdi",
+    "Mert changed the description",
   );
   expect(edited({ priority: "medium" }, { priority: "high" })).toBe(
-    "Mert önceliği Orta → Yüksek yaptı",
+    "Mert changed priority Medium → High",
   );
   expect(edited({ what_changed_md: "" }, { what_changed_md: "B" })).toBe(
-    "Mert Ne değişti metnini güncelledi",
+    "Mert updated the What changed text",
   );
   expect(edited({ how_to_test_md: "" }, { how_to_test_md: "B" })).toBe(
-    "Mert Nasıl denerim metnini güncelledi",
+    "Mert updated the How to test text",
   );
   expect(
     edited({ title: "A", body_md: "A" }, { title: "B", body_md: "B" }),
-  ).toBe("Mert başlığı değiştirdi, açıklamayı değiştirdi");
-  expect(edited({}, {})).toBe("Mert PBI'yı düzenledi");
+  ).toBe("Mert changed the title, changed the description");
+  expect(edited({}, {})).toBe("Mert edited PBI");
 });
 
-test("old records without content fall back to a general sentence", () => {
+test("old records without content fall back to a general sentence", async () => {
+  await setLanguage("en", false);
   expect(
     activityText(
       entry("scenario_removed", { id: "s", removed_at: null }, { id: "s" }),
     ),
-  ).toBe("Mert bir senaryoyu sildi");
+  ).toBe("Mert deleted a scenario");
   expect(activityText(entry("scenario_edited", { id: "s" }, { id: "s" }))).toBe(
-    "Mert bir senaryoyu düzenledi",
+    "Mert edited a scenario",
   );
   expect(
     activityText(
@@ -228,23 +231,22 @@ test("old records without content fall back to a general sentence", () => {
         { id: "s", result: "failed" },
       ),
     ),
-  ).toBe("Mert bir senaryoyu Kaldı işaretledi");
+  ).toBe("Mert marked a scenario Failed");
   expect(
     activityText(
       entry("criterion_removed", { id: "c", removed_at: null }, { id: "c" }),
     ),
-  ).toBe("Mert bir kriteri sildi");
+  ).toBe("Mert deleted a criterion");
 });
 
-test("summaries never leak kind names, system messages or broken JSON", () => {
+test("summaries never leak kind names, system messages or broken JSON", async () => {
+  await setLanguage("en", false);
   const broken = entry("edited", null, null, "Item updated");
   broken.after_json = "not json";
-  expect(activityText(broken)).toBe("Mert PBI'yı düzenledi");
-  expect(activityText(entry("mystery", null, null))).toBe(
-    "Mert PBI'yı düzenledi",
-  );
+  expect(activityText(broken)).toBe("Mert edited PBI");
+  expect(activityText(entry("mystery", null, null))).toBe("Mert edited PBI");
   expect(activityText(entry("moved", {}, {}, "Item updated"))).toBe(
-    "Mert PBI'yı düzenledi",
+    "Mert edited PBI",
   );
   expect(
     activityText(
@@ -255,15 +257,16 @@ test("summaries never leak kind names, system messages or broken JSON", () => {
         "Attachment added",
       ),
     ),
-  ).toBe("Mert ek ekledi: a.png");
+  ).toBe("Mert added an attachment: a.png");
 });
 
-test("a reason is only what someone actually wrote", () => {
+test("a reason is only what someone actually wrote", async () => {
+  await setLanguage("en", false);
   const reason = (kind: string, message: string, after: unknown = {}) =>
     activityReason(entry(kind, {}, after, message));
-  expect(reason("edited", "Kapsam büyüdü")).toBe("Kapsam büyüdü");
-  expect(reason("cancelled", "Gerek kalmadı")).toBe("Gerek kalmadı");
-  expect(reason("moved", "x", { reason: "Geri alındı" })).toBe("Geri alındı");
+  expect(reason("edited", "Scope expanded")).toBe("Scope expanded");
+  expect(reason("cancelled", "No longer needed")).toBe("No longer needed");
+  expect(reason("moved", "x", { reason: "Reverted" })).toBe("Reverted");
   for (const [kind, message] of [
     ["edited", "Item updated"],
     ["created", "Item created"],
@@ -274,8 +277,8 @@ test("a reason is only what someone actually wrote", () => {
     ["criterion_checked", "check"],
     ["attachment_added", "Attachment added"],
     ["moved", "Test column disabled"],
-    ["decision", "Karar metni"],
-    ["sent_back", "Geri gönderme notu"],
+    ["decision", "Decision text"],
+    ["sent_back", "Send-back note"],
     ["edited", "   "],
   ])
     expect(reason(kind, message)).toBeNull();
@@ -288,7 +291,8 @@ test("relative time uses Turkish minute, hour and day units", () => {
   expect(relativeTime("2026-11-06T10:00:00Z", now)).toBe("2 saat önce");
   expect(relativeTime("2026-11-04T12:00:00Z", now)).toBe("2 gün önce");
 });
-test("activity describes status changes", () => {
+test("activity describes status changes", async () => {
+  await setLanguage("en", false);
   expect(
     activityText({
       id: "1",
@@ -299,5 +303,5 @@ test("activity describes status changes", () => {
       after_json: '{"status":"test"}',
       created_at: "",
     }),
-  ).toBe("Mert taşıdı");
+  ).toBe("Mert moved");
 });

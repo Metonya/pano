@@ -144,7 +144,7 @@ export function createProjects(context: Context) {
                 str(a.sent_at).localeCompare(str(b.sent_at)) ||
                 Number(a.number) - Number(b.number),
             );
-          // Counted per tool: `claude:po` and `claude:kart` are one Claude.
+          // Counted per tool: `claude:po` and `claude:card` are one Claude.
           const agents = new Set(
             items
               .filter(

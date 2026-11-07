@@ -39,7 +39,7 @@ test("CLI creates criteria, moves through REST, emits SSE and preserves actor", 
     "task",
     "create",
     "PANO",
-    "Başlık",
+    "Title",
     "--criteria",
     "A",
     "--criteria",
@@ -87,8 +87,8 @@ test("CLI creates criteria, moves through REST, emits SSE and preserves actor", 
     "done (0)",
   ])
     expect(board.out).toContain(column);
-  expect(board.out).toContain("Başlık");
-  expect((await run(["task", "create", "PANO", "İkinci"])).out).toContain(
+  expect(board.out).toContain("Title");
+  expect((await run(["task", "create", "PANO", "Second"])).out).toContain(
     "PANO-2",
   );
 });
@@ -109,9 +109,9 @@ test("all commands produce JSON; project toggles, assignment, check and note wor
     "task",
     "create",
     "PANO",
-    "İş",
+    "Item",
     "--criteria",
-    "Ölçüt",
+    "Criterion",
     "--priority",
     "high",
   ]);
@@ -136,7 +136,7 @@ test("all commands produce JSON; project toggles, assignment, check and note wor
     "PANO-1",
     "cancelled",
     "--reason",
-    "Gerek kalmadı",
+    "No longer needed",
   ]);
   expect((await json(["project", "archive", "PANO"])).archived_at).toBeTruthy();
   expect(await json(["project", "list"])).toHaveLength(0);
@@ -158,7 +158,7 @@ test("all commands produce JSON; project toggles, assignment, check and note wor
 test("task usage sends only the given values and rejects bad ones", async () => {
   const { run, core } = setup();
   await run(["project", "create", "PANO", "Pano"]);
-  await run(["task", "create", "PANO", "İş"]);
+  await run(["task", "create", "PANO", "Item"]);
   const result = await run([
     "task",
     "usage",
@@ -270,7 +270,7 @@ test("validation, offline and API errors go to stderr with code 1 and no trace",
   for (const args of [
     ["task", "move", "PANO-1", "cancelled"],
     ["task", "move", "PANO-1", "unknown"],
-    ["task", "create", "PANO", "İş", "--priority", "urgent"],
+    ["task", "create", "PANO", "Item", "--priority", "urgent"],
     ["project", "list", "--unknown"],
     ["board"],
     ["mcp-config", "unknown"],

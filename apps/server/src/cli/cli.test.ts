@@ -5,7 +5,7 @@ import { runCli } from "./index";
 async function run(
   args: string[],
   fetcher: Fetch = async () =>
-    Response.json({ key: "PANO-3", title: "Başlık", criteria: [] }),
+    Response.json({ key: "PANO-3", title: "Title", criteria: [] }),
   env: NodeJS.ProcessEnv = {},
 ) {
   let out = "";
@@ -133,7 +133,7 @@ test("every CLI command supports JSON without opening a port", async () => {
     ["project", "create", "PANO", "Pano"],
     ["project", "star", "PANO"],
     ["project", "archive", "PANO"],
-    ["task", "create", "PANO", "İş"],
+    ["task", "create", "PANO", "Item"],
     ["task", "show", "PANO-3"],
     ["task", "move", "PANO-3", "test"],
     ["task", "assign", "PANO-3", "codex"],
@@ -150,7 +150,7 @@ test("every CLI command supports JSON without opening a port", async () => {
   for (const command of commands) {
     const result = await run([...command, "--json"], async (url) =>
       Response.json(
-        url.endsWith("/items") ? [] : { key: "PANO-3", title: "İş" },
+        url.endsWith("/items") ? [] : { key: "PANO-3", title: "Item" },
       ),
     );
     expect(result.code).toBe(0);
@@ -179,7 +179,7 @@ test("four readable board columns and custom MCP URL", async () => {
     Response.json([
       {
         number: 3,
-        title: "Başlık",
+        title: "Title",
         status: "test",
         priority: "high",
         assignee: "codex",
@@ -192,7 +192,7 @@ test("four readable board columns and custom MCP URL", async () => {
     "test (1)",
     "done (0)",
     "PANO-3",
-    "Başlık",
+    "Title",
   ])
     expect(board.out).toContain(text);
   expect(
@@ -219,7 +219,7 @@ test("validation prevents requests; offline and API errors are concise stderr JS
   for (const args of [
     ["task", "move", "PANO-3", "cancelled"],
     ["task", "move", "PANO-3", "invalid"],
-    ["task", "create", "PANO", "İş", "--priority", "urgent"],
+    ["task", "create", "PANO", "Item", "--priority", "urgent"],
     ["board"],
     ["unknown"],
     ["task", "show", "--unknown"],
@@ -249,7 +249,7 @@ test("validation prevents requests; offline and API errors are concise stderr JS
 test("status alias, cancellation reason and default URL are sent correctly", async () => {
   for (const [status, reason] of [
     ["in-progress", undefined],
-    ["cancelled", "Gerek kalmadı"],
+    ["cancelled", "No longer needed"],
   ] as const) {
     const args: string[] = ["task", "move", "PANO-3", status];
     if (reason) args.push("--reason", reason);

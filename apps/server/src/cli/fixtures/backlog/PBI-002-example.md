@@ -6,11 +6,11 @@ priority: P3
 assignee: -
 ---
 
-## Amaç
+## Purpose
 Another backlog item.
 
 ## Kabul kriterleri
 - [ ] Follow-up criterion
 
-## Test planı
+## Test plan
 Check the result.

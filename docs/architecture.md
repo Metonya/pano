@@ -139,7 +139,7 @@ erDiagram
 ```
 
 - PBI key: `<PROJECT.key>-<number>` (e.g. `PANO-12`). Agents, commit messages, and cross-project lists use this key; the interface within a project shows only `#12`.
-- Priority is `high|medium|low`; the interface uses Yüksek / Orta / Düşük [High / Medium / Low].
+- Priority is `high|medium|low`; the interface uses High / Medium / Low.
 - Acceptance criteria have a separate table: agents can `check` them individually, and the board shows a progress bar.
 - Statuses are fixed: `backlog`, `in_progress`, `test`, `done`, `cancelled`. The Test column can be disabled in project settings; `cancelled` is a filter, not a column. Workflow rules: [product.md](product.md#workflow).
 - **Nothing is deleted; every change remains in `activity` with its previous/new values.** The UI displays these records for humans; by default, agents receive only the current card state + a few recent records and request the full history when needed. Recording history therefore does not increase the agent's token cost.

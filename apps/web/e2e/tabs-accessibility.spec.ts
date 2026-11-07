@@ -1,17 +1,17 @@
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
+  await page.addInitScript(() => localStorage.setItem("pano-language", "en"));
 });
 
-test("ayar sekmeleri ok tuşlarıyla dolaşılır ve panellerine bağlıdır", async ({
+test("settings tabs support arrow keys and reference their panels", async ({
   page,
 }) => {
   await page.goto("/settings");
   const dialog = page.getByRole("dialog");
   const tabs = dialog.getByRole("tab");
-  const general = dialog.getByRole("tab", { name: "Genel" });
-  const appearance = dialog.getByRole("tab", { name: "Görünüm" });
+  const general = dialog.getByRole("tab", { name: "General" });
+  const appearance = dialog.getByRole("tab", { name: "Appearance" });
   await general.focus();
   await expect(general).toHaveAttribute("tabindex", "0");
   await expect(appearance).toHaveAttribute("tabindex", "-1");
@@ -20,7 +20,7 @@ test("ayar sekmeleri ok tuşlarıyla dolaşılır ve panellerine bağlıdır", a
   await expect(appearance).toHaveAttribute("aria-selected", "true");
   const tabId = await appearance.getAttribute("id");
   const panelId = await appearance.getAttribute("aria-controls");
-  const panel = dialog.getByRole("tabpanel", { name: "Görünüm" });
+  const panel = dialog.getByRole("tabpanel", { name: "Appearance" });
   expect(panelId).toBeTruthy();
   expect(tabId).toBeTruthy();
   await expect(panel).toHaveAttribute("id", panelId ?? "");
@@ -34,7 +34,7 @@ test("ayar sekmeleri ok tuşlarıyla dolaşılır ve panellerine bağlıdır", a
   await expect(tabs.last()).toBeFocused();
 });
 
-test("detay sekmeleri notu korur ve ilgili panelleri bildirir", async ({
+test("detail tabs preserve notes and reference their panels", async ({
   page,
   request,
 }) => {
@@ -44,10 +44,10 @@ test("detay sekmeleri notu korur ve ilgili panelleri bildirir", async ({
       headers: { "X-Pano-Actor": "codex" },
     });
   expect(
-    (await post("/projects", { key: "TABTEST", name: "Sekme testi" })).ok(),
+    (await post("/projects", { key: "TABTEST", name: "Tab test" })).ok(),
   ).toBeTruthy();
   await post("/projects/TABTEST/items", {
-    title: "Kontrol",
+    title: "Check",
     assignee: "codex",
   });
   await request.patch("/api/v1/items/TABTEST-1", {
@@ -55,19 +55,17 @@ test("detay sekmeleri notu korur ve ilgili panelleri bildirir", async ({
     headers: { "X-Pano-Actor": "codex" },
   });
   await page.goto("/projects/TABTEST");
-  await page.locator(".board-card").filter({ hasText: "Kontrol" }).click();
+  await page.locator(".board-card").filter({ hasText: "Check" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog
-    .getByRole("button", { name: "Geri gönder", exact: true })
-    .click();
-  const note = dialog.getByRole("textbox", { name: "Geri gönderme notu" });
-  await note.fill("Kaydedilmemiş not");
-  const detail = dialog.getByRole("tab", { name: "Detay" });
-  const history = dialog.getByRole("tab", { name: "Geçmiş" });
+  await dialog.getByRole("button", { name: "Send back", exact: true }).click();
+  const note = dialog.getByRole("textbox", { name: "Send-back note" });
+  await note.fill("Unsaved note");
+  const detail = dialog.getByRole("tab", { name: "Details" });
+  const history = dialog.getByRole("tab", { name: "History" });
   await detail.focus();
   await page.keyboard.press("ArrowRight");
   await expect(history).toBeFocused();
-  const panel = dialog.getByRole("tabpanel", { name: "Geçmiş" });
+  const panel = dialog.getByRole("tabpanel", { name: "History" });
   await expect(panel).toHaveAttribute(
     "id",
     (await history.getAttribute("aria-controls")) ?? "",
@@ -78,23 +76,23 @@ test("detay sekmeleri notu korur ve ilgili panelleri bildirir", async ({
   );
   await page.keyboard.press("ArrowLeft");
   await expect(detail).toBeFocused();
-  await expect(dialog.getByRole("tabpanel", { name: "Detay" })).toBeVisible();
-  await expect(note).toHaveValue("Kaydedilmemiş not");
+  await expect(dialog.getByRole("tabpanel", { name: "Details" })).toBeVisible();
+  await expect(note).toHaveValue("Unsaved note");
 });
 
-test("mobil board statü seçicisi klavyeyle çalışan basılı düğmelerdir", async ({
+test("mobile board status selector uses keyboard-accessible pressed buttons", async ({
   page,
   request,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await request.post("/api/v1/projects", {
-    data: { key: "MOBTAB", name: "Mobil sekme" },
+    data: { key: "MOBTAB", name: "Mobile tab" },
   });
   await request.post("/api/v1/projects/MOBTAB/items", {
-    data: { title: "Mobil iş" },
+    data: { title: "Mobile item" },
   });
   await page.goto("/projects/MOBTAB");
-  const group = page.getByRole("group", { name: "Durum" });
+  const group = page.getByRole("group", { name: "Status" });
   const backlog = group.getByRole("button", { name: /Backlog/ });
   const progress = group.getByRole("button", { name: /In Progress/ });
   await expect(backlog).toHaveAttribute("aria-pressed", "true");

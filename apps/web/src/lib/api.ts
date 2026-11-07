@@ -61,7 +61,7 @@ export async function ensureUser() {
   await loadingUser;
   return currentUser();
 }
-/** Percent-encoded because a header cannot carry names like Şükrü as they are. */
+/** Percent-encoded because a header cannot carry names with non-ASCII characters as they are. */
 export async function actorHeaders(): Promise<Record<string, string>> {
   const user = await ensureUser();
   return user ? { "X-Pano-Actor": encodeURIComponent(user) } : {};

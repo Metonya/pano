@@ -15,7 +15,7 @@ import {
 import { type ToolLogo, toolLogos } from "./logos";
 
 beforeEach(async () => {
-  await setLanguage("tr", false);
+  await setLanguage("en", false);
   setCurrentUser("mert");
 });
 
@@ -33,7 +33,7 @@ test("agentInfo reads the tool and role of an identity", () => {
     label: "Cursor · Review",
   });
   expect(agentInfo("codex").role).toBeNull();
-  expect(agentName("claude:design")).toBe("Claude · Tasarım");
+  expect(agentName("claude:design")).toBe("Claude · Design");
   expect(agentName("claude:QA")).toBe("Claude · QA");
 });
 
@@ -138,7 +138,14 @@ test("the rule follows the name: only the person and empty wait", () => {
 
 test("three Claude roles are one line in the assignee menu", () => {
   const keys = assigneeKeys(
-    ["claude:po", "claude:kimlik", "claude:kart", "windsurf:dev", null, "MERT"],
+    [
+      "claude:po",
+      "claude:identity",
+      "claude:card",
+      "windsurf:dev",
+      null,
+      "MERT",
+    ],
     { includeKnown: true, includeUser: true },
   );
   expect(keys).toEqual([
@@ -157,17 +164,17 @@ test("three Claude roles are one line in the assignee menu", () => {
 });
 
 test("a role keeps its tool selected", () => {
-  expect(assigneeKey("claude:kimlik")).toBe("claude");
+  expect(assigneeKey("claude:identity")).toBe("claude");
   expect(assigneeKey("Claude")).toBe("claude");
   expect(assigneeKey("Mert")).toBe("mert");
 });
 
 test("filtering by a tool brings all of its roles", () => {
-  const assignees = ["claude:po", "claude:kimlik", "codex", "mert", null];
+  const assignees = ["claude:po", "claude:identity", "codex", "mert", null];
   expect(assigneeKeys(assignees)).toEqual(["mert", "claude", "codex"]);
   expect(assignees.filter((a) => matchesAssignee(a, "claude"))).toEqual([
     "claude:po",
-    "claude:kimlik",
+    "claude:identity",
   ]);
   expect(assignees.filter((a) => matchesAssignee(a, "mert"))).toEqual(["mert"]);
   expect(

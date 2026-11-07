@@ -34,7 +34,7 @@ Send the known usage fields from the JSON, omitting nulls and reader metadata (`
 
 ## Commits
 
-Follow the target repository's `AGENTS.md` and its commit rules. In the Pano repository, the orchestrator writes commit titles in Turkish with the PBI number and a clear outcome, for example `PANO-39: Agent çalışma yönergesi sadeleştirildi`. Keep technical terms in English, add 2 to 5 user-facing changes in the body, and review `git status` and `git diff --staged` before committing. Delegated agents do not commit or push.
+Follow the target repository's `AGENTS.md` and its commit rules. In the Pano repository, the orchestrator writes commit titles in English with the card number and a clear outcome, for example `PANO-39: Simplified agent working instructions`. Keep technical terms in English, add 2 to 5 user-facing changes in the body, and review `git status` and `git diff --staged` before committing. Delegated agents do not commit or push.
 
 ## CLI examples
 

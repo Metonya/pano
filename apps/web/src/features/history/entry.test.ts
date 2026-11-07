@@ -8,7 +8,7 @@ import {
 } from "./entry";
 
 beforeAll(async () => {
-  await setLanguage("tr", false);
+  await setLanguage("en", false);
 });
 
 const entry = (
@@ -25,7 +25,7 @@ const entry = (
   after_json: after === null ? null : JSON.stringify(after),
   created_at: "",
 });
-const steps = { id: "s", steps_md: "Aç" };
+const steps = { id: "s", steps_md: "Open" };
 const result = entry(
   "scenario_edited",
   { ...steps, result: "pending" },
@@ -33,8 +33,8 @@ const result = entry(
 );
 const content = entry(
   "scenario_edited",
-  { ...steps, expected_md: "Eski" },
-  { ...steps, expected_md: "Yeni" },
+  { ...steps, expected_md: "Old" },
+  { ...steps, expected_md: "New" },
 );
 
 test("Important shows content changes and hides bookkeeping", () => {
@@ -114,15 +114,15 @@ test("filters route each record", () => {
 test("deleted content lists the steps and the expected result", () => {
   expect(
     childContent(
-      entry("scenario_removed", { ...steps, expected_md: "Açılır" }, {}),
+      entry("scenario_removed", { ...steps, expected_md: "Opens" }, {}),
     ),
-  ).toEqual({ kind: "removed", lines: ["Aç", "Beklenen: Açılır"] });
+  ).toEqual({ kind: "removed", lines: ["Open", "Expected: Opens"] });
   expect(
     childContent(entry("criterion_removed", { text: "A\nB" }, {})),
   ).toEqual({ kind: "removed", lines: ["A", "B"] });
   expect(
     childContent(entry("scenario_added", null, { ...steps, expected_md: "X" })),
-  ).toEqual({ kind: "added", lines: ["Beklenen: X"] });
+  ).toEqual({ kind: "added", lines: ["Expected: X"] });
 });
 
 test("old records without text have no content and do not fail", () => {

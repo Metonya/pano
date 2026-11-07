@@ -18,8 +18,8 @@ Pano is an **observation and control panel**, not a work management form:
 |---|---|
 | What stage is the project at? When did I start, and how much work remains? | Project summary: start date, open/closed counts, priority distribution |
 | What is being worked on now, and by which agent? | Board: In Progress cards and the assigned agent |
-| What is expected of me? | "Seni bekliyor" [Waiting for you] list: Test cards assigned to you |
-| Have I looked at completed work? | "görülmedi" [unseen] marker on Done cards |
+| What is expected of me? | "Waiting for you" list: Test cards assigned to you |
+| Have I looked at completed work? | "unseen" marker on Done cards |
 | How has this work changed? Did it grow or get cancelled? | Card activity history: the previous and new values of every change |
 
 ## Workflow
@@ -28,12 +28,12 @@ Pano is an **observation and control panel**, not a work management form:
 Backlog → In Progress → (Test) → Done
                  ↑          │
                  └─ send back (note + screenshot)
-Cancel: from any stage; the card is not deleted and stays in the "İptal edilenler" [Cancelled] filter.
+Cancel: from any stage; the card is not deleted and stays in the "Cancelled" filter.
 ```
 
 - **AI runs its own tests within In Progress.** Unit tests, build, lint, and its own functional checks (it decides which tools to use). Results appear on the card as **check** records ("unit test: 42/42 passed"). Failed tests do not move the card back and forth between columns; they become records.
 - **The Test column is for human verification.** AI assigns work it cannot verify itself or that the user needs to see (UI, feel, business rules) to the user with test scenarios, and says in chat, "PANO-12 is waiting for you in Test."
-- **The user:** adds/removes/edits scenarios; "Onayla" [Approve] → Done, "Geri gönder" [Send back] → In Progress (with a note and screenshot). This is one action and one record.
+- **The user:** adds/removes/edits scenarios; "Approve" → Done, "Send back" → In Progress (with a note and screenshot). This is one action and one record.
 - **Default:** AI moves simple work that does not need human testing to Done itself.
 
 ### Project settings (simple)

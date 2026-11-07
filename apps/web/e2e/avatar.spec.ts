@@ -133,13 +133,13 @@ async function expectBesideText(holder: Locator, where: string) {
 }
 
 for (const deviceScaleFactor of [1, 4]) {
-  test.describe(`${deviceScaleFactor}x ekran`, () => {
+  test.describe(`${deviceScaleFactor}x display`, () => {
     test.use({
       deviceScaleFactor,
       viewport: { width: 1400, height: 1200 },
     });
 
-    test("logolar her kullanım yerinde dairenin ortasında, metinle aynı hizada", async ({
+    test("logos are centered in their circles and aligned with text everywhere", async ({
       page,
       request,
     }) => {
@@ -149,7 +149,7 @@ for (const deviceScaleFactor of [1, 4]) {
       });
       for (const [index, tool] of TOOLS.entries()) {
         await request.post(`/api/v1/projects/${key}/items`, {
-          data: { title: `${tool} işi`, assignee: tool },
+          data: { title: `${tool} item`, assignee: tool },
           headers: { "X-Pano-Actor": tool },
         });
         await request.post(`/api/v1/items/${key}-${index + 1}/move`, {
@@ -163,25 +163,25 @@ for (const deviceScaleFactor of [1, 4]) {
       for (const tool of TOOLS) {
         const chip = page
           .locator(".board-card")
-          .filter({ hasText: `${tool} işi` })
+          .filter({ hasText: `${tool} item` })
           .locator(".assignee");
         await expectCentred(
           page,
           chip.locator(".assignee-avatar"),
-          `kart ${tool}`,
+          `card ${tool}`,
         );
-        await expectBesideText(chip, `kart ${tool}`);
+        await expectBesideText(chip, `card ${tool}`);
         await expectCentred(
           page,
           page
             .locator(".agent-row")
             .filter({ hasText: new RegExp(tool, "i") })
             .locator(".assignee-avatar"),
-          `sol panel ${tool}`,
+          `sidebar ${tool}`,
         );
       }
 
-      await page.getByRole("button", { name: /Filtre/ }).click();
+      await page.getByRole("button", { name: /Filter/ }).click();
       for (const tool of TOOLS)
         await expectCentred(
           page,
@@ -196,33 +196,33 @@ for (const deviceScaleFactor of [1, 4]) {
       for (const tool of TOOLS) {
         await page
           .locator(".board-card")
-          .filter({ hasText: `${tool} işi` })
+          .filter({ hasText: `${tool} item` })
           .click();
         const chip = page.locator(".sheet-assignee");
         await expectCentred(
           page,
           chip.locator(".assignee-avatar"),
-          `detay ${tool}`,
+          `detail ${tool}`,
         );
-        await expectBesideText(chip, `detay ${tool}`);
-        await page.getByRole("button", { name: /^Atanan/ }).click();
+        await expectBesideText(chip, `detail ${tool}`);
+        await page.getByRole("button", { name: /^Assignee/ }).click();
         await expectCentred(
           page,
           page
             .getByRole("menuitemradio", { name: new RegExp(`^${tool}$`, "i") })
             .locator(".assignee-avatar"),
-          `atanan ${tool}`,
+          `assignee ${tool}`,
         );
         await page.keyboard.press("Escape");
-        await page.getByRole("tab", { name: "Geçmiş" }).click();
+        await page.getByRole("tab", { name: "History" }).click();
         await expectCentred(
           page,
           page.locator(".history-line .assignee-avatar").first(),
-          `geçmiş ${tool}`,
+          `history ${tool}`,
         );
         await expectBesideText(
           page.locator(".history-line > div").first(),
-          `geçmiş ${tool}`,
+          `history ${tool}`,
         );
         await page.keyboard.press("Escape");
         await expect(chip).toHaveCount(0);

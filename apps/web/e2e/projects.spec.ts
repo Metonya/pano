@@ -1,44 +1,38 @@
 import { expect, test } from "@playwright/test";
 import { onlyProjects } from "./helpers";
 
-test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async ({
+test("project can be created, starred, archived and restored", async ({
   page,
 }) => {
   await onlyProjects(page, "DP");
   await page.goto("/");
-  await page.getByRole("button", { name: "Yeni proje" }).first().click();
-  await page.getByLabel("Proje adı").fill("Deneme proje");
+  await page.getByRole("button", { name: "New project" }).first().click();
+  await page.getByLabel("Project name").fill("Demo project");
   await expect(page.getByLabel("Key", { exact: true })).toHaveCount(0);
-  await expect(
-    page.getByText("PBI'lar DP-1, DP-2 diye numaralanır"),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Oluştur" }).click();
-  const card = page.locator("article").filter({ hasText: "Deneme proje" });
+  await expect(page.getByText("PBIs are numbered DP-1, DP-2")).toBeVisible();
+  await page.getByRole("button", { name: "Create" }).click();
+  const card = page.locator("article").filter({ hasText: "Demo project" });
   await expect(card).toBeVisible();
   await expect(
-    card.getByRole("link", { name: "Deneme proje" }),
+    card.getByRole("link", { name: "Demo project" }),
   ).toHaveAttribute("href", "/projects/DP");
-  await card.getByRole("button", { name: "Yıldızla Deneme proje" }).click();
+  await card.getByRole("button", { name: "Star Demo project" }).click();
   await expect(
-    card.getByRole("button", { name: "Yıldızı kaldır Deneme proje" }),
+    card.getByRole("button", { name: "Remove star Demo project" }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    card.getByRole("button", { name: "Yıldızı kaldır Deneme proje" }),
+    card.getByRole("button", { name: "Remove star Demo project" }),
   ).toBeVisible();
-  await card
-    .getByRole("button", { name: "Diğer işlemler Deneme proje" })
-    .click();
-  await page.getByRole("menuitem", { name: "Arşivle", exact: true }).click();
+  await card.getByRole("button", { name: "More actions Demo project" }).click();
+  await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
   await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: /^Arşiv/ }).click();
+  await page.getByRole("button", { name: /^Archive/ }).click();
   await expect(card).toBeVisible();
-  await card
-    .getByRole("button", { name: "Diğer işlemler Deneme proje" })
-    .click();
-  await page.getByRole("menuitem", { name: "Arşivden çıkar" }).click();
+  await card.getByRole("button", { name: "More actions Demo project" }).click();
+  await page.getByRole("menuitem", { name: "Restore" }).click();
   await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: "Projeler", exact: true }).click();
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
   await expect(card).toBeVisible();
   const box = await card.boundingBox();
   if (!box) throw new Error("Project card is not visible");
@@ -46,216 +40,224 @@ test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async (
   await expect(page).toHaveURL(/\/projects\/DP$/);
 });
 
-test("proje ayarları adı kaydeder, kuralları uygular ve satır içi onayla arşivler", async ({
+test("project settings save the name, enforce rules and archive with inline confirmation", async ({
   page,
 }) => {
   await page.request.post("/api/v1/projects", {
-    data: { key: "AYAR", name: "Ayar denemesi" },
+    data: { key: "SETTING", name: "Settings test" },
   });
-  await page.request.post("/api/v1/projects/AYAR/items", {
-    data: { title: "Testte bekleyen" },
+  await page.request.post("/api/v1/projects/SETTING/items", {
+    data: { title: "Waiting in Test" },
   });
-  await page.request.patch("/api/v1/items/AYAR-1", {
+  await page.request.patch("/api/v1/items/SETTING-1", {
     data: { status: "test" },
   });
-  await page.goto("/projects/AYAR");
+  await page.goto("/projects/SETTING");
   const openSettings = () =>
-    page.getByRole("button", { name: "Proje ayarları" }).click();
+    page.getByRole("button", { name: "Project settings" }).click();
   const dialog = page.getByRole("dialog");
   await openSettings();
   await expect(page.getByLabel("Key", { exact: true })).toHaveJSProperty(
     "readOnly",
     true,
   );
-  await expect(page.getByLabel("Key", { exact: true })).toHaveValue("AYAR");
-  const save = page.getByRole("button", { name: "Kaydet", exact: true });
+  await expect(page.getByLabel("Key", { exact: true })).toHaveValue("SETTING");
+  const save = page.getByRole("button", { name: "Save", exact: true });
 
   // Closing the Test column needs a destination for the waiting card.
-  await page.getByRole("switch", { name: "Test kolonu" }).click();
+  await page.getByRole("switch", { name: "Test column" }).click();
   await expect(save).toBeDisabled();
-  await page.getByLabel("Test kartları nereye taşınsın?").selectOption("done");
+  await page.getByLabel("Where should Test cards move?").selectOption("done");
   await expect(save).toBeEnabled();
 
   // Test and AI cannot both be off.
-  await page.getByRole("switch", { name: "AI Done'a çekebilir" }).click();
+  await page.getByRole("switch", { name: "AI can move to Done" }).click();
   await expect(page.getByRole("alert")).toHaveText(
-    "Test kolonu kapalıysa AI Done'a çekebilmelidir.",
+    "AI must be allowed to move to Done when Test is disabled.",
   );
   await expect(save).toBeDisabled();
-  await page.getByRole("switch", { name: "AI Done'a çekebilir" }).click();
-  await page.getByRole("switch", { name: "Test kolonu" }).click();
+  await page.getByRole("switch", { name: "AI can move to Done" }).click();
+  await page.getByRole("switch", { name: "Test column" }).click();
 
-  await page.getByLabel("Proje adı").fill("Yeni ayar adı");
-  await page.getByRole("button", { name: "Kapat", exact: true }).click();
+  await page.getByLabel("Project name").fill("New settings name");
+  await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
-    page.getByText("Kaydedilmemiş değişikliklerin var", { exact: true }),
+    page.getByText("You have unsaved changes", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Düzenlemeye devam et" }).click();
+  await page.getByRole("button", { name: "Keep editing" }).click();
   await save.click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.locator(".toolbar h1")).toHaveText("Yeni ayar adı");
+  await expect(page.locator(".toolbar h1")).toHaveText("New settings name");
 
   await openSettings();
-  await page.getByRole("button", { name: "Projeyi arşivle…" }).click();
-  await expect(page.getByText("Proje arşivlensin mi?")).toBeVisible();
+  await page.getByRole("button", { name: "Archive project…" }).click();
+  await expect(page.getByText("Archive this project?")).toBeVisible();
   await expect(
-    page.getByText("Board listeden kalkar, Arşiv'den geri alabilirsin."),
+    page.getByText(
+      "The board leaves the list; you can restore it from Archive.",
+    ),
   ).toBeVisible();
   await expect(save).toHaveCount(0);
-  await page.getByRole("button", { name: "Vazgeç" }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
   await expect(
-    page.getByRole("button", { name: "Projeyi arşivle…" }),
+    page.getByRole("button", { name: "Archive project…" }),
   ).toBeFocused();
-  await page.getByRole("button", { name: "Projeyi arşivle…" }).click();
-  await page.getByRole("button", { name: "Arşivle", exact: true }).click();
+  await page.getByRole("button", { name: "Archive project…" }).click();
+  await page.getByRole("button", { name: "Archive", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page).toHaveURL("/");
-  await expect(page.locator("aside")).not.toContainText("Yeni ayar adı");
+  await expect(page.locator("aside")).not.toContainText("New settings name");
 });
 
-test("proje açıklaması yazılır ve silinir, boş kartta metin çıkmaz", async ({
+test("project descriptions can be saved and cleared; empty cards show no placeholder", async ({
   page,
 }) => {
-  await onlyProjects(page, "ACIK");
+  await onlyProjects(page, "DESCR");
   await page.request.post("/api/v1/projects", {
-    data: { key: "ACIK", name: "Açıklama denemesi" },
+    data: { key: "DESCR", name: "Description test" },
   });
-  await page.request.post("/api/v1/projects/ACIK/star", {
+  await page.request.post("/api/v1/projects/DESCR/star", {
     data: { starred: true },
   });
   await page.goto("/");
-  const card = page.locator("article").filter({ hasText: "Açıklama denemesi" });
+  const card = page.locator("article").filter({ hasText: "Description test" });
   const description = card.locator(".description");
   const settings = async () => {
     await card
-      .getByRole("button", { name: "Diğer işlemler Açıklama denemesi" })
+      .getByRole("button", { name: "More actions Description test" })
       .click();
-    await page.getByRole("menuitem", { name: "Proje ayarları" }).click();
+    await page.getByRole("menuitem", { name: "Project settings" }).click();
   };
   const dialog = page.getByRole("dialog");
-  const field = dialog.getByLabel("Açıklama", { exact: true });
-  const save = dialog.getByRole("button", { name: "Kaydet", exact: true });
+  const field = dialog.getByLabel("Description", { exact: true });
+  const save = dialog.getByRole("button", { name: "Save", exact: true });
 
   await expect(card).toBeVisible();
   await expect(description).toHaveCount(0);
-  await expect(card).not.toContainText("Açıklama yok");
+  await expect(card).not.toContainText("No description");
   const emptyHeight = (await card.boundingBox())?.height ?? 0;
 
   await settings();
   await expect(field).toHaveValue("");
-  await field.fill("Takımın ortak panosu");
+  await field.fill("Shared team board");
   // An unsaved description counts as a change.
-  await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
-    page.getByText("Kaydedilmemiş değişikliklerin var", { exact: true }),
+    page.getByText("You have unsaved changes", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Düzenlemeye devam et" }).click();
+  await page.getByRole("button", { name: "Keep editing" }).click();
   await save.click();
   await expect(dialog).toHaveCount(0);
-  await expect(description).toHaveText("Takımın ortak panosu");
+  await expect(description).toHaveText("Shared team board");
   expect((await card.boundingBox())?.height ?? 0).toBeGreaterThan(emptyHeight);
 
   await settings();
-  await expect(field).toHaveValue("Takımın ortak panosu");
+  await expect(field).toHaveValue("Shared team board");
   await field.fill("");
   await save.click();
   await expect(dialog).toHaveCount(0);
   await expect(description).toHaveCount(0);
-  await expect(card).not.toContainText("Açıklama yok");
+  await expect(card).not.toContainText("No description");
   expect((await card.boundingBox())?.height).toBe(emptyHeight);
-  const saved = await page.request.get("/api/v1/projects/ACIK");
+  const saved = await page.request.get("/api/v1/projects/DESCR");
   expect((await saved.json()).description).toBe("");
 });
 
-test("açıklaması olmayan PBI'da başlık ve Düzenle kalır, boş metin çıkmaz", async ({
+test("PBIs without a description retain the heading and Edit without a placeholder", async ({
   page,
 }) => {
   await page.request.post("/api/v1/projects", {
-    data: { key: "BOSPBI", name: "Boş PBI" },
+    data: { key: "EMPTYPBI", name: "Empty PBI" },
   });
-  await page.request.post("/api/v1/projects/BOSPBI/items", {
-    data: { title: "Açıklamasız iş" },
+  await page.request.post("/api/v1/projects/EMPTYPBI/items", {
+    data: { title: "Item without description" },
   });
-  await page.goto("/projects/BOSPBI");
+  await page.goto("/projects/EMPTYPBI");
   await page
     .locator(".board-card")
-    .filter({ hasText: "Açıklamasız iş" })
+    .filter({ hasText: "Item without description" })
     .click();
   const dialog = page.getByRole("dialog");
   await expect(
-    dialog.getByRole("heading", { name: "Açıklama", exact: true }),
+    dialog.getByRole("heading", { name: "Description", exact: true }),
   ).toBeVisible();
-  await expect(dialog).not.toContainText("Açıklama yok");
+  await expect(dialog).not.toContainText("No description");
   await expect(
     dialog
       .locator(".sheet-section")
-      .filter({ has: page.getByRole("heading", { name: "Açıklama" }) })
-      .getByRole("button", { name: "Düzenle" }),
+      .filter({ has: page.getByRole("heading", { name: "Description" }) })
+      .getByRole("button", { name: "Edit" }),
   ).toBeVisible();
 });
 
-test("kart menüsü ayarları aynı sayfada açar, yıldız kartta kalır", async ({
+test("card menu opens settings on the current page and keeps starring on the card", async ({
   page,
 }) => {
   await onlyProjects(page, "MENU");
   await page.request.post("/api/v1/projects", {
-    data: { key: "MENU", name: "Menü denemesi" },
+    data: { key: "MENU", name: "Menu test" },
   });
   await page.goto("/");
-  const card = page.locator("article").filter({ hasText: "Menü denemesi" });
+  const card = page.locator("article").filter({ hasText: "Menu test" });
   const menu = page.getByRole("menu");
   const trigger = card.getByRole("button", {
-    name: "Diğer işlemler Menü denemesi",
+    name: "More actions Menu test",
   });
 
   await trigger.click();
-  await expect(menu.getByRole("menuitem").first()).toHaveText("Proje ayarları");
-  await expect(menu.getByRole("menuitem", { name: /Yıldız/ })).toHaveCount(0);
-  await expect(menu.getByRole("menuitem", { name: "Arşivle" })).toBeVisible();
+  await expect(menu.getByRole("menuitem").first()).toHaveText(
+    "Project settings",
+  );
+  await expect(
+    menu.getByRole("menuitem", { name: /Star|Remove star/ }),
+  ).toHaveCount(0);
+  await expect(menu.getByRole("menuitem", { name: "Archive" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(menu).toHaveCount(0);
 
   // The right-click menu has the same content.
   await card.click({ button: "right", position: { x: 30, y: 30 } });
-  await expect(menu.getByRole("menuitem").first()).toHaveText("Proje ayarları");
-  await expect(menu.getByRole("menuitem", { name: /Yıldız/ })).toHaveCount(0);
+  await expect(menu.getByRole("menuitem").first()).toHaveText(
+    "Project settings",
+  );
+  await expect(
+    menu.getByRole("menuitem", { name: /Star|Remove star/ }),
+  ).toHaveCount(0);
 
-  await menu.getByRole("menuitem", { name: "Proje ayarları" }).click();
+  await menu.getByRole("menuitem", { name: "Project settings" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByLabel("Key", { exact: true })).toHaveValue("MENU");
   await expect(page).toHaveURL("/");
-  await dialog.getByRole("button", { name: "Vazgeç" }).click();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page).toHaveURL("/");
   await expect(page.locator("body")).not.toHaveCSS("pointer-events", "none");
 
   // The star button on the card still works.
-  await card.getByRole("button", { name: "Yıldızla Menü denemesi" }).click();
+  await card.getByRole("button", { name: "Star Menu test" }).click();
   await expect(
-    card.getByRole("button", { name: "Yıldızı kaldır Menü denemesi" }),
+    card.getByRole("button", { name: "Remove star Menu test" }),
   ).toBeVisible();
 
   // An archived project has no settings entry.
   await trigger.click();
-  await menu.getByRole("menuitem", { name: "Arşivle", exact: true }).click();
+  await menu.getByRole("menuitem", { name: "Archive", exact: true }).click();
   await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: /^Arşiv/ }).click();
+  await page.getByRole("button", { name: /^Archive/ }).click();
   await trigger.click();
+  await expect(menu.getByRole("menuitem", { name: "Restore" })).toBeVisible();
   await expect(
-    menu.getByRole("menuitem", { name: "Arşivden çıkar" }),
-  ).toBeVisible();
-  await expect(
-    menu.getByRole("menuitem", { name: "Proje ayarları" }),
+    menu.getByRole("menuitem", { name: "Project settings" }),
   ).toHaveCount(0);
 });
 
-test("büyük kartta alt satır tek satırdır: göreli tarih ve aktif agent sayısı", async ({
+test("large card footer keeps relative date and active agent count on one line", async ({
   page,
 }) => {
-  await onlyProjects(page, "AGSIFIR", "AGIKI");
+  await onlyProjects(page, "AGZERO", "AGTWO");
   for (const [key, name] of [
-    ["AGSIFIR", "Agentsiz kart"],
-    ["AGIKI", "İki agentli kart"],
+    ["AGZERO", "Card without agents"],
+    ["AGTWO", "Card with two agents"],
   ] as const) {
     await page.request.post("/api/v1/projects", { data: { key, name } });
     await page.request.post(`/api/v1/projects/${key}/star`, {
@@ -264,16 +266,20 @@ test("büyük kartta alt satır tek satırdır: göreli tarih ve aktif agent say
   }
   // Three items, two different agents; the person does not count.
   for (const assignee of ["claude:a", "claude:a", "codex:b", "mert"]) {
-    const created = await page.request.post("/api/v1/projects/AGIKI/items", {
-      data: { title: `İş ${assignee}` },
+    const created = await page.request.post("/api/v1/projects/AGTWO/items", {
+      data: { title: `Item ${assignee}` },
     });
     await page.request.patch(`/api/v1/items/${(await created.json()).key}`, {
       data: { status: "in_progress", assignee },
     });
   }
   await page.goto("/");
-  const zero = page.locator("article").filter({ hasText: "Agentsiz kart" });
-  const two = page.locator("article").filter({ hasText: "İki agentli kart" });
+  const zero = page
+    .locator("article")
+    .filter({ hasText: "Card without agents" });
+  const two = page
+    .locator("article")
+    .filter({ hasText: "Card with two agents" });
   const accent = await page.evaluate(() => {
     const probe = document.createElement("i");
     probe.style.color = "var(--accent)";
@@ -283,20 +289,20 @@ test("büyük kartta alt satır tek satırdır: göreli tarih ve aktif agent say
     return color;
   });
 
-  await expect(two.locator(".foot-agents")).toHaveText("2 aktif agent");
+  await expect(two.locator(".foot-agents")).toHaveText("Active agents: 2");
   await expect(two.locator(".foot-dot")).toHaveCSS("background-color", accent);
-  await expect(zero.locator(".foot-agents")).toHaveText("0 aktif agent");
+  await expect(zero.locator(".foot-agents")).toHaveText("Active agents: 0");
   await expect(zero.locator(".foot-dot")).not.toHaveCSS(
     "background-color",
     accent,
   );
-  await expect(zero).not.toContainText("Agent yok");
+  await expect(zero).not.toContainText("No agents");
 
   const updatedAt = (
-    await (await page.request.get("/api/v1/projects/AGIKI")).json()
+    await (await page.request.get("/api/v1/projects/AGTWO")).json()
   ).updated_at as string;
   const time = two.locator(".card-foot time");
-  await expect(two.locator(".foot-updated")).toHaveText("Güncellendi az önce");
+  await expect(two.locator(".foot-updated")).toHaveText("Updated just now");
   await expect(time).toHaveAttribute("datetime", updatedAt);
   await expect(time).toHaveAttribute("title", /2\d{3}/);
 
@@ -323,65 +329,65 @@ test("büyük kartta alt satır tek satırdır: göreli tarih ve aktif agent say
   const foot = await two.locator(".foot-agents").boundingBox();
   if (!foot) throw new Error("Agent indicator is not visible");
   await page.mouse.click(foot.x + 4, foot.y + 4);
-  await expect(page).toHaveURL(/\/projects\/AGIKI$/);
+  await expect(page).toHaveURL(/\/projects\/AGTWO$/);
 });
 
-test("aktif agent araç düzeyinde sayılır: üç Claude rolü ve Codex iki eder", async ({
+test("active agent count groups three Claude roles and Codex into two tools", async ({
   page,
 }) => {
-  await onlyProjects(page, "AGROL");
+  await onlyProjects(page, "AGROLE");
   await page.request.post("/api/v1/projects", {
-    data: { key: "AGROL", name: "Rollü kart" },
+    data: { key: "AGROLE", name: "Card with roles" },
   });
-  await page.request.post("/api/v1/projects/AGROL/star", {
+  await page.request.post("/api/v1/projects/AGROLE/star", {
     data: { starred: true },
   });
   for (const assignee of [
-    "claude:kimlik",
+    "claude:identity",
     "claude:kullanim",
     "claude:po",
     "codex",
     "mert",
   ]) {
-    const created = await page.request.post("/api/v1/projects/AGROL/items", {
-      data: { title: `İş ${assignee}` },
+    const created = await page.request.post("/api/v1/projects/AGROLE/items", {
+      data: { title: `Item ${assignee}` },
     });
     await page.request.patch(`/api/v1/items/${(await created.json()).key}`, {
       data: { status: "in_progress", assignee },
     });
   }
   await page.goto("/");
-  const card = page.locator("article").filter({ hasText: "Rollü kart" });
-  await expect(card.locator(".foot-agents")).toHaveText("2 aktif agent");
+  const card = page.locator("article").filter({ hasText: "Card with roles" });
+  await expect(card.locator(".foot-agents")).toHaveText("Active agents: 2");
   const saved = await page.request.get("/api/v1/projects");
   const project = (await saved.json()).find(
-    (entry: { key: string }) => entry.key === "AGROL",
+    (entry: { key: string }) => entry.key === "AGROLE",
   );
   expect(project.agents).toBe(2);
 });
 
-test("küçük kartta butonlar yer tutmaz, hover ve Tab ile görünür", async ({
+test("compact card buttons take no space and appear on hover and Tab", async ({
   page,
 }) => {
-  await onlyProjects(page, "KUCUK");
-  const name = "Çok uzun adlı küçük kart ".repeat(4).trim();
+  await onlyProjects(page, "COMPACT");
+  const name = "Compact card with a very long name ".repeat(4).trim();
   await page.request.post("/api/v1/projects", {
-    data: { key: "KUCUK", name },
+    data: { key: "COMPACT", name },
   });
-  await page.request.post("/api/v1/projects/KUCUK/items", {
-    data: { title: "Açık iş" },
+  await page.request.post("/api/v1/projects/COMPACT/items", {
+    data: { title: "Open item" },
   });
   await page.setViewportSize({ width: 1440, height: 800 });
   await page.goto("/");
   await page.mouse.move(0, 0);
-  const card = page.locator("article").filter({ hasText: "küçük kart" });
+  const card = page.locator("article").filter({ hasText: "Compact card" });
   const link = card.getByRole("link");
-  const star = card.getByRole("button", { name: /^Yıldızla / });
-  const more = card.getByRole("button", { name: /^Diğer işlemler / });
+  const star = card.getByRole("button", { name: /^Star / });
+  const more = card.getByRole("button", { name: /^More actions / });
   const info = card.locator(".card-info");
 
-  await expect(info).toContainText("1 açık iş");
-  await expect(info.locator("time")).toHaveText("az önce");
+  await expect(info).toContainText("1 open items");
+  await expect(info.locator("time")).toHaveText("just now");
   await expect(info.locator("time")).toHaveAttribute("title", /2\d{3}/);
   expect((await info.boundingBox())?.height).toBeLessThan(24);
   await expect(card.locator(".card-actions")).toHaveCSS("opacity", "0");
@@ -436,7 +442,7 @@ test("küçük kartta butonlar yer tutmaz, hover ve Tab ile görünür", async (
   expect((titleBox?.x ?? 0) + (titleBox?.width ?? 0)).toBeLessThanOrEqual(
     starBox?.x ?? 0,
   );
-  await expect(info.locator("time")).toHaveText("az önce");
+  await expect(info.locator("time")).toHaveText("just now");
   expect(
     await info
       .locator("time")
@@ -444,9 +450,9 @@ test("küçük kartta butonlar yer tutmaz, hover ve Tab ile görünür", async (
   ).toBeLessThanOrEqual(starBox?.x ?? 0);
 });
 
-test.describe("uzun dil", () => {
+test.describe("long translations", () => {
   test.use({ locale: "de-DE" });
-  test("sayı etiketleri ve alt satır taşmaz", async ({ page }) => {
+  test("number labels and footer fit without overflow", async ({ page }) => {
     await onlyProjects(page, "DEUTSCH");
     await page.request.post("/api/v1/projects", {
       data: { key: "DEUTSCH", name: "Deutsche Karte" },
@@ -477,15 +483,15 @@ test.describe("uzun dil", () => {
   });
 });
 
-test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu gösterir", async ({
+test("sidebar lists starred projects first and highlights the active project", async ({
   page,
 }) => {
   await onlyProjects(page, "SIDEA", "SIDEB");
   await page.request.post("/api/v1/projects", {
-    data: { key: "SIDEA", name: "Yıldızsız panel" },
+    data: { key: "SIDEA", name: "Unstarred sidebar" },
   });
   await page.request.post("/api/v1/projects", {
-    data: { key: "SIDEB", name: "Yıldızlı panel" },
+    data: { key: "SIDEB", name: "Starred sidebar" },
   });
   await page.request.post("/api/v1/projects/SIDEB/star", {
     data: { starred: true },
@@ -494,15 +500,17 @@ test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu göst
   await page.goto("/projects/SIDEA");
   const sidebar = page.locator("aside");
   await expect(
-    sidebar.locator(".nav-label", { hasText: "Yıldızlı" }),
+    sidebar.locator(".nav-label", { hasText: "Starred" }),
   ).toHaveCount(0);
-  const links = sidebar.locator("a.nav-project").filter({ hasText: "panel" });
-  const rows = sidebar.locator(".nav-project-row").filter({ hasText: "panel" });
-  await expect(links.nth(0)).toContainText("Yıldızlı panel");
+  const links = sidebar.locator("a.nav-project").filter({ hasText: "sidebar" });
+  const rows = sidebar
+    .locator(".nav-project-row")
+    .filter({ hasText: "sidebar" });
+  await expect(links.nth(0)).toContainText("Starred sidebar");
   await expect(
-    rows.nth(0).getByRole("button", { name: "Yıldızı kaldır" }),
+    rows.nth(0).getByRole("button", { name: "Remove star" }),
   ).toBeVisible();
-  await expect(rows.nth(1).getByRole("button", { name: "Yıldızla" })).toHaveCSS(
+  await expect(rows.nth(1).getByRole("button", { name: "Star" })).toHaveCSS(
     "opacity",
     "0",
   );
@@ -532,22 +540,22 @@ test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu göst
   ).toBe(true);
 });
 
-test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", async ({
+test("sidebar starring moves a project to the top without navigating", async ({
   page,
 }) => {
   await onlyProjects(page, "STARZ", "STARB");
   await page.request.post("/api/v1/projects", {
-    data: { key: "STARZ", name: "Durak bir" },
+    data: { key: "STARZ", name: "Stop one" },
   });
   // Newer and earlier in key order, so it starts above the project to star.
   await page.request.post("/api/v1/projects", {
-    data: { key: "STARB", name: "Durak iki" },
+    data: { key: "STARB", name: "Stop two" },
   });
   await page.goto("/waiting");
   const sidebar = page.locator("aside");
-  const pair = sidebar.locator(".nav-project-row").filter({ hasText: "Durak" });
-  const row = pair.filter({ hasText: "Durak bir" });
-  await expect(pair.first()).toContainText("Durak iki");
+  const pair = sidebar.locator(".nav-project-row").filter({ hasText: "Stop" });
+  const row = pair.filter({ hasText: "Stop one" });
+  await expect(pair.first()).toContainText("Stop two");
   const button = row.locator("button.nav-star");
   await expect(row.locator("a button")).toHaveCount(0);
 
@@ -558,19 +566,19 @@ test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", asy
   const box = await button.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(28);
   expect(box?.height).toBeGreaterThanOrEqual(28);
-  await expect(button).toHaveAccessibleName("Yıldızla: Durak bir");
+  await expect(button).toHaveAccessibleName("Star: Stop one");
   await expect(button).toHaveAttribute("aria-pressed", "false");
 
   await button.click();
   await expect(button).toHaveAttribute("aria-pressed", "true");
-  await expect(button).toHaveAccessibleName("Yıldızı kaldır: Durak bir");
+  await expect(button).toHaveAccessibleName("Remove star: Stop one");
   await expect(page).toHaveURL("/waiting");
-  await expect(pair.first()).toContainText("Durak bir");
+  await expect(pair.first()).toContainText("Stop one");
   // Stays visible without hover.
   await page.mouse.move(800, 400);
   await expect(button).toHaveCSS("opacity", "1");
   await page.reload();
-  await expect(pair.first()).toContainText("Durak bir");
+  await expect(pair.first()).toContainText("Stop one");
 
   // Removing the star again keeps the page too.
   await button.click();
@@ -579,19 +587,19 @@ test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", asy
 
   // Touch size on the narrow layout.
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.getByRole("button", { name: "Menüyü aç" }).click();
+  await page.getByRole("button", { name: "Open menu" }).click();
   const mobile = await button.boundingBox();
   expect(mobile?.width).toBeCloseTo(44, 1);
   expect(mobile?.height).toBeCloseTo(44, 1);
 });
 
-test("Seni bekliyor satırı en eski önce listelenir ve kartı doğrudan açar", async ({
+test("Waiting for you lists oldest items first and opens cards directly", async ({
   page,
 }) => {
   await page.request.post("/api/v1/projects", {
-    data: { key: "WAIT", name: "Bekleme denemesi" },
+    data: { key: "WAIT", name: "Waiting test" },
   });
-  for (const title of ["Sonra gönderilen", "Önce gönderilen"])
+  for (const title of ["Sent later", "Sent earlier"])
     await page.request.post("/api/v1/projects/WAIT/items", {
       data: { title, priority: "high" },
     });
@@ -610,37 +618,37 @@ test("Seni bekliyor satırı en eski önce listelenir ve kartı doğrudan açar"
     .toBeGreaterThan(Date.parse(firstMove.created_at));
   await send("WAIT-1");
   await page.request.post("/api/v1/items/WAIT-2/scenarios", {
-    data: { steps_md: "Aç", expected_md: "Açılır", author: "claude:po" },
+    data: { steps_md: "Open", expected_md: "Opens", author: "claude:po" },
     headers: { "X-Pano-Actor": "claude:po" },
   });
   await page.goto("/waiting");
-  await expect(page.getByText(/Test etmeni bekleyen işler\./)).toContainText(
-    "iş · en eski önce",
+  await expect(page.getByText(/Items waiting for your test\./)).toContainText(
+    "items · oldest first",
   );
   const group = page
     .locator(".waiting-group")
-    .filter({ hasText: "Bekleme denemesi" });
-  await expect(group.locator(".waiting-group-head")).toContainText("2 iş");
+    .filter({ hasText: "Waiting test" });
+  await expect(group.locator(".waiting-group-head")).toContainText("2 items");
   const rows = group.getByRole("link");
   await expect(rows.nth(0)).toContainText("WAIT-2");
-  await expect(rows.nth(0)).toContainText("Yüksek");
-  await expect(rows.nth(0)).toContainText("1 senaryo · Claude · PO");
+  await expect(rows.nth(0)).toContainText("High");
+  await expect(rows.nth(0)).toContainText("1 scenario · Claude · PO");
   await expect(rows.nth(1)).toContainText("WAIT-1");
-  await expect(rows.nth(1)).not.toContainText("senaryo");
+  await expect(rows.nth(1)).not.toContainText("scenario");
   await rows.nth(0).click();
   await expect(page).toHaveURL("/projects/WAIT");
   await expect(
-    page.getByRole("dialog").getByRole("heading", { name: "Önce gönderilen" }),
+    page.getByRole("dialog").getByRole("heading", { name: "Sent earlier" }),
   ).toBeVisible();
 });
 
-test("mobil görünümde yatay taşma yok ve dark sistem teması uygulanır", async ({
+test("mobile has no horizontal overflow and follows the dark system theme", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Menüyü aç" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

@@ -8,11 +8,11 @@ test("board respects reduced motion and remains keyboard draggable", async ({
     data: { key: "MOTION", name: "Hareket" },
   });
   await request.post("/api/v1/projects/MOTION/items", {
-    data: { title: "Hareket işi" },
+    data: { title: "Motion item" },
   });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/projects/MOTION");
-  const card = page.locator(".board-card").filter({ hasText: "Hareket işi" });
+  const card = page.locator(".board-card").filter({ hasText: "Motion item" });
   await expect(card).toBeVisible();
   await expect(card).toHaveCSS("transition-duration", "0.12s, 0.12s");
 

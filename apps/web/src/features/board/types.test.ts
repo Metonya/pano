@@ -3,12 +3,12 @@ import { setLanguage } from "@/lib/i18n";
 import { agentName, type BoardItem, sortColumn } from "./types";
 
 beforeEach(async () => {
-  await setLanguage("tr", false);
+  await setLanguage("en", false);
 });
 
 test("agent identities are readable", () => {
   expect(agentName("claude:po")).toBe("Claude · PO");
-  expect(agentName("claude:design")).toBe("Claude · Tasarım");
+  expect(agentName("claude:design")).toBe("Claude · Design");
   expect(agentName("codex")).toBe("Codex");
   expect(agentName("mert")).toBe("Mert");
 });

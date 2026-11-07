@@ -6,12 +6,12 @@ priority: P1
 assignee: codex
 ---
 
-## Amaç
+## Purpose
 An example backlog item.
 
 ## Kabul kriterleri
 - [x] First criterion
 - [ ] Second criterion
 
-## Test planı
+## Test plan
 Check the result.

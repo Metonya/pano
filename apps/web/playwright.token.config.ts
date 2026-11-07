@@ -7,7 +7,7 @@ const dataDir = mkdtempSync(join(tmpdir(), "pano-token-e2e-"));
 export default defineConfig({
   testDir: "./token-e2e",
   use: {
-    locale: "tr-TR",
+    locale: "en-US",
     baseURL: "http://127.0.0.1:15174",
     ...devices["Desktop Chrome"],
   },

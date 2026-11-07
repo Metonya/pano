@@ -2,18 +2,18 @@ import { expect, test } from "bun:test";
 import { lineDiff } from "./lineDiff";
 
 test("line diff preserves shared lines and marks replacements", () => {
-  expect(lineDiff("başlık\neski\nson", "başlık\nyeni\nson")).toEqual([
-    { kind: "same", text: "başlık" },
-    { kind: "removed", text: "eski" },
-    { kind: "added", text: "yeni" },
-    { kind: "same", text: "son" },
+  expect(lineDiff("title\nold\nlast", "title\nnew\nlast")).toEqual([
+    { kind: "same", text: "title" },
+    { kind: "removed", text: "old" },
+    { kind: "added", text: "new" },
+    { kind: "same", text: "last" },
   ]);
 });
 test("empty, repeated, CRLF and trailing blank lines reconstruct both versions", () => {
   for (const [before, after] of [
     ["", ""],
-    ["", "yeni"],
-    ["eski", ""],
+    ["", "new"],
+    ["old", ""],
     ["a\na\nb\n", "a\nb\na\n"],
     ["a\r\nb", "a\nb"],
     ["a\n", "a"],

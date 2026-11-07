@@ -5,9 +5,9 @@ test("usage API records reports, validates them and adds up the totals", async (
   const core = createCore(":memory:");
   try {
     const app = createApp({ core, dataDir: "test" });
-    core.projects.create({ key: "USAGE", name: "Kullanım" }, "mert");
+    core.projects.create({ key: "USAGE", name: "Usage" }, "mert");
     core.items.create("USAGE", { title: "Veri var" }, "codex");
-    core.items.create("USAGE", { title: "Veri yok" }, "codex");
+    core.items.create("USAGE", { title: "No data" }, "codex");
     const post = (body: unknown, key = "USAGE-1") =>
       app.request(`/api/v1/items/${key}/usage`, {
         method: "POST",
@@ -87,8 +87,8 @@ test("history API validates pagination, filters records and restores cancellatio
   const core = createCore(":memory:");
   try {
     const app = createApp({ core, dataDir: "test" });
-    core.projects.create({ key: "HISTORY", name: "Geçmiş" }, "mert");
-    core.items.create("HISTORY", { title: "Geçmiş" }, "codex");
+    core.projects.create({ key: "HISTORY", name: "History" }, "mert");
+    core.items.create("HISTORY", { title: "History" }, "codex");
     for (let i = 0; i < 55; i++)
       core.records.add(
         "HISTORY-1",
@@ -116,7 +116,7 @@ test("history API validates pagination, filters records and restores cancellatio
       "cancelled",
       "mert",
       undefined,
-      "Gerek kalmadı",
+      "No longer needed",
     );
     const restored = await app.request("/api/v1/items/HISTORY-1/restore", {
       method: "POST",

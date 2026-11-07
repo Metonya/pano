@@ -21,17 +21,17 @@ assignee: ${assignee}
 created: 2026-11-05
 ---
 
-## Amaç
-İçerik olduğu gibi kalır.
+## Purpose
+Content stays unchanged.
 
 ## Kabul kriterleri
 - [x] İlk ölçüt
 - [ ] İkinci ölçüt
-### Ayrıntı
+### Detail
 - [X] Üçüncü ölçüt
 
-## Test planı
-Son bölüm.
+## Test plan
+Last section.
 `;
 
 async function run(args: string[], fetcher: Fetch) {
@@ -82,8 +82,8 @@ async function fixture(
 
 test("parser preserves Markdown and CRLF outside acceptance criteria, including code fences", () => {
   const source = markdown().replace(
-    "## Amaç\n",
-    "## Amaç\n```md\n## Kabul kriterleri\n- [x] Example only\n```\n",
+    "## Purpose\n",
+    "## Purpose\n```md\n## Kabul kriterleri\n- [x] Example only\n```\n",
   );
   const parsed = parseBacklog(`\uFEFF${source.replaceAll("\n", "\r\n")}`);
   expect(parsed).toMatchObject({
@@ -102,9 +102,9 @@ test("parser preserves Markdown and CRLF outside acceptance criteria, including 
   });
   expect(parsed.item.body_md).toBe(
     `Kaynak: PBI-001\n\n${source
-      .slice(source.indexOf("\n\n## Amaç") + 1)
+      .slice(source.indexOf("\n\n## Purpose") + 1)
       .replace(
-        /## Kabul kriterleri\n- \[x\] İlk ölçüt[\s\S]*?(?=## Test planı)/,
+        /## Kabul kriterleri\n- \[x\] İlk ölçüt[\s\S]*?(?=## Test plan)/,
         "",
       )
       .replaceAll("\n", "\r\n")}`,

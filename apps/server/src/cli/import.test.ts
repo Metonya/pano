@@ -6,12 +6,12 @@ import { runCli } from "./index";
 
 test("parser preserves CRLF Markdown and ignores fenced examples when extracting criteria", () => {
   const before =
-    "\r\n## Amaç\r\n```md\r\n## Kabul kriterleri\r\n- [x] Example\r\n```\r\n";
-  const after = "## Test planı\r\nKontrol et.\r\n";
+    "\r\n## Purpose\r\n```md\r\n## Kabul kriterleri\r\n- [x] Example\r\n```\r\n";
+  const after = "## Test plan\r\nCheck it.\r\n";
   const parsed = parseBacklog(
     "\uFEFF---\r\nid: PBI-012\r\ntitle: 'Türkçe: başlık'\r\nstatus: done\r\npriority: P3\r\nassignee: -\r\n---\r\n" +
       before +
-      "## Kabul kriterleri\r\n- [X] Tamam\r\n### Ayrıntı\r\n- [ ] Bekler\r\n" +
+      "## Kabul kriterleri\r\n- [X] Tamam\r\n### Detail\r\n- [ ] Bekler\r\n" +
       after,
   );
   expect(parsed.item).toMatchObject({
@@ -185,13 +185,13 @@ status: in-progress
 priority: P2
 assignee: codex
 ---
-## Amaç
-İçerik.
+## Purpose
+Content.
 ## Kabul kriterleri
 - [x] Çalışır
 - [ ] Bekler
-## Test planı
-Kontrol et.
+## Test plan
+Check it.
 `,
       "utf8",
     );
@@ -217,7 +217,7 @@ Kontrol et.
           priority: "medium",
           assignee: "codex",
           body_md:
-            "Kaynak: PBI-012\n\n## Amaç\nİçerik.\n## Test planı\nKontrol et.\n",
+            "Kaynak: PBI-012\n\n## Purpose\nContent.\n## Test plan\nCheck it.\n",
           criteria: ["Çalışır", "Bekler"],
         },
       },

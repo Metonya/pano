@@ -5,18 +5,18 @@ if (!dataDir) throw new Error("Run e2e tests with bun run test:e2e");
 export default defineConfig({
   testDir: "./e2e",
   use: {
-    locale: "tr-TR",
+    locale: "en-US",
     baseURL: "http://127.0.0.1:15173",
     ...devices["Desktop Chrome"],
   },
   // Renaming the person changes who counts as human for every test, so that
   // spec waits until the parallel tests sharing this database have finished.
   projects: [
-    { name: "paralel", testIgnore: /user-name\.spec\.ts/ },
+    { name: "parallel", testIgnore: /user-name\.spec\.ts/ },
     {
-      name: "kullanici-adi",
+      name: "user-name",
       testMatch: /user-name\.spec\.ts/,
-      dependencies: ["paralel"],
+      dependencies: ["parallel"],
     },
   ],
   webServer: [

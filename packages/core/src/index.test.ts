@@ -29,7 +29,7 @@ test("project suggestions skip active and archived keys and cap suffix length", 
   cores.push(core);
   core.projects.create({ key: "OP", name: "Örnek Proje" }, "mert");
   core.projects.archive("OP", true, "mert");
-  core.projects.create({ key: "OP2", name: "Diğer" }, "mert");
+  core.projects.create({ key: "OP2", name: "Other" }, "mert");
   expect(core.projects.suggestKey("Örnek Proje")).toBe("OP3");
   for (let suffix = 1; suffix <= 12; suffix++) {
     core.projects.create(
@@ -162,10 +162,16 @@ test("usage reports need one valid field; totals skip cache and add up per item"
       duration_ms: 7,
     });
     expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
-    core.items.move("USE-3", "cancelled", "mert", undefined, "Sayma testi");
+    core.items.move("USE-3", "cancelled", "mert", undefined, "Counting test");
     expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
     // Tokens already spent still count after the item is cancelled.
-    core.items.move("USE-1", "cancelled", "mert", undefined, "Gerek kalmadı");
+    core.items.move(
+      "USE-1",
+      "cancelled",
+      "mert",
+      undefined,
+      "No longer needed",
+    );
     expect(core.projects.summary("USE").usage.total_tokens).toBe(118);
   } finally {
     core.close();
@@ -415,8 +421,8 @@ test("cancellation is filtered and invalid inputs rejected", () => {
 });
 test("project description can be written and cleared", () => {
   const c = setup();
-  c.projects.update("PANO", { description: "Takım panosu" }, "mert");
-  expect(c.projects.get("PANO").description).toBe("Takım panosu");
+  c.projects.update("PANO", { description: "Team board" }, "mert");
+  expect(c.projects.get("PANO").description).toBe("Team board");
   c.projects.update("PANO", { description: "" }, "mert");
   expect(c.projects.get("PANO").description).toBe("");
 });

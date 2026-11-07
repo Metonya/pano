@@ -23,4 +23,4 @@ Never use the em dash character (U+2014) anywhere in this project: UI text, docs
 
 ## Commits
 
-Write commit messages in Turkish, retain English technical terms, and use simple language a product owner can understand. Start the title with the PBI number and describe the outcome, for example `PBI-012: İnsan testi akışı eklendi`. The body lists 2–5 user-facing changes. Before committing, check `git status` and `git diff --staged`: no scratch files, build output, secrets or personal paths. Agents working on a PBI do not commit or push; the orchestrator does.
+Write commit messages in English, in simple language a product owner can understand. Start the title with the card number and describe the outcome, for example `PANO-12: Added human test flow`. The body lists 2–5 user-facing changes. Before committing, check `git status` and `git diff --staged`: no scratch files, build output, secrets or personal paths. Agents working on a PBI do not commit or push; the orchestrator does.

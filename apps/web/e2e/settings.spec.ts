@@ -9,7 +9,7 @@ const system = {
   updateAvailable: true,
 };
 
-test("/settings adresi popup açar; dil, tema, sürüm ve güncelleme bildirimi çalışır", async ({
+test("/settings opens a popup with language, theme, version and update notification", async ({
   page,
 }) => {
   await page.addInitScript(
@@ -23,7 +23,7 @@ test("/settings adresi popup açar; dil, tema, sürüm ve güncelleme bildirimi 
   await page.goto("/settings");
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
-  // The home page stays underneath the window.
+  // The home page stays underneath the window in the selected Turkish language.
   await expect(page.locator(".toolbar h1")).toHaveText("Projeler");
   await expect(
     dialog.getByText("v99.0.0", { exact: false }).first(),
@@ -49,22 +49,22 @@ test("/settings adresi popup açar; dil, tema, sürüm ve güncelleme bildirimi 
   await expect(page).toHaveURL("/");
 });
 
-test("Ayarlar bulunduğun sayfada popup açar; X, Esc ve dışarı tıklama kapatır", async ({
+test("settings opens over the current page and closes with X, Escape or outside click", async ({
   page,
   request,
 }) => {
   await request.post("/api/v1/projects", {
-    data: { key: "POPUP", name: "Popup denemesi" },
+    data: { key: "POPUP", name: "Popup test" },
   });
   await page.goto("/projects/POPUP");
   const dialog = page.getByRole("dialog");
   const open = () =>
-    page.getByRole("button", { name: "Ayarlar", exact: true }).click();
+    page.getByRole("button", { name: "Settings", exact: true }).click();
   await open();
   await expect(dialog).toBeVisible();
   await expect(page).toHaveURL("/projects/POPUP");
-  await expect(page.locator(".toolbar h1")).toHaveText("Popup denemesi");
-  await expect(dialog.getByRole("heading")).toHaveText("Genel");
+  await expect(page.locator(".toolbar h1")).toHaveText("Popup test");
+  await expect(dialog.getByRole("heading")).toHaveText("General");
   // Opening a settings window puts focus on the window, not on a control.
   await expect(dialog).toBeFocused();
 
@@ -74,7 +74,7 @@ test("Ayarlar bulunduğun sayfada popup açar; X, Esc ve dışarı tıklama kapa
     Promise.all(el.getAnimations().map((animation) => animation.finished)),
   );
   const box = await dialog.boundingBox();
-  for (const name of ["Görünüm", "Agent bağlantısı", "Hakkında", "Genel"]) {
+  for (const name of ["Appearance", "Agent connection", "About", "General"]) {
     await dialog.getByRole("tab", { name }).click();
     await expect(dialog.getByRole("heading")).toHaveText(name);
     const next = await dialog.boundingBox();
@@ -83,7 +83,7 @@ test("Ayarlar bulunduğun sayfada popup açar; X, Esc ve dışarı tıklama kapa
   }
   expect(box?.width).toBe(720);
 
-  await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page).toHaveURL("/projects/POPUP");
   await open();
@@ -95,18 +95,18 @@ test("Ayarlar bulunduğun sayfada popup açar; X, Esc ve dışarı tıklama kapa
   await expect(page).toHaveURL("/projects/POPUP");
 });
 
-test("ayarlar mobilde yatay taşmadan kullanılır", async ({ page }) => {
+test("settings fits mobile without horizontal overflow", async ({ page }) => {
   await page.route("**/api/v1/system", (route) =>
     route.fulfill({ json: system }),
   );
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Menüyü aç" }).click();
-  await page.getByRole("button", { name: "Ayarlar", exact: true }).click();
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(page.locator("aside")).not.toHaveClass(/mobile-open/);
-  for (const name of ["Genel", "Görünüm", "Agent bağlantısı", "Hakkında"]) {
+  for (const name of ["General", "Appearance", "Agent connection", "About"]) {
     await dialog.getByRole("tab", { name }).click();
     await expect(dialog.getByRole("heading")).toHaveText(name);
     expect(
@@ -124,15 +124,15 @@ test("ayarlar mobilde yatay taşmadan kullanılır", async ({ page }) => {
   }
 });
 
-test("proje ayarları pencerede odaklı açılır; form pencereleri ilk alana odaklanır", async ({
+test("project settings focuses the dialog; forms focus the first field", async ({
   page,
   request,
 }) => {
   await request.post("/api/v1/projects", {
-    data: { key: "ODAK", name: "Odak denemesi" },
+    data: { key: "FOCUS", name: "Focus test" },
   });
-  await page.goto("/projects/ODAK");
-  await page.getByRole("button", { name: "Proje ayarları" }).click();
+  await page.goto("/projects/FOCUS");
+  await page.getByRole("button", { name: "Project settings" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeFocused();
   expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
@@ -143,14 +143,14 @@ test("proje ayarları pencerede odaklı açılır; form pencereleri ilk alana od
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Yeni PBI" }).click();
-  await expect(page.getByRole("textbox", { name: "Başlık" })).toBeFocused();
+  await page.getByRole("button", { name: "New PBI" }).click();
+  await expect(page.getByRole("textbox", { name: "Title" })).toBeFocused();
 });
 
-test.describe("14 dil", () => {
+test.describe("14 languages", () => {
   test.use({ timezoneId: "UTC" });
 
-  test("Deutsch ve 日本語 seçimi, tarih biçimi ve yenilemede kalıcılık", async ({
+  test("German and Japanese selection, date formatting and persistence after reload", async ({
     page,
   }) => {
     await page.route("**/api/v1/system", (route) =>
@@ -202,7 +202,7 @@ test.describe("14 dil", () => {
   });
 
   for (const width of [375, 1280]) {
-    test(`Deutsch ayarlar ve board yatay taşmaz: ${width}`, async ({
+    test(`German settings and board fit without horizontal overflow: ${width}`, async ({
       page,
       request,
     }) => {
@@ -275,9 +275,9 @@ test.describe("14 dil", () => {
   }
 });
 
-test.describe("ilk açılış Japonca", () => {
+test.describe("Japanese on first launch", () => {
   test.use({ locale: "ja-JP" });
-  test("sistem dilini kullanır, sunucu tercihini kullanmaz", async ({
+  test("uses the system language instead of the server preference", async ({
     page,
   }) => {
     await page.route("**/api/v1/settings", (route) =>
@@ -290,9 +290,9 @@ test.describe("ilk açılış Japonca", () => {
   });
 });
 
-test.describe("desteklenmeyen sistem dili", () => {
+test.describe("unsupported system language", () => {
   test.use({ locale: "ru-RU" });
-  test("ilk açılışta English kullanır", async ({ page }) => {
+  test("uses English on first launch", async ({ page }) => {
     await page.goto("/settings");
     await expect(page.locator(".toolbar h1")).toHaveText("Projects");
     await expect(page.locator("#app-language")).toHaveValue("en");

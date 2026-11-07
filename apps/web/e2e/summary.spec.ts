@@ -1,14 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("yerel gün sınırı", () => {
+test.describe("local day boundary", () => {
   test.use({ timezoneId: "Europe/Istanbul" });
-  test("UTC günü aynı olsa da dün açılan projede tarih gösterilir", async ({
+  test("projects opened yesterday show the date even within the same UTC day", async ({
     page,
     request,
   }) => {
     await page.clock.setFixedTime(new Date("2026-11-06T22:30:00Z"));
     await request.post("/api/v1/projects", {
-      data: { key: "LOCALDAY", name: "Yerel gün" },
+      data: { key: "LOCALDAY", name: "Local day" },
     });
     await page.route("**/api/v1/projects/LOCALDAY/summary*", (route) =>
       route.fulfill({
@@ -27,22 +27,22 @@ test.describe("yerel gün sınırı", () => {
     await page.goto("/projects/LOCALDAY");
     await page.locator("button.board-summary").click();
     await expect(
-      page.getByRole("dialog", { name: "Proje özeti" }),
-    ).toContainText("6 Kas'ta açıldı, 25 iş tamamlandı");
+      page.getByRole("dialog", { name: "Project summary" }),
+    ).toContainText("Opened on Nov 6, 25 tasks completed");
     await expect(
-      page.getByRole("dialog", { name: "Proje özeti" }),
-    ).not.toContainText("Bugün açıldı");
+      page.getByRole("dialog", { name: "Project summary" }),
+    ).not.toContainText("Opened today");
   });
 });
 
-test("özet sayıları, SSE ile Done ve popover klavye davranışı", async ({
+test("summary counts, Done over SSE and popover keyboard behavior", async ({
   page,
   request,
 }) => {
   expect(
     (
       await request.post("/api/v1/projects", {
-        data: { key: "SUMMARY", name: "Özet" },
+        data: { key: "SUMMARY", name: "Summary" },
       })
     ).ok(),
   ).toBe(true);
@@ -50,7 +50,7 @@ test("özet sayıları, SSE ile Done ve popover klavye davranışı", async ({
     expect(
       (
         await request.post("/api/v1/projects/SUMMARY/items", {
-          data: { title: `İş ${priority}`, priority },
+          data: { title: `Item ${priority}`, priority },
         })
       ).ok(),
     ).toBe(true);
@@ -58,29 +58,26 @@ test("özet sayıları, SSE ile Done ve popover klavye davranışı", async ({
   expect(
     (
       await request.post("/api/v1/items/SUMMARY-4/move", {
-        data: { status: "cancelled", reason: "Tekrar" },
+        data: { status: "cancelled", reason: "Duplicate" },
       })
     ).ok(),
   ).toBe(true);
   await page.goto("/projects/SUMMARY");
   const summary = page.locator("button.board-summary");
-  await expect(summary).toContainText("0 / 3 tamamlandı");
-  await expect(summary).toContainText("3 kaldı");
-  await expect(summary).toContainText("1 yüksek öncelikli");
+  await expect(summary).toContainText("0 / 3 completed");
+  await expect(summary).toContainText("3 remaining");
+  await expect(summary).toContainText("1 high priority");
   await expect(summary).toHaveAttribute("aria-haspopup", "dialog");
-  await expect(summary).toHaveAccessibleName(/Toplam 3, 0 tamamlandı/);
+  await expect(summary).toHaveAccessibleName(/Total 3, 0 completed/);
   await summary.focus();
   await page.keyboard.press("Enter");
-  const popover = page.getByRole("dialog", { name: "Proje özeti" });
+  const popover = page.getByRole("dialog", { name: "Project summary" });
   await expect(popover).toBeVisible();
   await expect(
-    popover
-      .locator("dl > div")
-      .filter({ hasText: "İptal edilen" })
-      .locator("dd"),
+    popover.locator("dl > div").filter({ hasText: "Cancelled" }).locator("dd"),
   ).toHaveText("1");
   await expect(popover.getByRole("img")).toHaveCount(0);
-  await expect(popover).toContainText("Bugün açıldı, henüz tamamlanan iş yok");
+  await expect(popover).toContainText("Opened today, no items completed yet");
   await page.keyboard.press("Escape");
   await expect(popover).toHaveCount(0);
   await expect(summary).toBeFocused();
@@ -91,22 +88,22 @@ test("özet sayıları, SSE ile Done ve popover klavye davranışı", async ({
       })
     ).ok(),
   ).toBe(true);
-  await expect(summary).toContainText("1 / 3 tamamlandı");
-  await expect(summary).toHaveAccessibleName(/Toplam 3, 1 tamamlandı/);
-  await expect(summary).toContainText("2 kaldı");
-  await expect(summary).toContainText("0 yüksek öncelikli");
+  await expect(summary).toContainText("1 / 3 completed");
+  await expect(summary).toHaveAccessibleName(/Total 3, 1 completed/);
+  await expect(summary).toContainText("2 remaining");
+  await expect(summary).toContainText("0 high priority");
   await summary.click();
   await expect(
     popover
       .locator("dl > div")
-      .filter({ hasText: "Son 7 günde tamamlanan" })
+      .filter({ hasText: "Completed in the last 7 days" })
       .locator("dd"),
   ).toHaveText("1");
-  await expect(popover).toContainText("Bugün açıldı, 1 iş tamamlandı");
+  await expect(popover).toContainText("Opened today, 1 items completed");
 });
 
 for (const variant of ["light", "dark"] as const) {
-  test(`grafik etiketleri, fare, klavye ve ekran sınırları: ${variant}`, async ({
+  test(`chart labels, mouse, keyboard and viewport bounds: ${variant}`, async ({
     page,
     request,
   }) => {
@@ -115,7 +112,7 @@ for (const variant of ["light", "dark"] as const) {
     expect(
       (
         await request.post("/api/v1/projects", {
-          data: { key, name: "Grafik" },
+          data: { key, name: "Chart" },
         })
       ).ok(),
     ).toBe(true);
@@ -142,22 +139,24 @@ for (const variant of ["light", "dark"] as const) {
       await page.setViewportSize({ width: 375, height: 500 });
     await page.goto(`/projects/${key}`);
     await page.locator("button.board-summary").click();
-    const popover = page.getByRole("dialog", { name: "Proje özeti" });
+    const popover = page.getByRole("dialog", { name: "Project summary" });
     const chart = popover.locator(".summary-chart-interaction");
     await expect(
-      popover.getByRole("img", { name: /Toplam 28 iş, 25 bitti/ }),
+      popover.getByRole("img", { name: /28 items, 25 completed/ }),
     ).toBeVisible();
     await expect(popover).not.toContainText(
-      /Burn-up|burn-up|Son 30 gün|kesikli çizgi|düz çizgi/,
+      /Burn-up|burn-up|Last 30 days|dashed line|solid line/,
     );
     await expect(
       popover.locator("figcaption, .summary-legend, .summary-axis"),
     ).toHaveCount(0);
-    await expect(popover.locator(".summary-total-label")).toHaveText("28 iş");
-    await expect(popover.locator(".summary-completed-label")).toHaveText(
-      "25 bitti",
+    await expect(popover.locator(".summary-total-label")).toHaveText(
+      "28 items",
     );
-    await expect(popover.locator(".summary-dates")).toHaveText("4 KasBugün");
+    await expect(popover.locator(".summary-completed-label")).toHaveText(
+      "25 done",
+    );
+    await expect(popover.locator(".summary-dates")).toHaveText("Nov 4Today");
     const labels = await popover
       .locator(".summary-total-label, .summary-completed-label")
       .evaluateAll((nodes) =>
@@ -165,32 +164,32 @@ for (const variant of ["light", "dark"] as const) {
       );
     expect(labels[0].bottom).toBeLessThanOrEqual(labels[1].top);
     const bounds = await chart.boundingBox();
-    if (!bounds) throw new Error("Grafik bulunamadı");
+    if (!bounds) throw new Error("Chart not found");
     await page.mouse.move(
       bounds.x + (bounds.width * 112) / 320,
       bounds.y + bounds.height / 2,
     );
     const tooltip = popover.locator(".summary-chart-tooltip");
-    await expect(tooltip).toHaveText("5 Kas · 24 / 28 bitti");
+    await expect(tooltip).toHaveText("Nov 5 · 24 / 28 done");
     await expect(tooltip).toHaveAttribute("data-visible", "true");
     await expect(popover.locator(".summary-cursor")).toHaveCount(1);
     await chart.evaluate((node) => (node as HTMLElement).blur());
     await chart.focus();
-    await expect(tooltip).toHaveText("6 Kas · 25 / 28 bitti");
+    await expect(tooltip).toHaveText("Nov 6 · 25 / 28 done");
     await page.keyboard.press("ArrowLeft");
-    await expect(tooltip).toHaveText("5 Kas · 24 / 28 bitti");
+    await expect(tooltip).toHaveText("Nov 5 · 24 / 28 done");
     await expect(chart.locator('[aria-live="polite"]')).toHaveText(
-      "5 Kas · 24 / 28 bitti",
+      "Nov 5 · 24 / 28 done",
     );
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");
-    await expect(tooltip).toHaveText("4 Kas · 0 / 20 bitti");
+    await expect(tooltip).toHaveText("Nov 4 · 0 / 20 done");
     await page.keyboard.press("ArrowRight");
-    await expect(tooltip).toHaveText("5 Kas · 24 / 28 bitti");
+    await expect(tooltip).toHaveText("Nov 5 · 24 / 28 done");
     const box = await popover.boundingBox();
     const viewport = page.viewportSize();
     if (!box || !viewport)
-      throw new Error("Popover veya ekran ölçüsü bulunamadı");
+      throw new Error("Popover or viewport bounds not found");
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
@@ -200,10 +199,10 @@ for (const variant of ["light", "dark"] as const) {
   });
 }
 
-test.describe("dokunmatik ve seçili dil", () => {
+test.describe("touch and selected language", () => {
   test.use({ hasTouch: true });
 
-  test("İngilizce tarihler, eşit değerler ve dokunarak gün seçimi", async ({
+  test("English dates, equal values and day selection by touch", async ({
     page,
     request,
   }) => {
@@ -255,7 +254,7 @@ test.describe("dokunmatik ve seçili dil", () => {
     const bounds = await popover
       .locator(".summary-chart-interaction")
       .boundingBox();
-    if (!bounds) throw new Error("Grafik bulunamadı");
+    if (!bounds) throw new Error("Chart not found");
     await page.touchscreen.tap(
       bounds.x + (bounds.width * 8) / 320,
       bounds.y + bounds.height / 2,
@@ -271,11 +270,14 @@ test.describe("dokunmatik ve seçili dil", () => {
   });
 });
 
-test("boş projede açıklama ve mobil koyu tema", async ({ page, request }) => {
+test("empty project explanation and mobile dark theme", async ({
+  page,
+  request,
+}) => {
   expect(
     (
       await request.post("/api/v1/projects", {
-        data: { key: "EMPTYSMRY", name: "Boş özet" },
+        data: { key: "EMPTYSMRY", name: "Empty summary" },
       })
     ).ok(),
   ).toBe(true);
@@ -283,8 +285,8 @@ test("boş projede açıklama ve mobil koyu tema", async ({ page, request }) => 
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/projects/EMPTYSMRY");
   await page.locator("button.board-summary").click();
-  const popover = page.getByRole("dialog", { name: "Proje özeti" });
-  await expect(popover).toContainText("Henüz PBI yok.");
+  const popover = page.getByRole("dialog", { name: "Project summary" });
+  await expect(popover).toContainText("No PBIs yet.");
   await expect(popover.getByRole("img")).toHaveCount(0);
   expect(
     await page.evaluate(
