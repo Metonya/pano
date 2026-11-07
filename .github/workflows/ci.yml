@@ -1,5 +1,8 @@
 name: CI
 on: [push, pull_request]
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ${{ matrix.os }}
@@ -15,6 +18,38 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_HTML_OPEN: never
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Install Chromium
+        working-directory: apps/web
+        run: bunx playwright install --with-deps chromium
+      - name: Run browser tests
+        id: browser-tests
+        run: bun run test:e2e --reporter=html --output=test-results/main
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/main
+      - name: Run token browser tests
+        if: ${{ !cancelled() && steps.browser-tests.outcome != 'skipped' }}
+        run: bun run test:e2e --config=playwright.token.config.ts --reporter=html --output=test-results/token
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/token
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-results
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
 
   sonar:
     runs-on: ubuntu-latest
