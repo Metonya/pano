@@ -1,0 +1,14 @@
+title = "Pano secret scanning"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "curl-auth-header"
+
+[[rules.allowlists]]
+description = "README authentication examples use the literal YOUR_TOKEN placeholder"
+condition = "AND"
+paths = ['''^README\.md$''']
+regexTarget = "secret"
+regexes = ['''^YOUR_TOKEN$''']

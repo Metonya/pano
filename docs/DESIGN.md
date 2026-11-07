@@ -1,80 +1,80 @@
-# Pano: Tasarım sistemi
+# Pano: Design system
 
-> Durum: v0.1, onaylandı (2026-11-06, Mert). Ekranlar: [Claude Design canvas](https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK) · Ürün: [product.md](product.md)
+> Status: v0.1, approved by the owner (2026-11-06). Product: [product.md](product.md)
 >
-> Bu dosya tek başına yeterli olmalı: UI'ı kuran agent buradaki token'lar ve kurallar dışında bir değer uydurmaz. Değer yoksa sorar, yeni bir değer eklerse bu dosyayı da günceller.
+> This file must be self-contained: agents building the UI must not invent values beyond the tokens and rules here. If a value is missing, ask; if adding a new value, update this file too.
 
-Hedef stack: React + Vite + Tailwind v4 + shadcn/ui + lucide-react.
+Target stack: React + Vite + Tailwind v4 + shadcn/ui + lucide-react.
 
-## 1. İlkeler
+## 1. Principles
 
-1. **Operate modu.** Pano bir iş aracıdır: taranabilirlik, tutarlılık ve tanıdık macOS kalıpları, ifade gücünden önce gelir. Marka küçük detaylarda yaşar.
-2. **macOS hissi.** Sol sidebar, ince yarı saydam toolbar, ortada açılan sheet, tek accent rengi (Apple mavisi), sistem fontu.
-3. **Sadece kritik bilgi.** Kullanıcının sürekli bakmadığı bilgi ekranda durmaz; ayrıntıya bir tıkla ulaşılır. Tekrar eden metrik kutuları yoktur.
-4. **İşi AI yapar, kontrol kullanıcıdadır.** Kullanıcıdan bir şey bekleniyorsa (Test) en görünür sinyal odur: turuncu "Seni bekliyor".
-5. **Hiyerarşi:** boşluk > ağırlık > boyut > renk. Bir ekranda tek birincil aksiyon.
-6. **Erişilebilir, çizildiği gibi.** Gerçek `<button>`/`<a>`/`<input>`, görünür focus, AA kontrast, sadece renkle anlam yok, mobilde 44px dokunma alanı.
+1. **Operate mode.** Pano is a work tool: scannability, consistency, and familiar macOS patterns come before expressiveness. Branding lives in small details.
+2. **macOS feel.** Left sidebar, thin translucent toolbar, centered sheet, one accent color (Apple blue), system font.
+3. **Only critical information.** Information the user does not constantly consult stays off the screen; details are one click away. No repeated metric boxes.
+4. **AI does the work; the user stays in control.** When something is expected of the user (Test), it is the most visible signal: orange "Seni bekliyor" [Waiting for you].
+5. **Hierarchy:** spacing > weight > size > color. One primary action per screen.
+6. **Accessible as designed.** Real `<button>`/`<a>`/`<input>` elements, visible focus, AA contrast, no meaning conveyed by color alone, 44px touch targets on mobile.
 
-## 2. Token'lar
+## 2. Tokens
 
-### Renkler
+### Colors
 
-| Token                            | Light                                                         | Dark                                                          | Kullanım                                                                   |
-| -------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `bg`                             | `#f5f5f7`                                                     | `#000000`                                                     | Sayfa zemini                                                               |
-| `sidebar`                        | `#fbfbfd`                                                     | `#161617`                                                     | Sidebar zemini                                                             |
-| `toolbar`                        | `rgba(245,245,247,0.82)`                                      | `rgba(0,0,0,0.72)`                                            | Toolbar, `backdrop-filter: saturate(180%) blur(20px)` ile                  |
-| `card`                           | `#ffffff`                                                     | `#1c1c1e`                                                     | Kart, input zemini                                                         |
-| `sheet`                          | `#ffffff`                                                     | `#2c2c2e`                                                     | Sheet/dialog (dark'ta bir kademe açık)                                     |
-| `window`                         | `#f5f5f7`                                                     | `#1c1c1e`                                                     | Uygulama ayarları penceresi                                                |
-| `text`                           | `#1d1d1f`                                                     | `#f5f5f7`                                                     | Ana metin                                                                  |
-| `muted`                          | `#636366`                                                     | `#a1a1a6`                                                     | İkincil metin, ikonlar                                                     |
-| `placeholder`                    | `#636366`                                                     | `#aeaeb2`                                                     | Input/textarea placeholder (temaya duyarlı; tek etiket olarak kullanılmaz) |
-| `skeleton`                       | `rgba(0,0,0,0.07)`                                            | `rgba(255,255,255,0.10)`                                      | Yükleme iskeleti çubukları                                                 |
-| `notice-bg`                      | `rgba(0,0,0,0.035)`                                           | `rgba(255,255,255,0.04)`                                      | Bağlantı şeridi zemini (sakin, uyarı rengi değil)                          |
-| `tooltip-bg` / `tooltip-fg`      | `#1d1d1f` / `#ffffff`                                         | `#f5f5f7` / `#1d1d1f`                                         | İpucu baloncuğu                                                            |
-| `line`                           | `rgba(0,0,0,0.08)`                                            | `rgba(255,255,255,0.10)`                                      | Kenarlık, ayraç (ayarlar penceresinde 0.10 / 0.12)                         |
-| `field`                          | `rgba(0,0,0,0.05)`                                            | `rgba(255,255,255,0.08)`                                      | Segment zemini, sayı rozeti, kod bloğu                                     |
-| `track`                          | `rgba(0,0,0,0.08)`                                            | `rgba(255,255,255,0.12)`                                      | İlerleme çubuğu zemini                                                     |
-| `primary`                        | `#0071e3`                                                     | `#0071e3`                                                     | Birincil buton zemini, switch açık, avatar (beyaz metinle)                 |
-| `accent`                         | `#0071e3`                                                     | `#0a84ff`                                                     | Görülmedi noktası, In Progress noktası, link-buton                         |
-| `accent-text`                    | `#0058b0`                                                     | `#4da3ff`                                                     | Açık mavi zemin üstündeki metin, link                                      |
-| `accent-soft`                    | `rgba(0,113,227,0.10)`                                        | `rgba(10,132,255,0.18)`                                       | Assignee chip, aktif sidebar öğesi, bilgi bandı                            |
-| `active-border`                  | `rgba(0,113,227,0.35)`                                        | `rgba(10,132,255,0.55)`                                       | Üzerinde çalışılan (In Progress) kartın kenarlığı                          |
-| `focus`                          | `#0071e3`                                                     | `#0a84ff`                                                     | `:focus-visible` halkası                                                   |
-| `selection`                      | `rgba(0,113,227,0.22)`                                        | `rgba(10,132,255,0.30)`                                       | `::selection`                                                              |
-| `p1` / `p1-bg`                   | `#d70015` / `rgba(215,0,21,0.08)`                             | `#ff6961` / `rgba(255,105,97,0.15)`                           | Yüksek öncelik                                                                 |
-| `wait` / `wait-bg` / `wait-line` | `#8a4b00` / `rgba(255,159,10,0.14)` / `rgba(255,159,10,0.35)` | `#ffb340` / `rgba(255,159,10,0.18)` / `rgba(255,159,10,0.40)` | "Seni bekliyor", Test durumu                                               |
-| `on-wait`                        | `#ffffff`                                                     | `#1c1c1e`                                                     | `wait` zeminli sayı rozetindeki metin                                      |
-| `star`                           | `#ff9f0a`                                                     | `#ffb340`                                                     | Yıldız (sadece ikon, metin değil)                                          |
-| `success` / `success-bg`         | `#1c6e30` / `rgba(52,199,89,0.14)`                            | `#30d158` / `rgba(48,209,88,0.16)`                            | Geçti, check kayıtları, "Pano güncel"                                      |
-| `progress`                       | `#248a3d`                                                     | `#30d158`                                                     | İlerleme çubuğu dolgusu, Done noktası                                      |
-| `danger`                         | `#c4001a`                                                     | `#ff6961`                                                     | Yıkıcı buton metni ("PBI'yı iptal et…")                                    |
-| `fail` / `fail-bg`               | `#b8001a` / `rgba(255,59,48,0.10)`                            | `#ff6961` / `rgba(255,105,97,0.16)`                           | Kaldı                                                                      |
-| `diff-del` / `diff-del-bg`       | `#9e0016` / `rgba(255,59,48,0.08)`                            | `#ff8a84` / `rgba(255,105,97,0.14)`                           | Diff'te silinen satır                                                      |
-| `diff-add` / `diff-add-bg`       | `#1c6e30` / `rgba(52,199,89,0.12)`                            | `#4cd964` / `rgba(48,209,88,0.14)`                            | Diff'te eklenen satır                                                      |
-| `scrim`                          | `rgba(0,0,0,0.30)`                                            | `rgba(0,0,0,0.60)`                                            | Sheet arkası                                                               |
-| `shadow-card`                    | `0 1px 2px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)`     | `none`                                                        | Kart                                                                       |
-| `shadow-sheet`                   | `0 30px 90px rgba(0,0,0,0.30)`                                | aynı                                                          | Sheet                                                                      |
+| Token | Light | Dark | Usage |
+| --- | --- | --- | --- |
+| `bg` | `#f5f5f7` | `#000000` | Page background |
+| `sidebar` | `#fbfbfd` | `#161617` | Sidebar background |
+| `toolbar` | `rgba(245,245,247,0.82)` | `rgba(0,0,0,0.72)` | Toolbar, with `backdrop-filter: saturate(180%) blur(20px)` |
+| `card` | `#ffffff` | `#1c1c1e` | Card and input background |
+| `sheet` | `#ffffff` | `#2c2c2e` | Sheet/dialog (one level lighter in dark mode) |
+| `window` | `#f5f5f7` | `#1c1c1e` | Application settings window |
+| `text` | `#1d1d1f` | `#f5f5f7` | Main text |
+| `muted` | `#636366` | `#a1a1a6` | Secondary text, icons |
+| `placeholder` | `#636366` | `#aeaeb2` | Input/textarea placeholder (theme-aware; never used as the sole label) |
+| `skeleton` | `rgba(0,0,0,0.07)` | `rgba(255,255,255,0.10)` | Loading skeleton bars |
+| `notice-bg` | `rgba(0,0,0,0.035)` | `rgba(255,255,255,0.04)` | Connection banner background (calm, not a warning color) |
+| `tooltip-bg` / `tooltip-fg` | `#1d1d1f` / `#ffffff` | `#f5f5f7` / `#1d1d1f` | Tooltip |
+| `line` | `rgba(0,0,0,0.08)` | `rgba(255,255,255,0.10)` | Border, divider (0.10 / 0.12 in the settings window) |
+| `field` | `rgba(0,0,0,0.05)` | `rgba(255,255,255,0.08)` | Segment background, count badge, code block |
+| `track` | `rgba(0,0,0,0.08)` | `rgba(255,255,255,0.12)` | Progress bar track |
+| `primary` | `#0071e3` | `#0071e3` | Primary button background, enabled switch, avatar (with white text) |
+| `accent` | `#0071e3` | `#0a84ff` | Unseen dot, In Progress dot, link button |
+| `accent-text` | `#0058b0` | `#4da3ff` | Text on a light blue background, links |
+| `accent-soft` | `rgba(0,113,227,0.10)` | `rgba(10,132,255,0.18)` | Assignee chip, active sidebar item, information banner |
+| `active-border` | `rgba(0,113,227,0.35)` | `rgba(10,132,255,0.55)` | Border of a card being worked on (In Progress) |
+| `focus` | `#0071e3` | `#0a84ff` | `:focus-visible` ring |
+| `selection` | `rgba(0,113,227,0.22)` | `rgba(10,132,255,0.30)` | `::selection` |
+| `p1` / `p1-bg` | `#d70015` / `rgba(215,0,21,0.08)` | `#ff6961` / `rgba(255,105,97,0.15)` | High priority |
+| `wait` / `wait-bg` / `wait-line` | `#8a4b00` / `rgba(255,159,10,0.14)` / `rgba(255,159,10,0.35)` | `#ffb340` / `rgba(255,159,10,0.18)` / `rgba(255,159,10,0.40)` | "Seni bekliyor" [Waiting for you], Test status |
+| `on-wait` | `#ffffff` | `#1c1c1e` | Text in count badges with a `wait` background |
+| `star` | `#ff9f0a` | `#ffb340` | Star (icon only, not text) |
+| `success` / `success-bg` | `#1c6e30` / `rgba(52,199,89,0.14)` | `#30d158` / `rgba(48,209,88,0.16)` | Passed, check records, "Pano güncel" [Pano is up to date] |
+| `progress` | `#248a3d` | `#30d158` | Progress bar fill, Done dot |
+| `danger` | `#c4001a` | `#ff6961` | Destructive button text ("PBI'yı iptal et…" [Cancel PBI…]) |
+| `fail` / `fail-bg` | `#b8001a` / `rgba(255,59,48,0.10)` | `#ff6961` / `rgba(255,105,97,0.16)` | Failed |
+| `diff-del` / `diff-del-bg` | `#9e0016` / `rgba(255,59,48,0.08)` | `#ff8a84` / `rgba(255,105,97,0.14)` | Deleted diff line |
+| `diff-add` / `diff-add-bg` | `#1c6e30` / `rgba(52,199,89,0.12)` | `#4cd964` / `rgba(48,209,88,0.14)` | Added diff line |
+| `scrim` | `rgba(0,0,0,0.30)` | `rgba(0,0,0,0.60)` | Behind the sheet |
+| `shadow-card` | `0 1px 2px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)` | `none` | Card |
+| `shadow-sheet` | `0 30px 90px rgba(0,0,0,0.30)` | same | Sheet |
 
-Durum noktaları: Backlog `muted`, In Progress `accent`, Test `star`/turuncu `#ff9f0a`, Done `progress`.
+Status dots: Backlog `muted`, In Progress `accent`, Test `star`/orange `#ff9f0a`, Done `progress`.
 
-### Kontrast
+### Contrast
 
-Hesaplanan çiftler (WCAG 2.x, hepsi ≥ 4.5:1 hedefli):
+Calculated pairs (WCAG 2.x, all targeting ≥ 4.5:1):
 
 - `muted #636366` / `bg #f5f5f7` ≈ 5.4 · / `card #fff` ≈ 5.9
-- Beyaz / `primary #0071e3` ≈ 4.6 (light ve dark'ta aynı buton zemini bu yüzden)
-- `accent-text #0058b0` / `accent-soft` (beyaz üstünde) ≈ 6.0
-- `wait #8a4b00` / `wait-bg` (beyaz üstünde) ≈ 5.6
+- White / `primary #0071e3` ≈ 4.6 (this is why the button background is the same in light and dark mode)
+- `accent-text #0058b0` / `accent-soft` (over white) ≈ 6.0
+- `wait #8a4b00` / `wait-bg` (over white) ≈ 5.6
 - `p1 #d70015` / `p1-bg` ≈ 5.2
 - `success #1c6e30` / `success-bg` ≈ 5.9
 - Dark: `muted #a1a1a6` / `card #1c1c1e` ≈ 6.7 · `accent-text #4da3ff` / `#1c1c1e` ≈ 6.3
-- Placeholder: light `#636366` / `field` (beyaz üstünde ≈ `#f2f2f2`) ≈ 5.4 · dark `#aeaeb2` / `field` (sheet `#2c2c2e` üstünde ≈ `#3a3a3c`) ≈ 5.1. Eski `#636366` dark sheet alanında 1.8'di (Codex incelemesi).
+- Placeholder: light `#636366` / `field` (over white ≈ `#f2f2f2`) ≈ 5.4 · dark `#aeaeb2` / `field` (over sheet `#2c2c2e` ≈ `#3a3a3c`) ≈ 5.1. The old `#636366` on a dark sheet field was 1.8 (Codex review).
 
-> Öncelik: **Yüksek / Orta / Düşük** (API: `high/medium/low`). Yalnız Yüksek `p1`/`p1-bg` renkli rozet kullanır. Orta ve Düşük sade 12px `muted` metindir; kartta varsayılan Orta gösterilmez, Düşük gösterilir. Yeni renk çifti eklersen kontrastını hesapla ve buraya yaz.
+> Priority: **Yüksek / Orta / Düşük [High / Medium / Low]** (API: `high/medium/low`). Only High uses a colored `p1`/`p1-bg` badge. Medium and Low are plain 12px `muted` text; cards hide the default Medium and show Low. When adding a color pair, calculate its contrast and record it here.
 
-### CSS değişkenleri
+### CSS variables
 
 ```css
 :root {
@@ -124,19 +124,19 @@ Hesaplanan çiftler (WCAG 2.x, hepsi ≥ 4.5:1 hedefli):
   color-scheme: light;
 }
 
-/* Koyu tema: kullanıcı "Koyu" seçtiyse */
+/* Dark theme: when the user selects "Koyu" [Dark] */
 :root[data-theme="dark"] {
-  /* aşağıdaki blokla aynı değerler */
+  /* same values as the block below */
 }
 
-/* "Otomatik": data-theme yoksa veya "auto" ise sistemi takip eder */
+/* "Otomatik" [Automatic]: follow the system if data-theme is absent or "auto" */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    /* aşağıdaki değerler */
+    /* values below */
   }
 }
 
-/* Dark değerleri (iki seçiciye de uygulanır) */
+/* Dark values (applied to both selectors) */
 :root[data-theme="dark"] {
   --bg: #000000;
   --sidebar: #161617;
@@ -184,9 +184,9 @@ Hesaplanan çiftler (WCAG 2.x, hepsi ≥ 4.5:1 hedefli):
 }
 ```
 
-Uygulamada dark değerlerini tek bir kaynakta tut (ör. `tokens.css` içinde bir mixin veya build adımı) ve hem `[data-theme="dark"]` hem `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }` seçicisine uygula. Tema `localStorage`'dan `<head>` içindeki küçük bir inline script ile ilk boyamadan önce okunur (yanıp sönme yok).
+Keep dark values in one source in the application (e.g. a mixin or build step in `tokens.css`) and apply them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`. Read the theme from `localStorage` with a small inline script in `<head>` before the first paint (no flash).
 
-### Tailwind v4 eşlemesi
+### Tailwind v4 mapping
 
 ```css
 @import "tailwindcss";
@@ -209,194 +209,194 @@ Uygulamada dark değerlerini tek bir kaynakta tut (ör. `tokens.css` içinde bir
 }
 ```
 
-shadcn token'ları bunlara bağlanır: `--background → --bg`, `--foreground → --text`, `--card → --card`, `--popover → --sheet`, `--primary → --primary` (`--primary-foreground: #fff`), `--muted-foreground → --muted`, `--border`/`--input → --line`, `--ring → --focus`, `--destructive → --danger`, `--radius: 10px`.
+shadcn tokens map to these: `--background → --bg`, `--foreground → --text`, `--card → --card`, `--popover → --sheet`, `--primary → --primary` (`--primary-foreground: #fff`), `--muted-foreground → --muted`, `--border`/`--input → --line`, `--ring → --focus`, `--destructive → --danger`, `--radius: 10px`.
 
-## 3. Tipografi
+## 3. Typography
 
-Font: `-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif` (macOS'ta SF, diğerlerinde Inter; Inter `400/500/600/700` yüklenir). Kod ve yol: `ui-monospace, "SF Mono", Menlo, monospace`, 12px. `-webkit-font-smoothing: antialiased`.
+Font: `-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif` (SF on macOS, Inter elsewhere; load Inter `400/500/600/700`). Code and paths: `ui-monospace, "SF Mono", Menlo, monospace`, 12px. `-webkit-font-smoothing: antialiased`.
 
-| Rol                          | Boyut / ağırlık                      | Satır    | Letter-spacing | Nerede                                        |
-| ---------------------------- | ------------------------------------ | -------- | -------------- | --------------------------------------------- |
-| Toolbar başlığı              | 26 / 700                             | 1.25     | −0.025em       | Board, Projeler toolbar'ı                     |
-| Sheet başlığı                | 24 / 700                             | 1.25     | −0.02em        | Dialog başlığı                                |
-| Marka                        | 19 / 600                             | 1        | −0.02em        | Sidebar'daki "Pano"                           |
-| Mobil başlık                 | 34 / 700                             | 1.1      | −0.03em        | Sadece mobil (iOS Large Title)                |
-| Kart başlığı / bölüm başlığı | 15 / 600                             | 1.35     | −0.01em        | Kart `h3`, kolon `h2`, sheet bölüm `h3`       |
-| Gövde                        | 15 / 400                             | 1.45–1.6 | 0              | Sheet içeriği, senaryo adımı, zaman çizelgesi |
-| Liste / sidebar              | 14 / 500                             | -        | 0              | Sidebar öğeleri, ikincil butonlar             |
-| Küçük metin / buton          | 13 / 500–600                         | 1.45     | 0              | Toolbar butonu, segment, özet satırı, meta    |
-| Caption                      | 12 / 600 (anahtar) veya 400 (yardım) | -        | 0              | PBI anahtarı, öncelik rozeti, yardım metni    |
+| Role | Size / weight | Line height | Letter-spacing | Where |
+| --- | --- | --- | --- | --- |
+| Toolbar title | 26 / 700 | 1.25 | −0.025em | Board, Projects toolbar |
+| Sheet title | 24 / 700 | 1.25 | −0.02em | Dialog title |
+| Brand | 19 / 600 | 1 | −0.02em | "Pano" in the sidebar |
+| Mobile title | 34 / 700 | 1.1 | −0.03em | Mobile only (iOS Large Title) |
+| Card title / section heading | 15 / 600 | 1.35 | −0.01em | Card `h3`, column `h2`, sheet section `h3` |
+| Body | 15 / 400 | 1.45–1.6 | 0 | Sheet content, scenario step, timeline |
+| List / sidebar | 14 / 500 | - | 0 | Sidebar items, secondary buttons |
+| Small text / button | 13 / 500–600 | 1.45 | 0 | Toolbar button, segment, summary line, metadata |
+| Caption | 12 / 600 (key) or 400 (help) | - | 0 | PBI key, priority badge, help text |
 
-Sayılar (PBI anahtarı, kolon sayısı, kriter ilerlemesi `1/3`, saat) `font-variant-numeric: tabular-nums`. 12px altı metin yok (avatar harfi 9–10px, `aria-hidden`; mobil segment etiketi 11px istisna).
+Numbers (PBI key, column count, criterion progress `1/3`, time) use `font-variant-numeric: tabular-nums`. No text below 12px (exceptions: avatar letter 9–10px, `aria-hidden`; mobile segment label 11px).
 
-## 4. Boşluk, radius, boyut
+## 4. Spacing, radius, size
 
-- **Ritim:** 4/8. Kullanılan aralıklar: 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32.
-- **Sidebar:** `flex: 1 1 260px; max-width: 280px`, padding `28px 18px`, bölüm arası 26px, öğe yüksekliği 40px ("Seni bekliyor" 44px).
-- **Toolbar:** 52px, padding `0 16px 0 28px`, `position: sticky; top: 0`, alt kenarda `1px solid var(--line)`.
-- **İçerik:** padding `18px 28px 56px`, bloklar arası 22px.
-- **Board kolonu:** 4 kolon `repeat(4, minmax(0,1fr))`, gap 20px, `min-width: 960px` (dar ekranda yatay kaydırma kutusu). Kolon içi kart arası 12px. Kolon arka planı yok.
-- **Kart:** padding `16px 18px`, iç gap 10px, radius 16px, kenarlık `1px solid var(--line)` (In Progress kartı `--active-border`).
-- **Sheet:** `max-width: 760px`, radius 24px, üstten 64px boşluk, başlık bölümü padding `28px 32px 20px`, içerik bölümleri `14–16px 32px`, footer padding `18px 32px`.
+- **Rhythm:** 4/8. Spacing values used: 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32.
+- **Sidebar:** `flex: 1 1 260px; max-width: 280px`, padding `28px 18px`, 26px between sections, item height 40px ("Seni bekliyor" [Waiting for you] 44px).
+- **Toolbar:** 52px, padding `0 16px 0 28px`, `position: sticky; top: 0`, bottom border `1px solid var(--line)`.
+- **Content:** padding `18px 28px 56px`, 22px between blocks.
+- **Board column:** 4 columns `repeat(4, minmax(0,1fr))`, gap 20px, `min-width: 960px` (horizontal scrolling container on narrow screens). 12px between cards within a column. No column background.
+- **Card:** padding `16px 18px`, internal gap 10px, radius 16px, border `1px solid var(--line)` (`--active-border` for In Progress cards).
+- **Sheet:** `max-width: 760px`, radius 24px, top offset 64px, header padding `28px 32px 20px`, content sections `14–16px 32px`, footer padding `18px 32px`.
 
-| Kontrol                 | Masaüstü                                              | Mobil                |
-| ----------------------- | ----------------------------------------------------- | -------------------- |
-| Toolbar ikon butonu     | 36×32, radius 8                                       | 44×44, radius 22     |
-| Toolbar birincil butonu | 32, padding `0 12px 0 10px`, radius 8                 | 44 daire (ikon)      |
-| Sheet footer butonu     | 36, padding `0 14–18px`, radius 10                    | ≥44                  |
-| Durum popup / segment   | 30–32, radius 8 (segment zemini radius 10, padding 3) | 52px segment (radius 12) |
-| Geçti/Kaldı             | 32, radius 8                                          | ≥44                  |
-| Rozet (öncelik)         | 20–22, radius 10–11                                   | aynı                 |
-| Assignee chip           | 24 (kartta), 28 (sheet), radius tam                   | 26                   |
-| Switch                  | 38×22, topuz 18                                       | aynı, satır ≥44      |
+| Control | Desktop | Mobile |
+| --- | --- | --- |
+| Toolbar icon button | 36×32, radius 8 | 44×44, radius 22 |
+| Toolbar primary button | 32, padding `0 12px 0 10px`, radius 8 | 44 circle (icon) |
+| Sheet footer button | 36, padding `0 14–18px`, radius 10 | ≥44 |
+| Status popup / segment | 30–32, radius 8 (segment background radius 10, padding 3) | 52px segment (radius 12) |
+| Passed/Failed | 32, radius 8 | ≥44 |
+| Badge (priority) | 20–22, radius 10–11 | same |
+| Assignee chip | 24 (card), 28 (sheet), full radius | 26 |
+| Switch | 38×22, thumb 18 | same, row ≥44 |
 
-Radius ölçeği: 6 (focus halkası), 8 (küçük kontrol), 10 (buton, segment), 12 (alan, liste kutusu), 14 (senaryo satırı), 16 (kart), 20 (proje kartı), 24 (sheet), tam (pill, chip, avatar).
+Radius scale: 6 (focus ring), 8 (small control), 10 (button, segment), 12 (field, list box), 14 (scenario row), 16 (card), 20 (project card), 24 (sheet), full (pill, chip, avatar).
 
 ## 5. Layout
 
 ```
 ┌ sidebar 260–280 ┬ toolbar 52 (sticky, translucent) ───────────────┐
-│ Pano            │ Proje adı ★                 ⫶ filtre  🔍  [+ Yeni PBI] │
-│ Seni bekliyor 1 ├────────────────────────────────────────────────┤
-│ Projeler        │ özet satırı (ilerleme · kalan · başlangıç · yüksek) │
-│ Agent'lar       │ Backlog │ In Progress │ Test │ Done            │
-│ …               │  kartlar …                                      │
-│ Arşiv · Ayarlar │                                                 │
+│ Pano            │ Project name ★              ⫶ filter  🔍  [+ New PBI] │
+│ Waiting for you 1 ├──────────────────────────────────────────────┤
+│ Projects        │ summary (progress · remaining · start · high) │
+│ Agents          │ Backlog │ In Progress │ Test │ Done            │
+│ …               │  cards …                                       │
+│ Archive · Settings │                                              │
 └─────────────────┴────────────────────────────────────────────────┘
 ```
 
-- Kök: `display: flex; flex-wrap: wrap`. Sidebar `flex: 1 1 260px`, içerik `flex: 999 1 560px; min-width: 0` (dar ekranda sidebar üste geçer).
-- **Masaüstünde kabuk ekrana sığar (100dvh):** board'da sayfa kaymaz, üst bar ve özet sabittir, yalnız kolonlar kendi içinde kayar. Diğer sayfalar içerik alanında kayar. 700px altında normal sayfa kaydırması.
-- **Sayfa hiçbir genişlikte yatay kaymaz.** Sadece board grid'i kendi `overflow-x: auto` kutusunda kayar.
-- **Mobil (< 640px):** toolbar yerine iOS tarzı üst bölüm (geri linki "Projeler", ikon butonlar, 34px başlık, özet satırı, turuncu "Seni bekliyor" satırı). Kolon görünümü tam genişlikte dört eşit segmenttir (`role="tablist"`, `grid-template-columns: repeat(4, minmax(0, 1fr))`): 390px ekranda 358×52px; üstte 17/600 sayı, altta 11px Backlog / In Progress / Test / Done etiketi (`white-space: nowrap`). Seçili segment light temada beyaz `card` zemindir; altında seçili kolonun kartları tek sütun. Kenar boşluğu 16px.
-- Proje ayarları ve PBI detayı board'un üstünde sheet; uygulama ayarları bulunulan sayfanın üstünde açılan macOS Settings penceresi; `/settings` adresi de bunu açar (720 geniş, üstte ikonlu sekmeler).
+- Root: `display: flex; flex-wrap: wrap`. Sidebar `flex: 1 1 260px`, content `flex: 999 1 560px; min-width: 0` (sidebar moves above content on narrow screens).
+- **On desktop, the shell fits the viewport (100dvh):** the board page does not scroll; the top bar and summary stay fixed, and only columns scroll internally. Other pages scroll within the content area. Normal page scrolling below 700px.
+- **The page never scrolls horizontally at any width.** Only the board grid scrolls inside its own `overflow-x: auto` container.
+- **Mobile (< 640px):** an iOS-style top section replaces the toolbar ("Projeler" [Projects] back link, icon buttons, 34px title, summary line, orange "Seni bekliyor" [Waiting for you] row). The column view has four equal full-width segments (`role="tablist"`, `grid-template-columns: repeat(4, minmax(0, 1fr))`): 358×52px on a 390px screen; 17/600 count above, 11px Backlog / In Progress / Test / Done label below (`white-space: nowrap`). In light mode the selected segment has a white `card` background; below it, the selected column's cards appear in one column. Side margins 16px.
+- Project settings and PBI details are sheets above the board; application settings open as a macOS Settings window over the current page; `/settings` also opens this window (720 wide, icon tabs at the top).
 
-## 6. Component kuralları
+## 6. Component rules
 
-**Logo:** Pano logosu üç kolonlu bir board ikonudur.
+**Logo:** The Pano logo is a three-column board icon.
 
-Her bileşende: gerçek HTML elemanı, `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px }`, `outline: none` hiçbir yerde yok.
+Every component: real HTML element, `:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px }`; no `outline: none` anywhere.
 
-**Sidebar öğesi**: `<a>`; ikon (18px lucide veya 22px renkli proje karesi, radius 6) + ad + sağda sayı (12px, tabular). Aktif: `accent-soft` zemin, `accent-text` metin, `aria-current="page"`. "Seni bekliyor": `wait-bg` zemin, `wait` metin, sayı rozeti `wait` zemin / `on-wait` metin; proje listesinin üstünde. Tek "Projeler" listesi vardır: yıldızlılar üstte; satırda sağa yaslı yıldız butonu (yıldızlıda dolu ve hep görünür, yıldızsızda hover/focus'ta boş), tıklama projeye gitmez. Bölüm başlığı 12/600 `muted`. _shadcn:_ `Sidebar` (menu button) veya düz liste.
+**Sidebar item**: `<a>`; icon (18px lucide or 22px colored project square, radius 6) + name + count on the right (12px, tabular). Active: `accent-soft` background, `accent-text` text, `aria-current="page"`. "Seni bekliyor" [Waiting for you]: `wait-bg` background, `wait` text, count badge with `wait` background / `on-wait` text; above the project list. One "Projeler" [Projects] list: starred first; a star button aligned right in each row (filled and always visible when starred, outlined on hover/focus when unstarred); clicking it does not navigate to the project. Section heading 12/600 `muted`. _shadcn:_ `Sidebar` (menu button) or plain list.
 
-**Toolbar ve ikon buton**: `role="toolbar"` + `aria-label`. Solda `h1` (26/700) + yıldız toggle (`aria-pressed`), boşluk, sağda ikon butonlar (filtre, arama, proje ayarları) ve birincil buton. İkon butonlarda `aria-label` zorunlu. Filtre menüsü: atanan, öncelik, "İptal edilenleri göster" (checkbox item), aktifken "Filtreyi temizle"; seçim menüyü kapatmaz, aktif filtre ikonda sayı rozetiyle görünür. Arama ikonu tıklanınca alana açılır; boşken odak kaybında ve Esc ile kapanır. _shadcn:_ `Button variant="ghost" size="icon"`, `DropdownMenu`.
+**Toolbar and icon button**: `role="toolbar"` + `aria-label`. Left: `h1` (26/700) + star toggle (`aria-pressed`), spacing, then icon buttons on the right (filter, search, project settings) and a primary button. Icon buttons require `aria-label`. Filter menu: assignee, priority, "İptal edilenleri göster" [Show cancelled] (checkbox item), "Filtreyi temizle" [Clear filter] when active; selecting does not close the menu, and active filters show a count badge on the icon. Clicking the search icon expands it into a field; when empty, it closes on blur and Esc. _shadcn:_ `Button variant="ghost" size="icon"`, `DropdownMenu`.
 
-**Butonlar ve sheet footer sırası**: Birincil: `primary` zemin, beyaz, 600. İkincil: şeffaf, `1px line` kenarlık, `text`. Yıkıcı: şeffaf, `line` kenarlık, `danger` metin, sonu "…" (onay ister). Footer sırası macOS: **solda yıkıcı/ikincil işlem, sağda "Vazgeç" + varsayılan (birincil)**. Örnekler: `Geri gönder | Vazgeç  Onayla`, `Projeyi arşivle | Vazgeç  Kaydet`. Progress detayında footer yoktur; kapatma header X veya Esc ile, "PBI'yı iptal et…" header’daki "Diğer işlemler" (…) menüsündedir. Test ve ayarlar footer’ları kalır. Return varsayılanı, Esc vazgeçi tetikler. Bir ekranda tek birincil. _shadcn:_ `Button` (default/outline/ghost, destructive yerine outline + danger metin).
+**Buttons and sheet footer order**: Primary: `primary` background, white text, 600. Secondary: transparent, `1px line` border, `text`. Destructive: transparent, `line` border, `danger` text, ending in "…" (requires confirmation). macOS footer order: **destructive/secondary action on the left, "Vazgeç" [Cancel] + default (primary) on the right**. Examples: `Geri gönder | Vazgeç  Onayla` [Send back | Cancel  Approve], `Projeyi arşivle | Vazgeç  Kaydet` [Archive project | Cancel  Save]. Progress details have no footer; close with header X or Esc; "PBI'yı iptal et…" [Cancel PBI…] is in the header's "Diğer işlemler" [Other actions] (…) menu. Test and settings footers remain. Return triggers the default action; Esc cancels. One primary action per screen. _shadcn:_ `Button` (default/outline/ghost; outline + danger text instead of destructive).
 
-**PBI kartı**: `<article>`; başlık `<h3><a href>` (kart detayı açar; tüm kart değil başlık link'tir, focus halkası başlıkta).
+**PBI card**: `<article>`; title `<h3><a href>` (opens card details; the title, not the whole card, is the link, with the focus ring on the title).
 
-- Üst satır: numara (12/600 `muted`, tabular; proje içinde `#4`) · Yüksek rozeti (`p1-bg`/`p1`); Orta gizli, Düşük sade 12px `muted` metin · sağda görülmedi noktası.
-- **Görülmedi noktası:** 8×8 `accent` daire, metin yok; 24×24 odaklanabilir `<button aria-label="Görülmedi, açınca kalkar">` içinde. Odak veya hover'da ipucu baloncuğu (`role="tooltip"`, `tooltip-bg`/`tooltip-fg`, 12/500, radius 8): "Görülmedi, açınca kalkar". Kural: kullanıcı kartı açınca kalkar; kart Done'dan çıkıp yeniden Done olursa tekrar görünür. _shadcn:_ `Tooltip`.
-- Atanan chip'i yalnız aracı gösterir (`Claude`), tam kimlik `title`'dadır; PBI detayında yanında muted rol metni, geçmişte tam kimlik. Agent avatarı addan türetilen sabit renktir (`#4f46b8`, `#7a3bb0`, `#a62f78`, `#0f766e`, `#1c6e30`, `#8a5a00`, `#4b5563`; hepsi beyaz metinle AA, test hesaplar), insan `primary`. Bilinen araçlar (Claude, Codex, Cursor, Gemini, Copilot, OpenCode) marka zemininde beyaz tek renk logo gösterir (2026-11-07, Mert kararı; kontrast: `#bc5a36` 4.51, `#836ca5` 4.51, `#767679` 4.53, siyah zemin koyu temada `#767679`); bilinmeyen araç baş harf ve renkle kalır.
-- Bildirilen token varsa kart alt satırında kısa gösterilir; yoksa hiç görünmez.
-- Alt satır: assignee chip (`accent-soft` zemin, `accent-text` metin, 16px avatar + baş harf, `aria-hidden` avatar) · kriter ilerlemesi (4px çubuk `track`/`progress`, `aria-hidden`; yanında metin `1/3`).
-- Test'te kullanıcıyı bekleyen kart: `wait-line` kenarlık + "Seni bekliyor" rozeti (`wait-bg`/`wait`, metinli). In Progress'teki kart: `active-border`.
-- Durumlar: hover'da `translateY(-1px)` + biraz daha belirgin gölge; basılıyken `scale(0.985)`; sürüklenirken gölge `shadow-sheet`'in hafifi.
-- Klavye: başlık link'iyle açılır; taşıma için dnd-kit klavye sensörü (Space tut, oklar, Space bırak) + kart menüsünde "Taşı…" alternatifi.
+- Top row: number (12/600 `muted`, tabular; `#4` within a project) · High badge (`p1-bg`/`p1`); Medium hidden, Low plain 12px `muted` text · unseen dot on the right.
+- **Unseen dot:** 8×8 `accent` circle, no text; inside a 24×24 focusable `<button aria-label="Görülmedi, açınca kalkar">` [Unseen, cleared when opened]. On focus or hover, a tooltip (`role="tooltip"`, `tooltip-bg`/`tooltip-fg`, 12/500, radius 8): "Görülmedi, açınca kalkar" [Unseen, cleared when opened]. Rule: cleared when the user opens the card; reappears if the card leaves Done and returns to Done. _shadcn:_ `Tooltip`.
+- The assignee chip shows only the tool (`Claude`); full identity is in `title`; PBI details show muted role text alongside it, history shows full identity. Agent avatars use a stable color derived from the name (`#4f46b8`, `#7a3bb0`, `#a62f78`, `#0f766e`, `#1c6e30`, `#8a5a00`, `#4b5563`; all AA with white text, calculated by tests); humans use `primary`. Known tools (Claude, Codex, Cursor, Gemini, Copilot, OpenCode) show a white monochrome logo on a brand background (2026-11-07, the owner's decision; contrast: `#bc5a36` 4.51, `#836ca5` 4.51, `#767679` 4.53; black backgrounds become `#767679` in dark mode); unknown tools retain an initial and color.
+- If tokens have been reported, show a compact value in the card's bottom row; otherwise show nothing.
+- Bottom row: assignee chip (`accent-soft` background, `accent-text` text, 16px avatar + initial, `aria-hidden` avatar) · criterion progress (4px bar `track`/`progress`, `aria-hidden`; `1/3` text beside it).
+- A Test card waiting for the user: `wait-line` border + "Seni bekliyor" [Waiting for you] badge (`wait-bg`/`wait`, with text). In Progress card: `active-border`.
+- States: hover `translateY(-1px)` + slightly stronger shadow; pressed `scale(0.985)`; dragging uses a lighter version of `shadow-sheet`.
+- Keyboard: open with the title link; move using the dnd-kit keyboard sensor (Space to pick up, arrows, Space to drop) + "Taşı…" [Move…] alternative in the card menu.
 
-**Kolon başlığı**: 8px durum noktası (`aria-hidden`) + `h2` (15/600) + sayı rozeti (22px, `field` zemin, `muted`, 12/600, tabular). Altında "Ekle" ghost butonu (40px). Çok kart varsa "N PBI daha" ikincil buton.
+**Column heading**: 8px status dot (`aria-hidden`) + `h2` (15/600) + count badge (22px, `field` background, `muted`, 12/600, tabular). "Ekle" [Add] ghost button below (40px). If many cards, "N PBI daha" [N more PBIs] secondary button.
 
-**Özet satırı:** toolbar altında tek `<button aria-haspopup="dialog">`: 160×4 ilerleme çubuğu + metin `**1 / 14 tamamlandı** · 13 kaldı · 5 Kas'ta başladı · 6 yüksek öncelikli · Son güncelleme 2 dk önce` (13px `muted`, ilk parça 600 `text`, süreler tabular) + küçük chevron. Tıklayınca yaklaşık 360px, ekranın kullanılabilir yüksekliğinde kaydırılabilen popover: iptal sayısı, son 7 gün, önceliğe göre kalan ve açılıştan bugüne günlük ilerleme. 180 günden uzun projelerde ilk ve son gün dahil en fazla 180 eşit aralıklı örnek gösterilir. Grafik başlıksız, legendsız ve eksensiz iki basamaklı alandır: arkada `track` toplam iş, önde `progress` biten iş, aradaki alan kalan iştir. 320×160 SVG içinde çizim x=8..216, y=48..144; sağdaki 12px tabular doğrudan etiketler `28 iş` (`muted`) ve `25 bitti` (`success`, 600), en az 20 birim aralıklı. Etiketler dolgu dışında AA kontrastla okunur. Altta seçili dilin `Intl` biçiminde açılış tarihi ve sağda “Bugün” bulunur; günlük veri UTC günlerini temsil eder. Fare ve dokunma en yakın örnekte dikey `text` çizgisi ve üstte sabit, ortalı `tooltip-bg`/`tooltip-fg` baloncuğu gösterir: `6 Kas · 25 / 28 bitti`. Odaklanabilir grafikte sol/sağ ok örnekler arasında ilerler, seçim `aria-live` ile okunur; SVG `role="img"` ve özet etiketi taşır. Baloncuk yalnız opacity ile 120ms geçiş yapar, reduced-motion'da geçiş kapalıdır. İki günden az veride grafik yerine “Bugün açıldı, 5 iş tamamlandı”, sıfır tamamlananda “Bugün açıldı, henüz tamamlanan iş yok” gösterilir; boş proje açıklaması korunur. Kutu/kart yok. _shadcn:_ `Popover`.
+**Summary line:** one `<button aria-haspopup="dialog">` below the toolbar: 160×4 progress bar + text `**1 / 14 tamamlandı** · 13 kaldı · 5 Kas'ta başladı · 6 yüksek öncelikli · Son güncelleme 2 dk önce` [1 / 14 completed · 13 remaining · started Nov 5 · 6 high priority · Last updated 2 minutes ago] (13px `muted`, first part 600 `text`, durations tabular) + small chevron. Clicking opens an approximately 360px popover, scrollable within the available screen height: cancelled count, last 7 days, remaining by priority, and daily progress from opening to today. For projects older than 180 days, show at most 180 evenly spaced samples including the first and last day. The chart is two stepped areas with no title, legend, or axes: total work in `track` behind, completed work in `progress` in front; the area between is remaining work. Within a 320×160 SVG, drawing coordinates are x=8..216, y=48..144; direct labels on the right are 12px tabular `28 iş` [28 items] (`muted`) and `25 bitti` [25 done] (`success`, 600), at least 20 units apart. Labels sit outside the fill with AA contrast. Below, show the opening date in the selected language's `Intl` format and “Bugün” [Today] on the right; daily data represents UTC days. Mouse and touch show a vertical `text` line at the nearest sample and a fixed centered `tooltip-bg`/`tooltip-fg` tooltip above: `6 Kas · 25 / 28 bitti` [Nov 6 · 25 / 28 done]. On the focusable chart, left/right arrows move between samples, and `aria-live` announces the selection; the SVG has `role="img"` and a summary label. Tooltip transitions use only opacity over 120ms; transitions are disabled with reduced-motion. With fewer than two days of data, replace the chart with “Bugün açıldı, 5 iş tamamlandı” [Opened today, 5 items completed], or “Bugün açıldı, henüz tamamlanan iş yok” [Opened today, no completed work yet] when none are completed; retain the empty project explanation. No box/card. _shadcn:_ `Popover`.
 
-**Agent satırı (sidebar)**: araç başına tek satır, avatar + ad + `#N · süre`; sessizde avatar soluk. İnsan bu listede yoktur.
+**Agent row (sidebar)**: one row per tool, avatar + name + `#N · duration`; fade the avatar when quiet. Humans are not in this list.
 
-**Veri yaşı**: "Son güncelleme N dk önce" özet satırında; SSE ile her olayda sıfırlanır. Sidebar Agent'lar satırı: nokta + ad + sağda `#4 · 3 dk önce` (iş + son kayıttan geçen süre). 30 dk'dan uzun kayıt yoksa satır `muted` noktayla "35 dk'dır sessiz" der; uyarı rengi kullanılmaz, "takıldı" denmez (kesin bilgi değil).
+**Data age**: "Son güncelleme N dk önce" [Last updated N minutes ago] in the summary line; resets on every SSE event. Sidebar Agents row: dot + name + `#4 · 3 dk önce` [#4 · 3 minutes ago] on the right (work + time since last record). After more than 30 minutes without a record, use a `muted` dot and "35 dk'dır sessiz" [Quiet for 35 minutes]; no warning color, do not say "takıldı" [stuck] (not known for certain).
 
-**Bağlantı şeridi**: sunucuya ulaşılamazsa toolbar'ın hemen altında tam genişlik, 40px, `notice-bg` zemin, alt `line` kenarlık, `role="status"`: wifi-off ikonu (`muted`) + "Sunucuya bağlanılamıyor: gösterilen veri 5 dk önceki." + sağda "Tekrar dene" ikincil buton (28px). Kırmızı/turuncu değil; içerik görünür kalır. Bağlantı gelince kendiliğinden kalkar.
+**Connection banner**: if the server is unreachable, directly below the toolbar, full width, 40px, `notice-bg` background, bottom `line` border, `role="status"`: wifi-off icon (`muted`) + "Sunucuya bağlanılamıyor: gösterilen veri 5 dk önceki." [Cannot connect to the server: the displayed data is 5 minutes old.] + "Tekrar dene" [Retry] secondary button on the right (28px). No red/orange; content stays visible. Disappears automatically when the connection returns.
 
-**Sheet (PBI detayı)**: _shadcn `Dialog`_ (shadcn `Sheet` kenardan kayar, burada **kullanılmaz**). `role="dialog" aria-modal="true" aria-labelledby`. Scrim `--scrim`; toolbar ve sidebar dahil tüm sayfayı örter (overlay `z-index: 10`, toolbar `2`). Başlık bölümü: anahtar + öncelik + sağda `Detay | Geçmiş · N` (`role="tablist"`, segment görünümü) + kapat X (36px, `aria-label="Kapat"`), `h2` başlık (24/700), altında durum popup'ı. Başlık tıklanınca yerinde düzenlenir.
+**Sheet (PBI details)**: _shadcn `Dialog`_ (shadcn `Sheet` slides in from an edge and **must not be used** here). `role="dialog" aria-modal="true" aria-labelledby`. Scrim `--scrim`; covers the entire page including toolbar and sidebar (overlay `z-index: 10`, toolbar `2`). Header: key + priority + `Detay | Geçmiş · N` [Details | History · N] on the right (`role="tablist"`, segmented appearance) + close X (36px, `aria-label="Kapat"` [Close]), `h2` title (24/700), status popup below. Clicking the title edits it inline.
 
-- **Özellik satırı (2026-11-06):** başlığın altında Durum, Öncelik, Atanan popup menüleri ile Kabul kriterleri sayısı ve Güncellendi tek satırdadır. Uzun açıklama kısaltılır, "Tümünü göster" ile açılır. Test'teki kart durum menüsünden In Progress'e alınırsa geri gönderme notu açılır.
-- **Durum popup'ı:** `<button aria-haspopup="menu">In Progress ▾</button>` (32px, `line` kenarlık, 14/600); menüde Backlog, In Progress, Test (proje ayarında kapalıysa yok), Done. İptal durum popup’ında yer almaz; header’daki "Diğer işlemler" (…) menüsündedir. _shadcn:_ `DropdownMenu` + `DropdownMenuRadioGroup`.
-- Progress meta satırı: üç eşit sütunlu grid, `align-items: start`; 12px `muted` etiketler 16px satır yüksekliğiyle aynı hizada; 15px değerler ve atanan chip’i 24px satır yüksekliğiyle aynı hizada. Kabul kriterleri: `padding: 6px 0`, `min-height: 36px`, `box-sizing: border-box`, satır ayıracı yok.
-- Modlar: **Detay** (meta: atanan, kriterler, güncellenme; Amaç; Kabul kriterleri checkbox listesi; son kayıtlar + "Tüm geçmişi göster"), **Test** (aşağıda), **Geçmiş** (aşağıda), **Proje ayarları** (aşağıda).
+- **Property row (2026-11-06):** below the title, Status, Priority, and Assignee popup menus, Acceptance criteria count, and Updated appear on one row. Long descriptions are truncated and expanded with "Tümünü göster" [Show all]. Moving a Test card to In Progress from the status menu opens the send-back note.
+- **Status popup:** `<button aria-haspopup="menu">In Progress ▾</button>` (32px, `line` border, 14/600); menu contains Backlog, In Progress, Test (absent if disabled in project settings), Done. Cancellation is not in this popup; it is in the header's "Diğer işlemler" [Other actions] (…) menu. _shadcn:_ `DropdownMenu` + `DropdownMenuRadioGroup`.
+- Progress metadata row: three equal grid columns, `align-items: start`; 12px `muted` labels aligned with 16px line height; 15px values and assignee chip aligned with 24px line height. Acceptance criteria: `padding: 6px 0`, `min-height: 36px`, `box-sizing: border-box`, no row divider.
+- Modes: **Details** (metadata: assignee, criteria, updated; Purpose; Acceptance criteria checkbox list; recent records + "Tüm geçmişi göster" [Show full history]), **Test** (below), **History** (below), **Project settings** (below).
 
-**Test modu ve senaryo satırı**: üstte `wait-bg` bilgi bandı: "Claude · PO bu işi test etmeni istiyor". Senaryo satırı: 14px radius kutu, `line` kenarlık, padding `14px 16px`; numara · adım (15px) + altında beklenen metin (13px `muted`, görünür etiket yok) · `role="group" aria-label="Senaryo N sonucu"` içinde iki `aria-pressed` buton **Geçti** (✓ ikon + metin, seçiliyken `success-bg`/`success`) ve **Kaldı** (✕ ikon + metin, `fail-bg`/`fail`) · `…` menüsü (Düzenle, Sil…). Düzenleme kartın içinde açılır, silme satır içi onay ister. Kaldı işaretlenince kartta "Ne oldu?" notu açılır. Altında "Senaryo ekle" accent ghost butonu. "AI'ın kendi testleri": check rozetleri (30px pill, `success-bg`/`success`, ✓ ikon + metin, ör. "Unit 18/18 geçti"). _shadcn:_ `ToggleGroup type="single"`.
+**Test mode and scenario row**: `wait-bg` information banner at the top: "Claude · PO bu işi test etmeni istiyor" [Claude · PO wants you to test this work]. Scenario row: box with 14px radius, `line` border, padding `14px 16px`; number · step (15px) + expected text below (13px `muted`, no visible label) · two `aria-pressed` buttons inside `role="group" aria-label="Senaryo N sonucu"` [Scenario N result]: **Geçti** [Passed] (✓ icon + text, `success-bg`/`success` when selected) and **Kaldı** [Failed] (✕ icon + text, `fail-bg`/`fail`) · `…` menu (Düzenle [Edit], Sil… [Delete…]). Editing opens inside the card; deletion requires inline confirmation. Marking Failed opens a "Ne oldu?" [What happened?] note on the card. Below: "Senaryo ekle" [Add scenario] accent ghost button. "AI'ın kendi testleri" [AI's own tests]: check badges (30px pill, `success-bg`/`success`, ✓ icon + text, e.g. "Unit 18/18 geçti" [Unit 18/18 passed]). _shadcn:_ `ToggleGroup type="single"`.
 
-**Onay kuralı (Test footer'ı)**: Herhangi bir senaryo **Kaldı** ise: "Onayla" `aria-disabled="true"` (şeffaf, `line` kenarlık, `muted` metin, `cursor: not-allowed`, `aria-describedby` ile nedene bağlı) ve **"Geri gönder" varsayılan/birincil** olur. Neden footer'ın solunda: ünlem ikonu + `fail` renkli 13/600 "1 senaryo kaldı: onaylamak için düzelt veya geri gönder". İşaretlenmemiş senaryo onayı engellemez; altında `muted` bilgi "1 senaryo işaretlenmedi". Kaldı yoksa: solda "Geri gönder" ikincil, sağda "Vazgeç" + "Onayla" birincil. Footer: `[neden/bilgi] … Vazgeç · Onayla · Geri gönder(birincil)`.
+**Approval rule (Test footer)**: If any scenario is **Kaldı** [Failed]: "Onayla" [Approve] has `aria-disabled="true"` (transparent, `line` border, `muted` text, `cursor: not-allowed`, linked to the reason with `aria-describedby`), and **"Geri gönder" [Send back] becomes default/primary**. Reason on the footer's left: exclamation icon + `fail` 13/600 "1 senaryo kaldı: onaylamak için düzelt veya geri gönder" [1 scenario failed: fix it to approve, or send back]. Unmarked scenarios do not block approval; below, `muted` information "1 senaryo işaretlenmedi" [1 scenario unmarked]. If none failed: secondary "Geri gönder" [Send back] on the left, "Vazgeç" [Cancel] + primary "Onayla" [Approve] on the right. Footer: `[reason/information] … Cancel · Approve · Send back(primary)`.
 
-**Geri gönderme formu + ekran görüntüsü**: "Geri gönder"e basılınca altta açılır; kalan senaryolar ve notları özetlenir, senaryo notu varsa genel not zorunlu değildir. Birden çok ekran görüntüsü eklenir, her biri küçük resimle görünür ve tek tek kaldırılır. `<label for>` "Geri gönderme notu (zorunlu)" + `textarea required aria-required` (12px radius, `field` zemin, 15px, placeholder "Ne düzeltilmeli?") + altında 13px `muted` yardım: "Claude · PO bir sonraki kontrolde görecek. Not ve ekler tek kayıt olarak geçmişe yazılır." Ekler: küçük resim (120×84, 12px radius, dosya adı · boyut) sağ üstte 24px "Kaldır" ikon butonu (`aria-label="hata.png ekini kaldır"`); bırakma kutusu dashed `line` kenarlık, "Ekran görüntüsünü yapıştır, sürükle veya" + görünür **"Dosya seç…"** butonu (gizli `<input type="file" accept="image/png,image/jpeg">`) + "PNG veya JPG, en fazla 10 MB". Not boşken gönderilmeye çalışılırsa alan altında `fail` renkli hata; yükleme hatası ekin altında yazılır, not kaybolmaz.
+**Send-back form + screenshot**: expands below on "Geri gönder" [Send back]; summarizes failed scenarios and their notes; a general note is not required if a scenario note exists. Multiple screenshots can be attached, each with a thumbnail and individual removal. `<label for>` "Geri gönderme notu (zorunlu)" [Send-back note (required)] + `textarea required aria-required` (12px radius, `field` background, 15px, placeholder "Ne düzeltilmeli?" [What needs fixing?]) + 13px `muted` help below: "Claude · PO bir sonraki kontrolde görecek. Not ve ekler tek kayıt olarak geçmişe yazılır." [Claude · PO will see it on the next check. The note and attachments are written to history as one record.] Attachments: thumbnail (120×84, 12px radius, filename · size), 24px "Kaldır" [Remove] icon button at the top right (`aria-label="hata.png ekini kaldır"` [Remove hata.png attachment]); drop area with dashed `line` border, "Ekran görüntüsünü yapıştır, sürükle veya" [Paste or drag a screenshot, or] + visible **"Dosya seç…"** [Choose file…] button (hidden `<input type="file" accept="image/png,image/jpeg">`) + "PNG veya JPG, en fazla 10 MB" [PNG or JPG, up to 10 MB]. Submitting with an empty note shows a `fail` error below the field; upload errors appear below the attachment, and the note is retained.
 
-**Aktivite zaman çizelgesi ve diff**: Kayıtlar güne göre gruplanır (12/600 `muted` gün başlığı, her gün bir `<ol>`); her `<li>`: solda 10px nokta + dikey çizgi (`aria-hidden`), sağda tek satır olay (14px, aktör 600) ve sağa yaslı saat (12px `muted`). Statü geçişi renkli istasyon rozetleriyle okunur: `● Backlog → ● In Progress`; nokta rengi hedef statünün rengidir (Backlog `muted`, In Progress `accent`, Test `star`, Done `progress`, İptal `danger`). Filtre pill'leri: **Önemli** (varsayılan) · Kararlar · Testler · Tümü (`aria-pressed`). Önemli'de yalnız görüntüleme, sıralama, kriter işaretleme ve senaryo sonucu kayıtları gizlenir; silinen ve düzenlenen senaryo veya kriter metniyle görünür (eski ve yeni hal). Testler: AI testleri, senaryo sonuçları, onay ve geri gönderme. "Neden" satırı yalnız gerçek gerekçe varsa çıkar. Hiçbir kayıt silinmez. Geri gönderme notu alıntı kutusunda görünür. Düzenleme kaydında "Neden: …" satırı ve "Değişikliği göster" (`aria-expanded`). Diff: mono olmayan 13px, satır başına `−` / `+` işareti **ve** renk (`diff-del-bg`/`diff-del`, `diff-add-bg`/`diff-add`), padding `4px 12px`, 10px radius kap. Check kaydı ✓/✕ ikonla.
+**Activity timeline and diff**: group records by day (12/600 `muted` day heading, one `<ol>` per day); each `<li>`: 10px dot + vertical line on the left (`aria-hidden`), single-line event on the right (14px, actor 600), right-aligned time (12px `muted`). Status transitions use colored station badges: `● Backlog → ● In Progress`; the dot uses the target status color (Backlog `muted`, In Progress `accent`, Test `star`, Done `progress`, Cancelled `danger`). Filter pills: **Önemli** [Important] (default) · Kararlar [Decisions] · Testler [Tests] · Tümü [All] (`aria-pressed`). Important hides only viewing, ordering, criterion checking, and scenario result records; deleted and edited scenarios or criteria remain visible with their text (previous and new values). Tests: AI tests, scenario results, approval, and send-back. The "Neden" [Reason] line appears only when a real reason exists. No records are deleted. Send-back notes appear in a quote box. Edit records have a "Neden: …" [Reason: …] line and "Değişikliği göster" [Show change] (`aria-expanded`). Diff: non-monospace 13px, `−` / `+` prefix on each line **and** color (`diff-del-bg`/`diff-del`, `diff-add-bg`/`diff-add`), padding `4px 12px`, container radius 10px. Check records use ✓/✕ icons.
 
-**Switch**: `<button role="switch" aria-checked>` 38×22, açıkken `primary` zemin (yeşil değil), kapalıyken `track`; topuz 18px beyaz, `0 1px 2px rgba(0,0,0,0.25)`. Etiket `aria-labelledby` ile bağlı; altta 12px `muted` açıklama. _shadcn:_ `Switch`.
+**Switch**: `<button role="switch" aria-checked>` 38×22, `primary` background when on (not green), `track` when off; 18px white thumb, `0 1px 2px rgba(0,0,0,0.25)`. Label linked with `aria-labelledby`; 12px `muted` description below. _shadcn:_ `Switch`.
 
-**Görünüm seçici**: `<fieldset>` + `<legend>Tema:</legend>`; üç `<label>`: 96×64 önizleme (radius 8; Açık `#f5f5f7`/`#fff`, Koyu `#000`/`#1c1c1e`, Otomatik yarı yarıya) + `<input type="radio" name="theme">` + metin. Seçili önizleme `2px primary` kenarlık. Varsayılan Otomatik. _shadcn:_ `RadioGroup`.
+**Appearance selector**: `<fieldset>` + `<legend>Tema:</legend>` [Theme:]; three `<label>` elements: 96×64 preview (radius 8; Açık [Light] `#f5f5f7`/`#fff`, Koyu [Dark] `#000`/`#1c1c1e`, Otomatik [Automatic] split half-and-half) + `<input type="radio" name="theme">` + text. Selected preview has a `2px primary` border. Default Automatic. _shadcn:_ `RadioGroup`.
 
-**Uygulama ayarları penceresi** (Genel sekmesinde "Adın" alanı `userName`'i değiştirir): 720 geniş, radius 12, `window` zemin; 30px pencere başlığı (seçili sekme adı, 13/600 `muted`); `role="tablist"` 4 ikonlu sekme (96×56, ikon 22px + 12px etiket; seçili `field`-koyusu zemin + `accent-text`): Genel, Görünüm, Agent bağlantısı, Hakkında. İçerik macOS form ızgarası: `grid-template-columns: 180px 1fr`, etiketler sağa yaslı 13px ve ":" ile biter. Yeni sürüm bandı `accent-soft` + `accent-text` ("v0.2.0 hazır · Sürüm notları · Güncelleme komutunu göster").
+**Application settings window** (the "Adın" [Your name] field in General changes `userName`): 720 wide, radius 12, `window` background; 30px window title (selected tab name, 13/600 `muted`); `role="tablist"` with 4 icon tabs (96×56, 22px icon + 12px label; selected has a darker `field` background + `accent-text`): Genel [General], Görünüm [Appearance], Agent bağlantısı [Agent connection], Hakkında [About]. Content uses a macOS form grid: `grid-template-columns: 180px 1fr`, labels right-aligned, 13px, ending in ":". New version banner `accent-soft` + `accent-text` ("v0.2.0 hazır · Sürüm notları · Güncelleme komutunu göster" [v0.2.0 is ready · Release notes · Show update command]).
 
-**Proje kartı tarih ve agent (2026-11-07)**: Tarih göreli ve tek satırdır, tam tarih `title`'dadır. Büyük kart alt satırı: `Güncellendi 3 saat önce` ve `● 2 aktif agent` (araç sayısı; 0 ise muted). Küçük kartta tek bilgi satırı; yıldız ve `…` yalnız hover/focus'ta görünür, dokunmatikte hep görünür.
+**Project card date and agent (2026-11-07)**: relative date on one line, full date in `title`. Large card bottom row: `Güncellendi 3 saat önce` [Updated 3 hours ago] and `● 2 aktif agent` [2 active agents] (tool count; muted if 0). Small cards have one information row; star and `…` appear only on hover/focus, always visible on touch devices.
 
-**Proje kartı (Projeler ekranı)**: radius 20, padding 24; 44px renkli kare + ad (18/600) + anahtar; açıklama (boşsa hiç gösterilmez, proje ayarlarından değiştirilir); bekleyen test varsa açıklamanın altında `<a>` rozet "1 test seni bekliyor" (28px pill, `wait-bg`/`wait`, ikon + metin, Seni bekliyor listesine gider); 4 durum sayısı (20/600 tabular + 12px etiket); alt satır son güncelleme + çalışan agent. Yıldız toggle ikonlu; yanında sağ üstte `aria-label="Diğer işlemler"` (…) ikon butonu bulunur; sidebar proje satırlarında da aynı buton vardır. Buton ve sağ tık aynı macOS menüsünü açar (`role="menu"`, öğeler `button role="menuitem"`): "Proje ayarları" (bulunulan sayfada açılır; yıldız kartın kendi butonundadır), "Projeyi arşivle…", ayırıcı, "Kalıcı olarak sil… (önce arşivle)". Son öğe aktif projede gri ve devre dışıdır; kalıcı silme yalnız arşivde, proje adı yazılarak onaylanır. Pano referans kartında menü açık gösterilir. Diğer projeler kompakt satır kartı (padding `20px 24px`); bekleyen test varsa sağda aynı rozetin küçük hali. Bekleyen test yoksa rozet hiç yok.
+**Project card (Projects screen)**: radius 20, padding 24; 44px colored square + name (18/600) + key; description (hidden if empty, changed in project settings); if tests are waiting, an `<a>` badge below the description, "1 test seni bekliyor" [1 test is waiting for you] (28px pill, `wait-bg`/`wait`, icon + text, links to the Waiting for you list); 4 status counts (20/600 tabular + 12px label); bottom row with last update + working agent. Icon star toggle; beside it, top right, an `aria-label="Diğer işlemler"` [Other actions] (…) icon button; sidebar project rows have the same button. The button and right-click open the same macOS menu (`role="menu"`, items `button role="menuitem"`): "Proje ayarları" [Project settings] (opens on the current page; starring has its own card button), "Projeyi arşivle…" [Archive project…], divider, "Kalıcı olarak sil… (önce arşivle)" [Delete permanently… (archive first)]. The last item is gray and disabled for active projects; permanent deletion is available only in the archive, confirmed by typing the project name. The Pano reference card shows the menu open. Other projects use compact row cards (padding `20px 24px`); if a test is waiting, show a smaller version of the same badge on the right. No badge if no tests are waiting.
 
-**Seni bekliyor listesi**: sidebar'daki "Seni bekliyor" tüm projeleri kapsayan sayfaya gider (`aria-current="page"` iken `wait-line` iç kenarlık). Toolbar başlığı "Seni bekliyor"; altında 13px `muted` "Test etmeni bekleyen işler. AI bir işi bitirip sana test için gönderdiğinde burada görünür. N iş · en eski önce". Satır kartı doğrudan açar. Proje grupları: 22px proje karesi + `h2` proje adı + sağda "N iş"; boş grup gösterilmez. Satır `<a>` (min 64px, radius 14, `wait-line` kenarlık, `card` zemin): anahtar + öncelik · başlık (15/600, uzun başlık `overflow-wrap: anywhere`) · "3 senaryo · Claude · PO" (13px `muted`) · chevron. Hiç iş yoksa boş durum: "Seni bekleyen iş yok".
+**Waiting for you list**: "Seni bekliyor" [Waiting for you] in the sidebar opens a page spanning all projects (`wait-line` inner border when `aria-current="page"`). Toolbar title "Seni bekliyor" [Waiting for you]; 13px `muted` below: "Test etmeni bekleyen işler. AI bir işi bitirip sana test için gönderdiğinde burada görünür. N iş · en eski önce" [Work waiting for you to test. When AI finishes work and sends it to you for testing, it appears here. N items · oldest first]. Clicking a row opens the card directly. Project groups: 22px project square + `h2` project name + "N iş" [N items] on the right; hide empty groups. Row `<a>` (min 64px, radius 14, `wait-line` border, `card` background): key + priority · title (15/600, long titles `overflow-wrap: anywhere`) · "3 senaryo · Claude · PO" [3 scenarios · Claude · PO] (13px `muted`) · chevron. Empty state when no work: "Seni bekleyen iş yok" [No work is waiting for you].
 
-**Boş, yükleme ve hata durumları**: hepsi aynı kalıp, ortalanmış, 360px min yükseklik kart içinde: 52px `field` zeminli kare içinde 26px `muted` ikon + başlık (17/600) + tek satır açıklama (14px `muted`, max 280px) + en fazla tek aksiyon.
+**Empty, loading, and error states**: all use the same centered pattern within a card of min height 360px: 26px `muted` icon in a 52px square with `field` background + title (17/600) + single-line description (14px `muted`, max 280px) + at most one action.
 
-- **Boş proje:** board ikonu, "Henüz PBI yok", "AI'a ilk işini ver; açtığı PBI'lar burada görünür.", ikincil "Agent bağlantısını göster" (uygulama ayarlarına).
-- **Yükleme:** başlık yerine 13/600 `muted` "Board yükleniyor…", `aria-busy="true"`; 3 iskelet kart (`skeleton` çubuklar, kart ölçüleriyle aynı). Animasyon sadece opacity nabzı (1.6s) ve sadece `prefers-reduced-motion: no-preference` iken.
-- **Hata:** wifi-off ikonu, "Sunucuya ulaşılamadı", "Pano çalışıyor mu? Terminalde `pano serve` ile başlat.", birincil "Tekrar dene". (Veri önceden yüklendiyse tam sayfa hata yerine bağlantı şeridi kullanılır.)
-- Dashed kutu sadece bırakma alanında.
+- **Empty project:** board icon, "Henüz PBI yok" [No PBIs yet], "AI'a ilk işini ver; açtığı PBI'lar burada görünür." [Give AI its first task; the PBIs it creates will appear here.], secondary "Agent bağlantısını göster" [Show agent connection] (opens application settings).
+- **Loading:** replace the title with 13/600 `muted` "Board yükleniyor…" [Loading board…], `aria-busy="true"`; 3 skeleton cards (`skeleton` bars, same dimensions as cards). Animate only an opacity pulse (1.6s) and only with `prefers-reduced-motion: no-preference`.
+- **Error:** wifi-off icon, "Sunucuya ulaşılamadı" [Could not reach the server], "Pano çalışıyor mu? Terminalde `pano serve` ile başlat." [Is Pano running? Start it with `pano serve` in the terminal.], primary "Tekrar dene" [Retry]. (If data was previously loaded, use the connection banner instead of a full-page error.)
+- Dashed boxes are only for drop areas.
 
-**Dialog konumu**: Tüm dialoglar üstten yaklaşık 10vh sabitlenir, yatay ortalanır; en fazla 80vh yüksekliğinde içeriği kaydırılır. İçerik büyüdüğünde üst kenar sabit kalır.
+**Dialog position**: All dialogs are anchored approximately 10vh from the top and horizontally centered; content scrolls within a maximum height of 80vh. The top edge stays fixed as content grows.
 
-**Dialog/Sheet kapatma**: Boş veya değişmemiş formlar ve salt okunur pencereler dışarı tıklama ve Esc ile kapanır. Her pencerede sağ üstte kapat X vardır. Değişmiş formda dışarı tıklama, Esc, X ve Vazgeç aynı pencerenin içinde “Kaydedilmemiş değişikliklerin var” sorusunu gösterir: varsayılan odak “Düzenlemeye devam et”, diğer seçenek “Kaydetmeden kapat”. İkinci modal açılmaz; Oluştur/Kaydet bu soruyu tetiklemez. Kalıcı silme penceresinde dışarı tıklama engellenir; Esc ve Vazgeç onay metni için soru sormadan kapatır. Ortak `ManagedDialog` bu davranışı sağlar; salt okunur kullanımda `dirty` verilmez.
+**Closing Dialog/Sheet**: Empty or unchanged forms and read-only windows close on outside click and Esc. Every window has a close X at the top right. For a changed form, outside click, Esc, X, and Cancel show “Kaydedilmemiş değişikliklerin var” [You have unsaved changes] within the same window: default focus on “Düzenlemeye devam et” [Keep editing], other option “Kaydetmeden kapat” [Close without saving]. Do not open a second modal; Create/Save do not trigger this question. Permanent deletion dialogs block outside clicks; Esc and Cancel close without asking about the confirmation text. Shared `ManagedDialog` provides this behavior; read-only uses omit `dirty`.
 
 ## 7. Motion
 
-- Dokunulan/sürüklenen her şey **spring**: damping 1.0 (zıplama yok), response 0.3–0.4s. Momentumlu bırakmada damping 0.8. Sheet/dialog: damping 0.8, response 0.3. (Framer Motion: `type: "spring", bounce: 0, duration: 0.35`.)
-- Geri bildirim pointer-down'da başlar; geçişler kesilebilir, animasyon sırasında input kilitlenmez.
-- Sadece `transform` ve `opacity`. Sheet tetikleyicisinden (kart) büyüyerek gelir, aynı yoldan kapanır; scrim opacity ile.
-- Kart taşınınca yerleşim değişimi `layout` animasyonuyla (FLIP), SSE ile gelen değişiklikler de aynı şekilde.
-- Hover 120ms, renk geçişleri 150ms `ease-out`.
-- `prefers-reduced-motion: reduce` → slide/spring yerine 150ms cross-fade; `prefers-reduced-transparency` → toolbar opak `--bg`.
+- Everything touched/dragged uses a **spring**: damping 1.0 (no bounce), response 0.3–0.4s. Damping 0.8 for momentum release. Sheet/dialog: damping 0.8, response 0.3. (Framer Motion: `type: "spring", bounce: 0, duration: 0.35`.)
+- Feedback starts on pointer-down; transitions are interruptible, and input is not locked during animation.
+- Only `transform` and `opacity`. A sheet grows from its trigger (card), closes along the same path; scrim uses opacity.
+- When a card moves, animate layout changes with `layout` (FLIP); the same applies to changes received through SSE.
+- Hover 120ms, color transitions 150ms `ease-out`.
+- `prefers-reduced-motion: reduce` → 150ms cross-fade instead of slide/spring; `prefers-reduced-transparency` → opaque `--bg` toolbar.
 
-## 8. Metin ve dil
+## 8. Text and language
 
-- Arayüz 14 dilde çalışır (PANO-27). Seçici sırası ve adları: English (en), Türkçe (tr), Azərbaycan (az), 中文 (zh, basitleştirilmiş), हिन्दी (hi), Español (es), Deutsch (de), Français (fr), Português (pt), 日本語 (ja), Nederlands (nl), 한국어 (ko), Svenska (sv), Polski (pl).
-- Açılışta önce tarayıcıdaki kayıtlı seçim kullanılır. Kayıt yoksa `navigator.languages` sırasıyla taranır ve desteklenen ilk taban dil seçilir (`pt-BR` → `pt`, `zh-TW` → `zh`). Eşleşme yoksa English kullanılır. Sunucu ayarı tarayıcı tercihini ezmez. HTML `lang` seçili dili izler.
-- Metinler `apps/web/src/i18n/<kod>.json` anahtarlarından gelir; koda sabit metin yazılmaz. English geri dönüş için gömülüdür; diğer diller yalnızca seçildiğinde dinamik yüklenir. İlk render çeviri yüklenene kadar bekler, `t()` eşzamanlı kalır. Eksik anahtar English'e döner.
-- Yeni çeviriler makine çevirisidir; doğal ve kısa bir ton hedeflenmiştir, ana dili konuşanların incelemesiyle iyileştirilebilir. Anahtar ve yer tutucu eşitliği ile karakter bozulmaları test edilir.
-- **Bilinen teknik terimler her dilde İngilizce kalır:** Backlog, In Progress, Test, Done, PBI, MCP, CLI, build, Key, Token, Definition of Done. Zorlama çeviri yok.
-- PBI numarası proje içinde (board, kart, detay ve mobil) `#N`; projeler arası listelerde ve bağlantılarda (Seni bekliyor, Projeler rozetleri), commit ve agent komutlarında `KEY-N` (`PANO-4`).
-- Sentence case ("Yeni PBI", "Seni bekliyor"); Title Case ve TAMAMI BÜYÜK yok.
-- Tarih/saat seçili dille `Intl.DateTimeFormat`, göreli zaman `Intl.RelativeTimeFormat` ile gösterilir. Türkçe kısa göreli metinler korunur ("az önce", "2 dk önce"). Özetin açılış günü ve grafiğin "Bugün" etiketi kullanıcının yerel gününe göre seçilir; grafik API'sine tarayıcının saat dilimi gönderilir. TR "5 Kas 2026, 23:10"; EN "Nov 5, 2026, 11:10 PM".
-- Ton: sakin, kısa, kullanıcıya "sen" diye hitap ("Seni bekliyor", "Ne düzeltilmeli?"). Aktörler okunaklı ad + rol ile gösterilir: `Claude · PO`, `Claude · Tasarım`, `Codex`, `Mert`; avatar baş harfi büyüktür. Teknik kimlik (`claude:po`) API’de ve geçmiş ayrıntısında küçük `muted` metin olarak kalabilir.
-- Yıkıcı aksiyon etiketleri "…" ile biter ve onay ister.
-- Dolgu metin, uydurma metrik, lorem ipsum yok; bilinmeyen değer `[yer tutucu]`.
+- The interface supports 14 languages (PANO-27). Selector order and names: English (en), Türkçe (tr), Azərbaycan (az), 中文 (zh, simplified), हिन्दी (hi), Español (es), Deutsch (de), Français (fr), Português (pt), 日本語 (ja), Nederlands (nl), 한국어 (ko), Svenska (sv), Polski (pl).
+- On startup, use the browser's saved selection first. If none exists, scan `navigator.languages` in order and select the first supported base language (`pt-BR` → `pt`, `zh-TW` → `zh`). Fall back to English if none matches. Server settings do not override browser preferences. HTML `lang` follows the selected language.
+- Text comes from keys in `apps/web/src/i18n/<kod>.json` (`<kod>` means language code); do not hardcode text. English is bundled as a fallback; other languages load dynamically only when selected. The first render waits for translations to load; `t()` remains synchronous. Missing keys fall back to English.
+- New translations are machine translated, aiming for a natural, concise tone; native-speaker review can improve them. Tests check key and placeholder parity and character corruption.
+- **Known technical terms stay in English in every language:** Backlog, In Progress, Test, Done, PBI, MCP, CLI, build, Key, Token, Definition of Done. No forced translations.
+- PBI numbers within a project (board, card, details, mobile) use `#N`; cross-project lists and links (Waiting for you, Projects badges), commits, and agent commands use `KEY-N` (`PANO-4`).
+- Sentence case ("Yeni PBI" [New PBI], "Seni bekliyor" [Waiting for you]); no Title Case or ALL CAPS.
+- Display dates/times with `Intl.DateTimeFormat` and relative times with `Intl.RelativeTimeFormat` in the selected language. Preserve short Turkish relative text ("az önce" [just now], "2 dk önce" [2 minutes ago]). The summary's opening day and chart's "Bugün" [Today] label follow the user's local day; send the browser's time zone to the chart API. TR "5 Kas 2026, 23:10"; EN "Nov 5, 2026, 11:10 PM".
+- Tone: calm, concise, informal "you" in Turkish ("Seni bekliyor" [Waiting for you], "Ne düzeltilmeli?" [What needs fixing?]). Actors use a readable name + role: `Claude · PO`, `Claude · Tasarım` [Claude · Design], `Codex`, the user; avatar initials are uppercase. Technical identity (`claude:po`) may remain as small `muted` text in the API and history details.
+- Destructive action labels end in "…" and require confirmation.
+- No filler text, invented metrics, or lorem ipsum; unknown values use `[yer tutucu]` [placeholder].
 
-## 9. Yapılmayacaklar
+## 9. Do not use
 
-- Board'da metrik/özet kutuları (tek satır özet var).
-- Başlık üstünde küçük üst etiket (eyebrow, ör. "PANO").
-- "Yeni · görülmedi" gibi metin rozetleri, görülmedi sadece nokta.
-- Ayrı "İptal edilenler" butonu, filtre menüsünde.
-- Kolon arka plan kutuları.
-- Emoji; gradient; sol kenar şeritli kart; parlama/neon.
-- Sadece renkle anlam (öncelik metinli, geçti/kaldı ikon + metinli, diff − / + işaretli).
-- `outline: none` veya focus'u gizleyen herhangi bir stil.
-- Kenardan kayan shadcn `Sheet` (detay ortada `Dialog`).
-- Durum seçimi için segmented control (popup kullanılır; segment sadece görünüm geçişi için).
-- Yeşil switch, mavi dışında ikinci bir accent.
-- 12px altında okunacak metin (mobil segmentlerin 11px etiketi hariç); masaüstünde 32px altı, mobilde 44px altı tıklama alanı.
-- Agent'a doğrudan iş başlatan buton ("Codex'e ata"), Pano agent çalıştırmaz.
+- Metric/summary boxes on the board (there is a single summary line).
+- A small label above the heading (eyebrow, e.g. "PANO").
+- Text badges such as "Yeni · görülmedi" [New · unseen]; unseen is only a dot.
+- A separate "İptal edilenler" [Cancelled] button; it belongs in the filter menu.
+- Column background boxes.
+- Emoji; gradients; cards with left-edge stripes; glow/neon.
+- Meaning conveyed by color alone (priority has text, passed/failed has icon + text, diff has − / + signs).
+- `outline: none` or any style that hides focus.
+- Edge-sliding shadcn `Sheet` (details use a centered `Dialog`).
+- A segmented control for status selection (use a popup; segments are only for switching views).
+- Green switches or a second accent besides blue.
+- Readable text below 12px (except 11px mobile segment labels); click targets below 32px on desktop or 44px on mobile.
+- Buttons that directly start agent work ("Codex'e ata" [Assign to Codex]); Pano does not run agents.
 
-## 10. Ekran referansları
+## 10. Screen references
 
-Test detayında sıralama: Ne değişti, Nasıl denerim, test senaryoları, AI'ın kendi testleri, açıklama, kriterler; altta sabit Onayla / Geri gönder alanı (Geri ata 2026-11-06'da kaldırıldı: tek kavram "Geri gönder"). Kalan senaryo onayı engeller; işaretsiz senaryo uyarı verir.
+Test detail order: Ne değişti [What changed], Nasıl denerim [How to test], test scenarios, AI's own tests, description, criteria; fixed Onayla [Approve] / Geri gönder [Send back] area at the bottom (Geri ata [Reassign back] was removed on 2026-11-06: the only concept is "Geri gönder" [Send back]). Failed scenarios block approval; unmarked scenarios produce a warning.
 
-[Claude Design canvas](https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK), artboard'lar:
+Design reference artboards:
 
-| Artboard                                         | İçerik                                                                                                                                             |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projeler (`Main`)                                | Toolbar, yıldızlı proje kartları, diğer projeler                                                                                                   |
-| Board                                            | Sidebar, toolbar, özet satırı (veri yaşıyla), 4 kolon, kart durumları; `connection` tweak'i: ok / stale (agent sessiz) / offline (bağlantı şeridi) |
-| Board, mobil (`Mobile`)                         | 390×844, kolon sekmeleri, "Seni bekliyor" satırı                                                                                                   |
-| PBI detayı (In Progress) (`Detail`)              | Detay sekmesi, durum popup'ı, header işlem menüsü; footer yok                                                                                                        |
-| Board, dark (`BoardDark`)                       | Dark token'ları                                                                                                                                    |
-| PBI detayı (Test, seni bekliyor) (`TestDetail`) | Senaryolar, AI testleri, onay kuralı (Onayla pasif + neden), geri gönderme notu + ekler                                                            |
-| PBI geçmişi (`History`)                          | Zaman çizelgesi, filtreler, diff                                                                                                                   |
-| Proje ayarları (`Settings`)                      | Test kolonu, AI Done'a çekebilir, Definition of Done                                                                                               |
-| Uygulama ayarları (`AppSettings`)                | Genel, Görünüm, Agent bağlantısı, Hakkında                                                                                                         |
-| Seni bekliyor (`Waiting`)                        | Tüm projelerdeki bekleyen testler, proje gruplu liste                                                                                              |
-| Boş, yükleme ve hata durumları (`States`)        | Boş proje, iskelet yükleme, sunucu hatası, görülmedi ipucu                                                                                         |
+| Artboard | Content |
+| --- | --- |
+| Projects (`Main`) | Toolbar, starred project cards, other projects |
+| Board | Sidebar, toolbar, summary line (with data age), 4 columns, card states; `connection` tweak: ok / stale (quiet agent) / offline (connection banner) |
+| Board, mobile (`Mobile`) | 390×844, column tabs, "Seni bekliyor" [Waiting for you] row |
+| PBI details (In Progress) (`Detail`) | Details tab, status popup, header actions menu; no footer |
+| Board, dark (`BoardDark`) | Dark tokens |
+| PBI details (Test, waiting for you) (`TestDetail`) | Scenarios, AI tests, approval rule (Approve disabled + reason), send-back note + attachments |
+| PBI history (`History`) | Timeline, filters, diff |
+| Project settings (`Settings`) | Test column, AI can move to Done, Definition of Done |
+| Application settings (`AppSettings`) | General, Appearance, Agent connection, About |
+| Waiting for you (`Waiting`) | Waiting tests across all projects, list grouped by project |
+| Empty, loading, and error states (`States`) | Empty project, skeleton loading, server error, unseen tooltip |

@@ -1,60 +1,60 @@
-# Pano: Ürün
+# Pano: Product
 
-> Durum: v0.1 taslağı (2026-11-05). Mimari: [architecture.md](architecture.md) · Kararlar: [decisions.md](decisions.md)
+> Status: v0.1 draft (2026-11-05). Architecture: [architecture.md](architecture.md) · Decisions: [decisions.md](decisions.md)
 
-## Kimin için, ne için
+## Who it is for and why
 
-**Tek başına proje geliştiren ve işi AI agent'lara yaptıran kişi.** Kişi işi AI'a chat'ten verir; AI PBI'ları açar, agent'lara dağıtır, ilerletir ve kapatır. Kişi Pano'ya **bakarak** projenin ne durumda olduğunu görür.
+**Someone building a project alone and having AI agents do the work.** The person gives work to AI in chat; AI creates PBIs, distributes them to agents, progresses them, and closes them. The person sees the project's state by **looking at** Pano.
 
-Pano bir **gözlem ve kontrol paneli**dir, iş yönetim formu değildir:
+Pano is an **observation and control panel**, not a work management form:
 
-- İşi AI yönetir. Kullanıcı karta dokunmak zorunda değildir ama dokunabilir.
-- Her şey kayıt altındadır: kim, ne zaman, neyi neden değiştirdi.
-- Pano agent çalıştırmaz. Sadece takip eder; agent'lar MCP, CLI veya REST ile Pano'yu günceller.
+- AI manages the work. The user does not have to interact with a card, but can.
+- Everything is recorded: who changed what, when, and why.
+- Pano does not run agents. It only tracks them; agents update Pano through MCP, CLI, or REST.
 
-## Kullanıcının cevap alması gereken sorular
+## Questions the user needs answered
 
-| Soru | Pano'da nerede |
+| Question | Where in Pano |
 |---|---|
-| Proje ne aşamada? Ne zaman başladım, kaç iş kaldı? | Proje özeti: başlangıç tarihi, açık/kapalı sayıları, öncelik dağılımı |
-| Şu an ne yapılıyor, hangi agent'ta? | Board: In Progress kartları ve atanan agent |
-| Benden ne bekleniyor? | "Seni bekliyor" listesi: sana atanmış Test kartları |
-| Bitenlere baktım mı? | Done kartlarında "görülmedi" işareti |
-| Bu iş nasıl değişti? Büyüdü mü, iptal mi oldu? | Kartın aktivite geçmişi: her değişikliğin eski ve yeni hali |
+| What stage is the project at? When did I start, and how much work remains? | Project summary: start date, open/closed counts, priority distribution |
+| What is being worked on now, and by which agent? | Board: In Progress cards and the assigned agent |
+| What is expected of me? | "Seni bekliyor" [Waiting for you] list: Test cards assigned to you |
+| Have I looked at completed work? | "görülmedi" [unseen] marker on Done cards |
+| How has this work changed? Did it grow or get cancelled? | Card activity history: the previous and new values of every change |
 
-## Akış
+## Workflow
 
 ```
 Backlog → In Progress → (Test) → Done
                  ↑          │
-                 └─ geri gönder (not + ekran görüntüsü)
-İptal: her aşamadan; kart silinmez, "İptal edilenler" filtresinde kalır.
+                 └─ send back (note + screenshot)
+Cancel: from any stage; the card is not deleted and stays in the "İptal edilenler" [Cancelled] filter.
 ```
 
-- **AI kendi testini In Progress içinde yapar.** Unit test, build, lint, kendi fonksiyonel kontrolü (hangi araçla yapacağına kendi karar verir). Sonuçlar kartta **check** kaydı olarak görünür ("unit test: 42/42 geçti"). Başarısız testler kartı kolonlar arasında gidip gelmez; kayıt olarak düşer.
-- **Test kolonu = insanın doğrulaması.** AI, kendi doğrulayamadığı veya kullanıcının görmesi gereken işleri (UI, his, iş kuralı) test senaryolarıyla birlikte kullanıcıya atar ve chat'te "PANO-12 testte seni bekliyor" der.
-- **Kullanıcı:** senaryoları ekler/çıkarır/düzenler; "Onayla" → Done, "Geri gönder" → In Progress (not ve ekran görüntüsüyle). Bu tek bir hareket ve tek bir kayıt olur.
-- **Varsayılan:** AI basit ve insan testi gerektirmeyen işleri kendisi Done'a çeker.
+- **AI runs its own tests within In Progress.** Unit tests, build, lint, and its own functional checks (it decides which tools to use). Results appear on the card as **check** records ("unit test: 42/42 passed"). Failed tests do not move the card back and forth between columns; they become records.
+- **The Test column is for human verification.** AI assigns work it cannot verify itself or that the user needs to see (UI, feel, business rules) to the user with test scenarios, and says in chat, "PANO-12 is waiting for you in Test."
+- **The user:** adds/removes/edits scenarios; "Onayla" [Approve] → Done, "Geri gönder" [Send back] → In Progress (with a note and screenshot). This is one action and one record.
+- **Default:** AI moves simple work that does not need human testing to Done itself.
 
-### Proje ayarları (sade)
+### Project settings (simple)
 
-| Ayar | Varsayılan |
+| Setting | Default |
 |---|---|
-| Test kolonu açık | Açık (kapatılırsa AI her işi kendi testiyle kapatır) |
-| AI işi Done'a çekebilir | Evet (insan testi gerekmeyen işler için) |
-| Tamamlanma tanımı (Definition of Done) | Serbest metin + madde listesi, ör. "unit test var, lint temiz, CI yeşil". Projeden projeye değişir (Sonar, pipeline vb.); Pano sadece kaydeder ve AI'a gösterir |
+| Test column enabled | On (when disabled, AI closes all work using its own tests) |
+| AI can move work to Done | Yes (for work that does not need human testing) |
+| Definition of Done | Free text + a list, e.g. "unit tests exist, lint is clean, CI is green". Varies by project (Sonar, pipeline, etc.); Pano only records it and shows it to AI |
 
-## Agent'lar
+## Agents
 
-- **Orkestratör (ana agent)** iş yapmaz; PBI açar, agent'lara dağıtır, sonucu doğrular, kartları günceller.
-- **Agent'lar** kendini `araç:rol` ile tanıtır (`claude:po`, `codex`, `cursor:review`), kayıt adımı yoktur. Atama araç düzeyindedir (`Claude`, `Codex`); rol detayda ve geçmişte görünür.
-- **İnsan** `userName` ayarıyla tanımlıdır; agent ona `assignee: "human"` ile atar. Test kartı, atanan boşsa veya atanan `userName` ise insanı bekler.
-- **Kullanım:** Agent model, düşünme seviyesi, token ve süreyi kendi bildirir. Pano ölçmez ve maliyet tahmini yapmaz; arayüz değerlerin bildirim olduğunu söyler.
-- Kullanıcının UI'dan yaptığı atama ("codex'e ver") sadece bir **talep kaydı**dır; orkestratör bir sonraki kontrolünde görür ve uygular.
+- **The orchestrator (main agent)** does not implement work; it creates PBIs, distributes them to agents, verifies results, and updates cards.
+- **Agents** identify themselves as `tool:role` (`claude:po`, `codex`, `cursor:review`), with no registration step. Assignment is at the tool level (`Claude`, `Codex`); the role appears in details and history.
+- **The human** is identified by the `userName` setting; an agent assigns work to them with `assignee: "human"`. A Test card is waiting for the human when its assignee is empty or matches `userName`.
+- **Usage:** The agent reports its own model, reasoning level, tokens, and duration. Pano does not measure these or estimate cost; the interface states that the values are reported.
+- A user's assignment in the UI ("give it to codex") is only a **request record**; the orchestrator sees and applies it on its next check.
 
-## Açık konular (bilerek sonraya bırakıldı)
+## Open questions (deliberately deferred)
 
-- Kullanıcı kartı geri gönderince AI'ın anında haberdar olması (`pano watch`, webhook). v0.1'de orkestratör bir sonraki oturumda/kontrolde görür.
-- Proje kararları ve dokümanlarının Pano'daki yeri (repo'da mı kalsın, Pano'da mı görünsün).
-- Ürün tanıtım sayfası (GitHub Pages).
-- Çok kullanıcı / takım kullanımı.
+- Notifying AI immediately when the user sends a card back (`pano watch`, webhook). In v0.1, the orchestrator sees it at the next session/check.
+- Where project decisions and documents belong in Pano (remain in the repo or appear in Pano).
+- Product introduction page (GitHub Pages).
+- Multi-user / team use.

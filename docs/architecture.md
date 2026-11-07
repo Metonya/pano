@@ -1,35 +1,35 @@
-# Pano: Mimari
+# Pano: Architecture
 
-> Durum: v0.1 taslağı (2026-11-05). Kararlar: [`decisions.md`](decisions.md)
+> Status: v0.1 draft (2026-11-05). Decisions: [`decisions.md`](decisions.md)
 
-## Tek cümlede
+## In one sentence
 
-**Pano tek bir çalıştırılabilir dosyadır.** İçinde web arayüzü, REST API, MCP endpoint'i, CLI ve SQLite veritabanı vardır. Kullanıcı ister binary'yi çalıştırır, ister Docker image'ını; agent'lar MCP, CLI veya düz REST ile bağlanır.
+**Pano is a single executable.** It contains the web interface, REST API, MCP endpoint, CLI, and SQLite database. The user runs either the binary or Docker image; agents connect through MCP, CLI, or plain REST.
 
-## Bileşen çizimi
+## Component diagram
 
 ```mermaid
 flowchart LR
-  subgraph Clients["İstemciler"]
-    B["Tarayıcı<br/>(insan)"]
+  subgraph Clients["Clients"]
+    B["Browser<br/>(human)"]
     CC["Claude Code / Codex / Cursor<br/>(MCP over HTTP)"]
-    SH["Shell'i olan agent<br/>(pano CLI veya curl)"]
+    SH["Agent with a shell<br/>(pano CLI or curl)"]
   end
 
   subgraph Bin["pano binary, bun build --compile"]
     direction TB
     H["Hono HTTP server<br/>127.0.0.1:7777"]
-    WEB["/  · Web UI<br/>(React + shadcn, gömülü statik)"]
+    WEB["/  · Web UI<br/>(React + shadcn, embedded static assets)"]
     API["/api/v1 · REST<br/>+ OpenAPI"]
-    MCP["/mcp · MCP<br/>(Streamable HTTP, 8 tool)"]
-    SSE["/api/v1/events · SSE<br/>(canlı güncelleme)"]
-    DOC["/agents.md<br/>(agent rehberi)"]
-    CORE["core<br/>(domain servisleri + zod şemaları)"]
-    CLI["CLI modu<br/>pano task move ..."]
+    MCP["/mcp · MCP<br/>(Streamable HTTP, 8 tools)"]
+    SSE["/api/v1/events · SSE<br/>(live updates)"]
+    DOC["/agents.md<br/>(agent guide)"]
+    CORE["core<br/>(domain services + zod schemas)"]
+    CLI["CLI mode<br/>pano task move ..."]
     H --> WEB & API & MCP & SSE & DOC
     API --> CORE
     MCP --> CORE
-    SSE -.olaylar.- CORE
+    SSE -.events.- CORE
   end
 
   DB[("SQLite<br/>~/.pano/pano.db")]
@@ -42,48 +42,48 @@ flowchart LR
   CORE --> DB
 ```
 
-**Altın kural:** iş kuralları sadece `core` içinde. REST ve MCP ince adaptörlerdir; aynı servisleri çağırır. CLI, çalışan sunucunun REST API'sine HTTP ile konuşur (DB'ye doğrudan dokunmaz), böylece SSE olayları her değişiklikte tetiklenir ve board canlı güncellenir.
+**Golden rule:** business rules live only in `core`. REST and MCP are thin adapters calling the same services. The CLI talks to the running server's REST API over HTTP (it does not touch the DB directly), so SSE events fire on every change and the board updates live.
 
-## Çalışma modları
+## Operating modes
 
-| Komut | Ne yapar |
+| Command | What it does |
 |---|---|
-| `pano serve` | Sunucuyu başlatır (varsayılan `127.0.0.1:7777`, DB `~/.pano/pano.db`) |
-| `pano project list` / `pano board <KEY>` | Projeleri / board'u terminalde gösterir |
-| `pano task create\|show\|move\|assign\|check ...` | PBI işlemleri |
-| `pano mcp-config <claude\|codex\|cursor>` | İlgili istemci için MCP bağlantı komutunu/JSON'unu yazdırır |
+| `pano serve` | Starts the server (default `127.0.0.1:7777`, DB `~/.pano/pano.db`) |
+| `pano project list` / `pano board <KEY>` | Shows projects / the board in the terminal |
+| `pano task create\|show\|move\|assign\|check ...` | PBI operations |
+| `pano mcp-config <claude\|codex\|cursor>` | Prints the MCP connection command/JSON for the client |
 | Docker | `docker run -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano` |
 
-Ortam değişkenleri: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `PANO_URL` (CLI'ın bağlanacağı sunucu), `PANO_USER` (insan kimliğinin varsayılanı).
+Environment variables: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `PANO_URL` (server the CLI connects to), `PANO_USER` (default human identity).
 
-## Güvenlik (v0.1)
+## Security (v0.1)
 
-- Varsayılan olarak yalnızca `127.0.0.1`'e bind olur; token gerekmez.
-- Yerel Docker: `PANO_LOCAL_DOCKER=1` ile container içinde `0.0.0.0` dinlenir ve port sadece host `127.0.0.1` üzerinde yayınlanır. Token gerekmez; Host ve Origin kontrolleri tarayıcıdan gelen çapraz kaynak ve DNS rebinding isteklerini sınırlar. Yerel süreçler ve aynı Docker ağına erişebilen container'lar güvenilir kabul edilir; bu mod LAN'a veya güvenilmeyen ağa açılmaz.
-- Diğer loopback dışı bağlantılarda `PANO_TOKEN` zorunludur; `/api` ve `/mcp` Bearer token ister. Uzaktan kullanım için HTTPS gerekir.
-- Çok kullanıcılı hesaplar v0.1 kapsamı dışında.
+- Binds only to `127.0.0.1` by default; no token is required.
+- Local Docker: with `PANO_LOCAL_DOCKER=1`, the container listens on `0.0.0.0` and the port is published only on host `127.0.0.1`. No token is required; Host and Origin checks restrict cross-origin browser requests and DNS rebinding requests. Local processes and containers that can access the same Docker network are trusted; this mode must not be exposed to a LAN or an untrusted network.
+- Other connections beyond loopback require `PANO_TOKEN`; `/api` and `/mcp` require a Bearer token. HTTPS is required for remote use.
+- Multi-user accounts are outside the v0.1 scope.
 
-## Veri modeli
+## Data model
 
 ```mermaid
 erDiagram
-  PROJECT ||--o{ ITEM : içerir
-  ITEM ||--o{ CRITERION : "kabul kriteri"
-  ITEM ||--o{ TEST_SCENARIO : "insan testi"
-  ITEM ||--o{ ACTIVITY : "geçmiş"
-  ITEM ||--o{ ATTACHMENT : "ekran görüntüsü"
+  PROJECT ||--o{ ITEM : contains
+  ITEM ||--o{ CRITERION : "acceptance criterion"
+  ITEM ||--o{ TEST_SCENARIO : "human test"
+  ITEM ||--o{ ACTIVITY : "history"
+  ITEM ||--o{ ATTACHMENT : "screenshot"
   PROJECT {
     text id PK "ulid"
     text key UK "PANO"
     text name
     text description
     int starred "0/1"
-    text archived_at "null = aktif"
-    int test_column "1 = Test kolonu açık"
-    int ai_can_close "1 = AI Done'a çekebilir"
+    text archived_at "null = active"
+    int test_column "1 = Test column enabled"
+    int ai_can_close "1 = AI can move to Done"
     text dod_md "Definition of Done"
     int next_number
-    text created_at "projenin başlangıcı"
+    text created_at "project start"
     text updated_at
   }
   ITEM {
@@ -91,12 +91,12 @@ erDiagram
     text project_id FK
     int number "PANO-12 -> 12"
     text title
-    text body_md "amaç, kapsam, bağlam, test planı"
+    text body_md "purpose, scope, context, test plan"
     text status "backlog|in_progress|test|done|cancelled"
     text priority "high|medium|low"
     text assignee "claude | codex:review | userName | null"
-    real position "kolon içi sıra"
-    text seen_at "kullanıcı son baktığında"
+    real position "order within column"
+    text seen_at "when the user last viewed it"
     text created_at
     text updated_at
     text done_at
@@ -111,16 +111,16 @@ erDiagram
   TEST_SCENARIO {
     text id PK
     text item_id FK
-    text steps_md "ne yap"
-    text expected_md "ne görmelisin"
+    text steps_md "what to do"
+    text expected_md "what you should see"
     text result "pending|passed|failed"
-    text author "AI veya kullanıcı"
+    text author "AI or user"
     real position
   }
   ATTACHMENT {
     text id PK
     text item_id FK
-    text activity_id FK "geri gönderme notuna bağlı"
+    text activity_id FK "linked to the send-back note"
     text file_name
     text mime
     int size
@@ -131,60 +131,60 @@ erDiagram
     text item_id FK "nullable"
     text actor "userName | claude:... | codex"
     text kind "created|moved|assigned|edited|check|note|sent_back|cancelled|usage|..."
-    text before_json "değişen alanların eski hali"
-    text after_json "yeni hali"
-    text message "insan okuyacak tek satır"
+    text before_json "previous values of changed fields"
+    text after_json "new values"
+    text message "one human-readable line"
     text created_at
   }
 ```
 
-- PBI'nın anahtarı: `<PROJECT.key>-<number>` (ör. `PANO-12`). Agent'lar, commit mesajları ve projeler arası listeler bu anahtarı kullanır; proje içindeki arayüzde sadece `#12` görünür.
-- Öncelik `high|medium|low`; arayüzde Yüksek / Orta / Düşük.
-- Kabul kriterleri ayrı tablo: agent'lar tek tek `check` edebilir, board ilerleme çubuğu gösterir.
-- Statüler sabit: `backlog`, `in_progress`, `test`, `done`, `cancelled`. Test kolonu proje ayarıyla kapatılabilir; `cancelled` kolon değil, filtredir. Akış kuralları: [product.md](product.md#akış).
-- **Hiçbir şey silinmez, her değişiklik `activity`'de eski/yeni haliyle durur.** Bu kayıtlar UI'da insan için gösterilir; agent'lar varsayılan olarak sadece kartın güncel hali + son birkaç kaydı alır, geçmişin tamamını istediğinde ister. Böylece kayıt tutmak agent'ın token maliyetini büyütmez.
-- Ekler (`ATTACHMENT`) dosya olarak `PANO_DATA_DIR/attachments/` altında, DB'de sadece metadata.
+- PBI key: `<PROJECT.key>-<number>` (e.g. `PANO-12`). Agents, commit messages, and cross-project lists use this key; the interface within a project shows only `#12`.
+- Priority is `high|medium|low`; the interface uses Yüksek / Orta / Düşük [High / Medium / Low].
+- Acceptance criteria have a separate table: agents can `check` them individually, and the board shows a progress bar.
+- Statuses are fixed: `backlog`, `in_progress`, `test`, `done`, `cancelled`. The Test column can be disabled in project settings; `cancelled` is a filter, not a column. Workflow rules: [product.md](product.md#workflow).
+- **Nothing is deleted; every change remains in `activity` with its previous/new values.** The UI displays these records for humans; by default, agents receive only the current card state + a few recent records and request the full history when needed. Recording history therefore does not increase the agent's token cost.
+- Attachments (`ATTACHMENT`) are files under `PANO_DATA_DIR/attachments/`; the DB stores only metadata.
 
-## MCP tool'ları (bilerek az)
+## MCP tools (deliberately few)
 
-Her MCP tool'u agent'ın her konuşmasında token harcar; bu yüzden az tool ile sınırlı (8; `record_usage` 2026-11-07'de Mert'in isteğiyle eklendi):
+Every MCP tool consumes tokens in every agent conversation, so the number of tools is limited (8; `record_usage` was added on 2026-11-07 at the owner's request):
 
-| Tool | Amaç |
+| Tool | Purpose |
 |---|---|
-| `list_projects` | Aktif projeler (yıldızlılar önce) ve proje ayarları |
-| `get_board` | Bir projenin kolonları, kart özetleri, kullanıcıyı bekleyenler |
-| `get_item` | PBI'nın güncel hali (body, kriterler, test senaryoları, son 5 kayıt); `history: true` ile tamamı |
-| `create_item` | Yeni PBI (başlık, body, kriterler, öncelik) |
-| `update_item` | Statü, assignee, başlık, body, öncelik, test senaryoları; `reason` alanı geçmişe yazılır |
-| `check_criterion` | Kabul kriterini işaretle / kaldır |
-| `add_record` | Karta kayıt düş: `note`, `check` (ör. "unit test 42/42 geçti") veya `decision` |
+| `list_projects` | Active projects (starred first) and project settings |
+| `get_board` | A project's columns, card summaries, and work waiting for the user |
+| `get_item` | Current PBI state (body, criteria, test scenarios, last 5 records); full history with `history: true` |
+| `create_item` | New PBI (title, body, criteria, priority) |
+| `update_item` | Status, assignee, title, body, priority, test scenarios; the `reason` field is written to history |
+| `check_criterion` | Check / uncheck an acceptance criterion |
+| `add_record` | Add a card record: `note`, `check` (e.g. "unit test 42/42 passed"), or `decision` |
 
-## Repo yapısı
+## Repository structure
 
 ```
 pano/
 ├─ apps/
-│  ├─ server/        # Hono: REST, MCP, SSE, agents.md, statik UI servis; main.ts = serve + CLI
+│  ├─ server/        # Hono: REST, MCP, SSE, agents.md, static UI serving; main.ts = serve + CLI
 │  └─ web/           # React + Vite + Tailwind + shadcn/ui
 ├─ packages/
-│  └─ core/          # domain servisleri, zod şemaları, SQLite (bun:sqlite) + migration'lar
-├─ docs/             # mimari, tasarım (DESIGN.md), kurulum
+│  └─ core/          # domain services, zod schemas, SQLite (bun:sqlite) + migrations
+├─ docs/             # architecture, design (DESIGN.md), installation
 └─ .github/workflows # CI + release (win/mac/linux binary, Docker image → ghcr.io)
 ```
 
-## Teknoloji seçimleri
+## Technology choices
 
-| Katman | Seçim | Neden |
+| Layer | Choice | Reason |
 |---|---|---|
-| Runtime | Bun | TS'i doğrudan çalıştırır, `bun:sqlite` gömülü, `--compile` ile tek dosya |
-| HTTP | Hono | Küçük, hızlı, Bun ile doğal; OpenAPI desteği (`@hono/zod-openapi`) |
-| DB | SQLite (WAL modu) | Kurulumsuz, tek dosya, yedeği kopyala-yapıştır |
-| Doğrulama | zod | REST, MCP ve CLI aynı şemaları paylaşır |
-| MCP | `@modelcontextprotocol/sdk` Streamable HTTP | İstemciye ayrı kurulum gerekmez, sadece URL |
-| UI | React + Vite + Tailwind + shadcn/ui + lucide | Apple tarzı tasarıma uygun, sahiplenilebilir component'ler |
-| Drag & drop | dnd-kit | Erişilebilir, klavye desteği |
-| Test | `bun test` + Playwright (UI) | Hızlı, tek araç zinciri |
+| Runtime | Bun | Runs TS directly, embedded `bun:sqlite`, single file with `--compile` |
+| HTTP | Hono | Small, fast, natural fit for Bun; OpenAPI support (`@hono/zod-openapi`) |
+| DB | SQLite (WAL mode) | No installation, single file, copy-and-paste backup |
+| Validation | zod | REST, MCP, and CLI share the same schemas |
+| MCP | `@modelcontextprotocol/sdk` Streamable HTTP | No separate client installation, just a URL |
+| UI | React + Vite + Tailwind + shadcn/ui + lucide | Suits Apple-style design, components we can own |
+| Drag & drop | dnd-kit | Accessible, keyboard support |
+| Tests | `bun test` + Playwright (UI) | Fast, one toolchain |
 
-## Sürüm 0.1 kapsamı dışında (bilinçli)
+## Outside the version 0.1 scope (deliberately)
 
-Çok kullanıcı / hesaplar, özelleştirilebilir kolonlar, sprint/takvim, bildirimler, agent'ı anında tetikleme (`pano watch`, webhook), GitHub senkronizasyonu. Bkz. [product.md → Açık konular](product.md#açık-konular-bilerek-sonraya-bırakıldı).
+Multi-user / accounts, customizable columns, sprints/calendar, notifications, immediately triggering agents (`pano watch`, webhook), GitHub synchronization. See [product.md → Open questions](product.md#open-questions-deliberately-deferred).

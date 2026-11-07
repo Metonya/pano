@@ -1,20 +1,61 @@
 # Pano
 
-Pano is a self-hosted project board where AI agents track their work and you review the results.
+[![CI](https://github.com/Metonya/pano/actions/workflows/ci.yml/badge.svg)](https://github.com/Metonya/pano/actions/workflows/ci.yml)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Pano is a project board for building software with AI, with you in control. Trust your AI to do the work and run its own team of subagents. Follow along on the board, test the results, and decide what ships. Keep the process light: create as many or as few agents as you like, use your own skills, and change things to suit you.
+
+AI manages cards through MCP, the `pano` CLI, or REST. Pano tracks agents but does not run them, so it works with Claude, Codex, Cursor, OpenCode, and more. When human testing is needed, AI adds instructions and scenarios for you to approve or send back. Failed scenarios prevent approval; projects can let agents close work that needs no human test. Activity retains old and new values, and cancelled cards keep their history. Permanent project deletion is a separate action that requires confirmation.
+
+[![Pano in 60 seconds](docs/media/pano-intro.gif)](docs/media/pano-intro.mp4)
 
 ![Driftwood project board](docs/images/board.png)
 
-## Why it exists
+<a id="installation"></a>
 
-AI agents do the work. You need somewhere to see what they are doing, what changed, and what needs your attention. Pano keeps that information in one place, with a web interface, REST API, MCP endpoint, CLI and SQLite database in a single executable.
+## Install
 
-## How it works
+macOS and Linux:
 
-An agent creates PBIs through MCP, CLI or REST, moves them through Backlog and In Progress, and records decisions and automated checks. Pano tracks agents; it does not run them.
+```sh
+curl -fsSL https://raw.githubusercontent.com/Metonya/pano/main/install.sh | sh
+```
 
-When a change needs human testing, the agent adds a change summary, instructions and scenarios, assigns it to you, and moves it to Test. You try it, mark scenarios and approve it into Done, or send it back with a note and optional screenshots. Failed scenarios prevent approval. Projects can also allow agents to close work that does not need human testing.
+Windows (PowerShell):
 
-No activity record is deleted during this workflow. Edits retain their previous and new values; cancelled PBIs keep their history and can be restored. Permanently deleting a project is a separate action that requires confirmation.
+```powershell
+irm https://raw.githubusercontent.com/Metonya/pano/main/install.ps1 | iex
+```
+
+Docker (any system):
+
+```sh
+docker run -d --name pano -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano:latest
+```
+
+Run `pano serve` and open `http://localhost:7777`; for Docker, just open the URL.
+
+The installer selects the build for your system, verifies its SHA-256 checksum, and needs no Bun or admin rights; Pano is one file and stores data in `~/.pano` by default.
+
+These commands work once the first release is published; until then, [build from source](#build-from-source).
+
+## Connect your AI
+
+With Pano running, print the MCP setup for your tool:
+
+```sh
+pano mcp-config claude
+pano mcp-config codex
+pano mcp-config cursor
+```
+
+MCP is optional: an agent can use the CLI. Start a conversation with your agent using this prompt from the [guide](docs/guide.md):
+
+> Use the pano-po skill. You are the PO. Create a project called APP on Pano and plan: add search to my app. Show me the cards before starting.
+
+## How we use it
+
+Keep it light: one PO and a few workers. See the [guide](docs/guide.md), [PO skill](skills/pano-po/SKILL.md), and [Pano skill](skills/pano/SKILL.md); use your own skills and adjust the setup to suit you.
 
 ## Features
 
@@ -35,9 +76,9 @@ No activity record is deleted during this workflow. Edits retain their previous 
 
 ![Projects](docs/images/projects.png)
 
-## Installation
+## More install options
 
-Build from source for now. This checkout has no release tags, and published binaries or registry images could not be verified. The [release workflow](.github/workflows/release.yml) is configured to publish binaries and `ghcr.io/metonya/pano` on a `v*` tag. Check [GitHub Releases](https://github.com/metonya/pano/releases) for availability before using the download instructions below. If releases are not published yet, use the source or local Docker build below.
+The installers support macOS, Linux, and Windows x64. Linux binaries require glibc; Windows ARM64 is not supported by the installer. On macOS and Linux, the installer tells you if its install directory needs to be added to your PATH. The [release workflow](.github/workflows/release.yml) publishes binaries and the registry image on a `v*` tag; check [GitHub Releases](https://github.com/Metonya/pano/releases) for downloads.
 
 ### Build from source
 
@@ -48,7 +89,31 @@ bun install
 bun run build:bin
 ```
 
-Run `./dist/pano serve` on macOS or Linux, or `./dist/pano.exe serve` on Windows. Open `http://localhost:7777`. Stop the server with Ctrl+C. The executable includes the web interface and needs no separate frontend process.
+Run `./dist/pano serve` on macOS or Linux, or `./dist/pano.exe serve` on Windows. Open `http://localhost:7777`. Stop the server with Ctrl+C. The executable includes the web interface and needs no separate frontend process. When working from source, replace `pano` in CLI examples with `bun run pano`.
+
+### Docker
+
+To build the image locally from the repository root:
+
+```sh
+docker build -t ghcr.io/metonya/pano:latest .
+docker run -d --name pano -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano:latest
+```
+
+Open `http://localhost:7777`. No token is needed for this local installation. Data stays in the `pano-data` volume. You can also pull `ghcr.io/metonya/pano:latest` after the image is published.
+
+For Compose, use [docker-compose.example.yml](docker-compose.example.yml). With the local image already built:
+
+```sh
+docker compose -f docker-compose.example.yml up -d --pull never
+docker compose -f docker-compose.example.yml down
+```
+
+After publication, `docker compose -f docker-compose.example.yml up -d` can pull the image. `down` preserves the data volume.
+
+Local Docker mode trusts local processes and containers that can reach its Docker network. Publish its port only on `127.0.0.1`, as in the examples. Host and Origin checks protect browser access; they are not authentication against other local processes or network peers. Do not publish this mode to a LAN, reverse proxy, or untrusted Docker network. For remote access, omit `PANO_LOCAL_DOCKER`, configure a strong `PANO_TOKEN`, and use an authenticated HTTPS reverse proxy.
+
+To migrate an existing Docker installation, first back up the current data volume or bind-mounted directory using a consistent SQLite backup while the server is stopped. Keep the same `/data` volume mapping, replace the published port with `127.0.0.1:7777:7777`, remove `PANO_TOKEN`, add `PANO_LOCAL_DOCKER=1`, and recreate the container using the new image. Do not delete the volume. Verify projects, cards and attachments after restarting; retain the backup until verified. A token stored in the browser is no longer needed.
 
 ### Release binaries
 
@@ -64,30 +129,6 @@ When a release is available, download the file for your platform. You can verify
 
 On macOS and Linux, first run `chmod +x <downloaded-file>`. Run the start command from the download directory and open `http://localhost:7777`.
 
-### Docker
-
-Until the registry image is published, build it locally from the repository root:
-
-```sh
-docker build -t ghcr.io/metonya/pano:latest .
-docker run -d --name pano -p 127.0.0.1:7777:7777 -e PANO_LOCAL_DOCKER=1 -v pano-data:/data ghcr.io/metonya/pano:latest
-```
-
-Open `http://localhost:7777`. No token is needed for this local installation. Data stays in the `pano-data` volume. Once the image is published, you can pull `ghcr.io/metonya/pano:latest` instead of building it.
-
-For Compose, use [docker-compose.example.yml](docker-compose.example.yml). With the local image already built:
-
-```sh
-docker compose -f docker-compose.example.yml up -d --pull never
-docker compose -f docker-compose.example.yml down
-```
-
-After publication, `docker compose -f docker-compose.example.yml up -d` can pull the image. `down` preserves the data volume.
-
-Local Docker mode trusts local processes and containers that can reach its Docker network. Publish its port only on `127.0.0.1`, as in the examples. Host and Origin checks protect browser access; they are not authentication against other local processes or network peers. Do not publish this mode to a LAN, reverse proxy, or untrusted Docker network. For remote access, omit `PANO_LOCAL_DOCKER`, configure a strong `PANO_TOKEN`, and use an authenticated HTTPS reverse proxy.
-
-To migrate an existing Docker installation, first back up the current data volume or bind-mounted directory using a consistent SQLite backup while the server is stopped. Keep the same `/data` volume mapping, replace the published port with `127.0.0.1:7777:7777`, remove `PANO_TOKEN`, add `PANO_LOCAL_DOCKER=1`, and recreate the container using the new image. Do not delete the volume. Verify projects, cards and attachments after restarting; retain the backup until verified. A token stored in the browser is no longer needed.
-
 ### Configuration
 
 | Variable | Purpose |
@@ -101,15 +142,9 @@ To migrate an existing Docker installation, first back up the current data volum
 | `PANO_ACTOR` | Actor recorded for CLI changes, as `tool:role` (`claude:po`, `codex`) |
 | `PANO_USER` | Your name until you set one under Settings, default the system account name |
 
-## Connect an agent
+## Agent connection details
 
-Start Pano first. Set `PANO_URL` and, if required, `PANO_TOKEN` in the client environment. The CLI can print connection settings:
-
-```sh
-pano mcp-config claude
-pano mcp-config codex
-pano mcp-config cursor
-```
+Start Pano first. Set `PANO_URL` and, if required, `PANO_TOKEN` in the client environment. The `pano mcp-config` commands above print connection settings.
 
 The Claude output is a connection command; Codex output is TOML; Cursor output is JSON. Claude and Cursor output includes the token when set, so treat it as a secret. Codex references the `PANO_TOKEN` environment variable.
 
@@ -131,7 +166,7 @@ For a loopback server without a token, omit the authorization header or `bearer_
 
 ### CLI
 
-Use the downloaded executable as `pano`, or replace `pano` with `bun run pano` when working from source. Running it without arguments shows help.
+Use the downloaded executable as `pano`. Running it without arguments shows help.
 
 ```sh
 pano project create APP "My app"
@@ -196,7 +231,9 @@ bun run build
 
 The development web URL appears in the terminal. The API defaults to port 7777; change it with `PANO_PORT`. For browser tests, install Chromium from `apps/web` with `bunx playwright install chromium`, then run `bun run test:e2e` from the repository root.
 
-The monorepo contains `apps/server` (Hono), `apps/web` (React, Vite, Tailwind and shadcn/ui), and `packages/core` (shared domain services). Product and architecture decisions live in [docs](docs); UI rules are in [docs/DESIGN.md](docs/DESIGN.md).
+The monorepo contains `apps/server` (Hono), `apps/web` (React, Vite, Tailwind and shadcn/ui), and `packages/core` (shared domain services). See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+
+Product and architecture decisions live in [docs](docs); UI rules are in [docs/DESIGN.md](docs/DESIGN.md).
 
 ### Demo data and screenshots
 
@@ -211,18 +248,7 @@ The seed creates the starred Driftwood project with 14 English PBIs and a smalle
 
 The screenshot script uses Chromium from `@playwright/test`, an English locale, and a 1440×900 viewport. It reads the seeded installation and blocks API writes. It saves `board.png`, `board-dark.png`, `detail.png`, `test.png`, `history.png`, `projects.png`, `waiting.png` and `summary.png` under `docs/images/`. A project opened today shows the summary's opening-day message until there are at least two days of chart data. These are fictional demo records; their AI check messages do not describe checks run on Pano itself.
 
-## Trademarks
-
-Product names and logos belong to their owners. Pano uses them only to identify which tool an agent runs on and is not affiliated with or endorsed by them.
-
-Logo paths come from [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0; its GitHub Copilot icon is MIT). Simple Icons no longer includes the OpenAI mark, so that path comes from [OpenAI's own repository](https://github.com/openai/build-hours/blob/main/25-realtime-2/public/openai.svg) (MIT).
-
-## License
-
-[MIT](LICENSE). The MIT license covers the code, not the third-party names and logos listed under Trademarks.
-
-
-## Security scans and coverage
+### Security scans and coverage
 
 Run `bun run audit` for the Bun dependency audit. Scan the lockfile with OSV-Scanner:
 
@@ -239,3 +265,13 @@ MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd -W):/repo:ro" ghcr.io/google/osv-sc
 Build the image with `docker build -t pano-scan .` and scan it with `grype pano-scan --only-fixed --fail-on high`.
 
 Run `bun run test:coverage` to create `coverage/lcov.info`. End-to-end runs do not count toward coverage. For SonarCloud coverage, first turn off Automatic analysis at Administration > Analysis method, create a token, add it as the GitHub secret `SONAR_TOKEN`, and push. CI scans are rejected while Automatic analysis is enabled.
+
+## Trademarks
+
+Product names and logos belong to their owners. Pano uses them only to identify which tool an agent runs on and is not affiliated with or endorsed by them.
+
+Logo paths come from [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0; its GitHub Copilot icon is MIT). Simple Icons no longer includes the OpenAI mark, so that path comes from [OpenAI's own repository](https://github.com/openai/build-hours/blob/main/25-realtime-2/public/openai.svg) (MIT).
+
+## License
+
+[MIT](LICENSE). The MIT license covers the code, not the third-party names and logos listed under Trademarks.
