@@ -62,16 +62,20 @@ async function fixture(
     fetcher: Fetch,
   ) => Promise<void>,
 ) {
-  const folder = await mkdtemp(join(tmpdir(), "pano-import-"));
-  const core = createCore(":memory:");
-  const app = createApp({ core, dataDir: folder, token: "test-token" });
-  const fetcher: Fetch = async (url, init) => app.fetch(new Request(url, init));
+  const folder = await mkdtemp(join(process.cwd(), "scratch.import-"));
   try {
-    for (const [name, content] of Object.entries(files))
-      await writeFile(join(folder, name), content, "utf8");
-    await check(folder, core, fetcher);
+    const core = createCore(":memory:");
+    try {
+      const app = createApp({ core, dataDir: folder, token: "test-token" });
+      const fetcher: Fetch = async (url, init) =>
+        app.fetch(new Request(url, init));
+      for (const [name, content] of Object.entries(files))
+        await writeFile(join(folder, name), content, "utf8");
+      await check(folder, core, fetcher);
+    } finally {
+      core.db.close();
+    }
   } finally {
-    core.db.close();
     await rm(folder, { recursive: true, force: true });
   }
 }
@@ -294,5 +298,25 @@ test("backlog fixtures import through an injected in-memory API without touching
       added: 0,
       skipped: files.length,
     });
+  });
+});
+
+test("import rejects paths outside the current working directory", async () => {
+  await fixture({}, async (folder, _core, fetcher) => {
+    const inside = await run(
+      ["import", folder, "--project", "DEMO", "--json"],
+      fetcher,
+    );
+    expect(inside.code).toBe(0);
+    for (const outside of ["../x", tmpdir()]) {
+      const result = await run(
+        ["import", outside, "--project", "DEMO", "--json"],
+        fetcher,
+      );
+      expect(result.code).toBe(1);
+      expect(JSON.parse(result.err).error.message).toContain(
+        "inside the current working directory",
+      );
+    }
   });
 });

@@ -152,7 +152,7 @@ When an agent finishes a run, it can report what it used: `pano task usage APP-1
 
 Commands support `--help` and `--json`; errors go to stderr with exit code 1. `serve --json` prints startup information and keeps the server running. The CLI uses REST, so the web board updates as it works.
 
-To import a Markdown backlog, run `pano import backlog --project APP`. It creates a missing project, preserves statuses, priorities and acceptance criteria, and skips existing records. It also supports `--json`.
+To import a Markdown backlog, run `pano import backlog --project APP`. It creates a missing project, preserves statuses, priorities and acceptance criteria, and skips existing records. It also supports `--json`. The folder must resolve inside the current working directory.
 
 ### REST
 
@@ -220,3 +220,22 @@ Logo paths come from [Simple Icons](https://github.com/simple-icons/simple-icons
 ## License
 
 [MIT](LICENSE). The MIT license covers the code, not the third-party names and logos listed under Trademarks.
+
+
+## Security scans and coverage
+
+Run `bun run audit` for the Bun dependency audit. Scan the lockfile with OSV-Scanner:
+
+```sh
+docker run --rm -v "$(pwd):/repo:ro" ghcr.io/google/osv-scanner:latest scan source --lockfile /repo/bun.lock
+```
+
+On Windows Git Bash, use:
+
+```sh
+MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd -W):/repo:ro" ghcr.io/google/osv-scanner:latest scan source --lockfile /repo/bun.lock
+```
+
+Build the image with `docker build -t pano-scan .` and scan it with `grype pano-scan --only-fixed --fail-on high`.
+
+Run `bun run test:coverage` to create `coverage/lcov.info`. End-to-end runs do not count toward coverage. For SonarCloud coverage, first turn off Automatic analysis at Administration > Analysis method, create a token, add it as the GitHub secret `SONAR_TOKEN`, and push. CI scans are rejected while Automatic analysis is enabled.

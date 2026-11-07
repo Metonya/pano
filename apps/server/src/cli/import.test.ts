@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseBacklog } from "./import";
 import { runCli } from "./index";
@@ -65,7 +64,6 @@ test("backlog fixtures parse with their source IDs and checkbox completion", asy
 });
 
 test("CLI imports through injected fetch and skips source IDs on a second run", async () => {
-  const folder = await mkdtemp(join(tmpdir(), "pano-import-unit-"));
   const item = {
     key: "DEMO-5",
     body_md: "",
@@ -126,6 +124,7 @@ test("CLI imports through injected fetch and skips source IDs on a second run", 
     );
     return { code, out, err };
   };
+  const folder = await mkdtemp(join(process.cwd(), "scratch.import-"));
   try {
     await writeFile(
       join(folder, "PBI-012.md"),

@@ -1,5 +1,5 @@
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { readdir, readFile, realpath } from "node:fs/promises";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { itemCreate, projectKeySchema, statusSchema } from "@pano/core";
 import { z } from "zod";
 import { parse, requireArgs } from "./args";
@@ -113,7 +113,25 @@ export async function importBacklog(args: string[], api: Client) {
   const { values, positionals } = parse(args, { project: { type: "string" } });
   requireArgs(positionals, 1, "import <backlog-klasörü> --project KEY");
   const project = projectKeySchema.parse(values.project);
-  const folder = positionals[0];
+  const cwd = await realpath(process.cwd());
+  const withinCwd = (path: string) => {
+    const difference = relative(cwd, path);
+    return (
+      difference !== ".." &&
+      !difference.startsWith(`..${sep}`) &&
+      !isAbsolute(difference)
+    );
+  };
+  const requested = resolve(cwd, positionals[0]);
+  if (!withinCwd(requested))
+    throw new Error(
+      "Import folder must be inside the current working directory.",
+    );
+  const folder = await realpath(requested);
+  if (!withinCwd(folder))
+    throw new Error(
+      "Import folder must be inside the current working directory.",
+    );
   const files = (await readdir(folder, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && /^PBI-.*\.md$/.test(entry.name))
     .map((entry) => entry.name)
