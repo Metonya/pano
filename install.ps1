@@ -38,7 +38,11 @@ function Install-Pano {
         $matchesForAsset = @(Get-Content (Join-Path $tempDir 'SHA256SUMS.txt') | Where-Object { $_ -match '^([0-9a-fA-F]{64})\s+\*?pano-windows-x64\.exe\s*$' })
         if ($matchesForAsset.Count -ne 1) { throw 'Missing or invalid checksum for Pano.' }
         $expected = ($matchesForAsset[0] -split '\s+')[0]
-        $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $tempDir $asset)).Hash
+        # Not Get-FileHash: Windows PowerShell started from PowerShell 7 may not find it.
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try { $hash = $sha256.ComputeHash([IO.File]::ReadAllBytes((Join-Path $tempDir $asset))) }
+        finally { $sha256.Dispose() }
+        $actual = [BitConverter]::ToString($hash) -replace '-', ''
         if ($actual -ne $expected) { throw 'SHA-256 checksum mismatch. Nothing was installed.' }
         $dir = $env:PANO_INSTALL_DIR
         if (-not $dir) { $dir = Join-Path $env:LOCALAPPDATA 'Programs\pano' }
