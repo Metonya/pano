@@ -40,6 +40,14 @@ test("project suggestions skip active and archived keys and cap suffix length", 
   expect(core.projects.suggestKey("Snakeful")).toBe("SNAKEF13");
   expect(core.projects.suggestKey("Snakeful")).toMatch(/^[A-Z0-9]{2,10}$/);
 });
+test("project key suggestions fill the first available suffix", () => {
+  const core = createCore(":memory:");
+  cores.push(core);
+  for (const key of ["PANO", "PANO2", "PANO4"]) {
+    core.projects.create({ key, name: key }, "mert");
+  }
+  expect(core.projects.suggestKey("Pano")).toBe("PANO3");
+});
 function setup() {
   const core = createCore(":memory:");
   cores.push(core);

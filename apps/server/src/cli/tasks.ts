@@ -1,35 +1,54 @@
 import { parse, requireArgs } from "./args";
 import { type Client, segment } from "./client";
 
+function taskOptions(command: string | undefined) {
+  switch (command) {
+    case "create":
+      return {
+        criteria: { type: "string", multiple: true },
+        body: { type: "string" },
+        priority: { type: "string" },
+        assignee: { type: "string" },
+      };
+    case "move":
+      return { reason: { type: "string" } };
+    case "show":
+      return { history: { type: "boolean" } };
+    case "check":
+      return { undo: { type: "boolean" } };
+    case "usage":
+      return Object.fromEntries(
+        [
+          "model",
+          "effort",
+          "input",
+          "output",
+          "cache",
+          "total",
+          "context",
+          "duration",
+          "note",
+        ].map((name) => [name, { type: "string" }]),
+      );
+    default:
+      return {};
+  }
+}
+
+function usageCount(
+  values: Record<string, string | boolean | string[] | undefined>,
+  flag: string,
+) {
+  const value = values[flag];
+  if (value === undefined) return undefined;
+  if (!/^\d+$/.test(String(value)))
+    throw new Error(`--${flag} negatif olmayan bir tam say? olmal?.`);
+  return Number(value);
+}
+
 export async function tasks(args: string[], api: Client) {
   const [command, ...rest] = args;
-  const options =
-    command === "create"
-      ? {
-          criteria: { type: "string", multiple: true },
-          body: { type: "string" },
-          priority: { type: "string" },
-          assignee: { type: "string" },
-        }
-      : command === "move"
-        ? { reason: { type: "string" } }
-        : command === "show"
-          ? { history: { type: "boolean" } }
-          : command === "check"
-            ? { undo: { type: "boolean" } }
-            : command === "usage"
-              ? {
-                  model: { type: "string" },
-                  effort: { type: "string" },
-                  input: { type: "string" },
-                  output: { type: "string" },
-                  cache: { type: "string" },
-                  total: { type: "string" },
-                  context: { type: "string" },
-                  duration: { type: "string" },
-                  note: { type: "string" },
-                }
-              : {};
+  const options = taskOptions(command);
   const { values, positionals: p } = parse(
     rest,
     options as Record<
@@ -100,24 +119,15 @@ export async function tasks(args: string[], api: Client) {
         1,
         'task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Not"]',
       );
-      const count = (
-        flag: "input" | "output" | "cache" | "total" | "context" | "duration",
-      ) => {
-        const value = values[flag];
-        if (value === undefined) return undefined;
-        if (!/^\d+$/.test(String(value)))
-          throw new Error(`--${flag} negatif olmayan bir tam sayı olmalı.`);
-        return Number(value);
-      };
       const usage = {
         model: values.model,
         effort: values.effort,
-        input_tokens: count("input"),
-        output_tokens: count("output"),
-        cache_tokens: count("cache"),
-        total_tokens: count("total"),
-        context_tokens: count("context"),
-        duration_ms: count("duration"),
+        input_tokens: usageCount(values, "input"),
+        output_tokens: usageCount(values, "output"),
+        cache_tokens: usageCount(values, "cache"),
+        total_tokens: usageCount(values, "total"),
+        context_tokens: usageCount(values, "context"),
+        duration_ms: usageCount(values, "duration"),
         note: values.note,
       };
       if (Object.values(usage).every((value) => value === undefined))

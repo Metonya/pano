@@ -70,7 +70,7 @@ export function childContent(
   if (!lines.length) return null;
   return {
     kind: entry.kind === "scenario_added" ? "added" : "removed",
-    lines: lines.flatMap((line) => line.replace(/\r\n/g, "\n").split("\n")),
+    lines: lines.flatMap((line) => line.replaceAll("\r\n", "\n").split("\n")),
   };
 }
 

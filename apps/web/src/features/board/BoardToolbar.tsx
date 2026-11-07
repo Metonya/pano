@@ -1,5 +1,5 @@
 import { Plus, Search, Settings, Star, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Project } from "@/lib/api";
 import { t } from "@/lib/i18n";
@@ -24,7 +24,12 @@ export function BoardToolbar({
   onSettings: () => void;
 }) {
   const [searching, setSearching] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const target = document.getElementById("page-toolbar-actions");
+  const searchVisible = searching || !!filters.search;
+  useEffect(() => {
+    if (target && searchVisible) searchRef.current?.focus();
+  }, [searchVisible, target]);
   if (!target) return null;
   const clearSearch = () => {
     setFilters({ ...filters, search: "" });
@@ -51,8 +56,7 @@ export function BoardToolbar({
         <span className="board-search">
           <Search size={15} aria-hidden="true" />
           <input
-            // biome-ignore lint/a11y/noAutofocus: the field only appears after the search button is pressed.
-            autoFocus
+            ref={searchRef}
             aria-label={t("search")}
             placeholder={t("search")}
             value={filters.search}

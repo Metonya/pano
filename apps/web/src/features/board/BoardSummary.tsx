@@ -5,7 +5,7 @@ import { useEffect, useId, useState } from "react";
 import { type Project, request } from "@/lib/api";
 import { language, t } from "@/lib/i18n";
 import { relativeTime } from "./format";
-import { chartDateLabel, openedSummary } from "./summaryDates";
+import { chartDateLabel, latestActivity, openedSummary } from "./summaryDates";
 import type { BoardItem } from "./types";
 import { formatTokens } from "./usage";
 import "./summary.css";
@@ -199,12 +199,10 @@ export function BoardSummary({
     query.data?.remaining_by_priority.high ??
     active.filter((item) => item.priority === "high" && item.status !== "done")
       .length;
-  const last =
-    items
-      .map((item) => item.last_activity)
-      .filter(Boolean)
-      .sort()
-      .at(-1) ?? project.updated_at;
+  const last = latestActivity(
+    items.map((item) => item.last_activity),
+    project.updated_at,
+  );
   const started = new Date(
     query.data?.started_at ?? project.created_at,
   ).toLocaleDateString(language(), { day: "numeric", month: "short" });

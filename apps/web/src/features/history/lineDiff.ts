@@ -30,8 +30,8 @@ function lcs(a: string[], b: string[]): string[] {
 }
 
 export function lineDiff(before: string, after: string): DiffLine[] {
-  const a = before === "" ? [] : before.replace(/\r\n/g, "\n").split("\n");
-  const b = after === "" ? [] : after.replace(/\r\n/g, "\n").split("\n");
+  const a = before === "" ? [] : before.replaceAll("\r\n", "\n").split("\n");
+  const b = after === "" ? [] : after.replaceAll("\r\n", "\n").split("\n");
   const result: DiffLine[] = [];
   let i = 0,
     j = 0;

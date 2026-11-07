@@ -1,11 +1,27 @@
 import { beforeEach, expect, test } from "bun:test";
 import { setLanguage } from "@/lib/i18n";
-import { chartDateLabel, openedSummary } from "./summaryDates";
+import { chartDateLabel, latestActivity, openedSummary } from "./summaryDates";
 
 beforeEach(async () => {
   await setLanguage("tr", false);
 });
 const timeZone = "Europe/Istanbul";
+
+test("latest activity uses the newest ISO timestamp or the project fallback", () => {
+  const fallback = "2026-01-01T00:00:00.000Z";
+  expect(
+    latestActivity(
+      [
+        null,
+        "2026-11-01T00:00:00.000Z",
+        "2026-11-02T00:00:00.000Z",
+        "2026-10-30T00:00:00.000Z",
+      ],
+      fallback,
+    ),
+  ).toBe("2026-11-02T00:00:00.000Z");
+  expect(latestActivity([undefined, null], fallback)).toBe(fallback);
+});
 
 test("one-point projects use the user's calendar day across UTC midnight", () => {
   // Both instants are Nov 6 in UTC, but opening was yesterday in Istanbul.

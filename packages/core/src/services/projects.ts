@@ -20,6 +20,49 @@ export function createProjects(context: Context) {
     get,
     userName,
   } = context;
+  function moveTestItemsWhenDisabled(
+    enabled: boolean,
+    row: Row,
+    id: string,
+    data: z.output<typeof projectPatch>,
+    actor: string,
+  ) {
+    if (!enabled && row.test_column) {
+      const testing = all(
+        "SELECT * FROM items WHERE project_id = ? AND status = 'test'",
+        id,
+      );
+      if (testing.length && !data.test_items_destination)
+        throw new Error("Choose where Test items should move");
+      for (const entry of testing) {
+        const status = data.test_items_destination;
+        if (!status) throw new Error("Choose where Test items should move");
+        if (
+          status === "done" &&
+          get(
+            "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed'",
+            str(entry.id),
+          )
+        )
+          throw new Error("Failed test scenarios prevent moving to Done");
+        update("items", str(entry.id), {
+          status,
+          updated_at: now(),
+          done_at: status === "done" ? now() : null,
+          seen_at: null,
+        });
+        log(
+          id,
+          str(entry.id),
+          actor,
+          "moved",
+          { status: "test" },
+          { status },
+          "Test column disabled",
+        );
+      }
+    }
+  }
   const projects = {
     suggestKey(name: string) {
       const words = name
@@ -42,9 +85,11 @@ export function createProjects(context: Context) {
         all("SELECT key FROM projects").map((row) => row.key),
       );
       let key = base;
-      for (let suffix = 2; used.has(key); suffix++) {
+      let suffix = 2;
+      while (used.has(key)) {
         const number = String(suffix);
         key = base.slice(0, 10 - number.length) + number;
+        suffix++;
       }
       return key;
     },
@@ -157,41 +202,7 @@ export function createProjects(context: Context) {
         const canClose = data.ai_can_close ?? Boolean(row.ai_can_close);
         if (!enabled && !canClose)
           throw new Error("Test column and AI Done cannot both be disabled");
-        if (!enabled && row.test_column) {
-          const testing = all(
-            "SELECT * FROM items WHERE project_id = ? AND status = 'test'",
-            id,
-          );
-          if (testing.length && !data.test_items_destination)
-            throw new Error("Choose where Test items should move");
-          for (const entry of testing) {
-            const status = data.test_items_destination;
-            if (!status) throw new Error("Choose where Test items should move");
-            if (
-              status === "done" &&
-              get(
-                "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed'",
-                str(entry.id),
-              )
-            )
-              throw new Error("Failed test scenarios prevent moving to Done");
-            update("items", str(entry.id), {
-              status,
-              updated_at: now(),
-              done_at: status === "done" ? now() : null,
-              seen_at: null,
-            });
-            log(
-              id,
-              str(entry.id),
-              actor,
-              "moved",
-              { status: "test" },
-              { status },
-              "Test column disabled",
-            );
-          }
-        }
+        moveTestItemsWhenDisabled(enabled, row, id, data, actor);
         const patch: Values = {};
         for (const [k, v] of Object.entries(data))
           if (v !== undefined && k !== "test_items_destination")

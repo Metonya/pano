@@ -1,5 +1,17 @@
 import { language, t } from "@/lib/i18n";
 
+export function latestActivity(
+  values: (string | null | undefined)[],
+  fallback: string,
+): string {
+  return (
+    values.reduce<string>(
+      (latest, value) => (value && value > latest ? value : latest),
+      "",
+    ) || fallback
+  );
+}
+
 export function localDate(value: Date, timeZone?: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,

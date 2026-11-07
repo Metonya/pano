@@ -10,6 +10,46 @@ export interface UpdateOptions {
   rename?: typeof rename;
 }
 
+async function installUpdate(
+  path: string,
+  platform: NodeJS.Platform,
+  move: typeof rename,
+  bytes: Buffer,
+) {
+  const temp = `${path}.new`,
+    backup = `${path}.bak`;
+  const old = `${path}.old`;
+  let backedUp = false;
+  let moved = false;
+  try {
+    await writeFile(temp, bytes, { mode: 0o755 });
+    await chmod(temp, 0o755);
+    await copyFile(path, backup);
+    backedUp = true;
+    // Windows allows renaming a running executable, but not overwriting it.
+    if (platform === "win32") {
+      await move(path, old);
+      moved = true;
+    }
+    await move(temp, path);
+  } catch (error) {
+    await unlink(temp).catch(() => {});
+    try {
+      if (moved) await move(old, path);
+      else if (backedUp && platform !== "win32") await copyFile(backup, path);
+    } catch (restoreError) {
+      throw new Error(
+        `Update failed: ${error instanceof Error ? error.message : String(error)}. Could not restore the previous binary: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}. Backup: ${backup}${moved ? `; previous executable: ${old}` : ""}.`,
+        { cause: error },
+      );
+    }
+    throw new Error(
+      `Update failed; the previous binary was preserved: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+}
+
 export async function update(
   fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch,
   options: UpdateOptions = {},
@@ -55,37 +95,6 @@ export async function update(
     createHash("sha256").update(bytes).digest("hex") !== checksum.toLowerCase()
   )
     throw new Error("SHA-256 checksum mismatch; binary was not changed.");
-  const temp = `${path}.new`,
-    backup = `${path}.bak`;
-  const old = `${path}.old`;
-  let backedUp = false;
-  let moved = false;
-  try {
-    await writeFile(temp, bytes, { mode: 0o755 });
-    await chmod(temp, 0o755);
-    await copyFile(path, backup);
-    backedUp = true;
-    // Windows allows renaming a running executable, but not overwriting it.
-    if (platform === "win32") {
-      await move(path, old);
-      moved = true;
-    }
-    await move(temp, path);
-  } catch (error) {
-    await unlink(temp).catch(() => {});
-    try {
-      if (moved) await move(old, path);
-      else if (backedUp && platform !== "win32") await copyFile(backup, path);
-    } catch (restoreError) {
-      throw new Error(
-        `Update failed: ${error instanceof Error ? error.message : String(error)}. Could not restore the previous binary: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}. Backup: ${backup}${moved ? `; previous executable: ${old}` : ""}.`,
-        { cause: error },
-      );
-    }
-    throw new Error(
-      `Update failed; the previous binary was preserved: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
+  await installUpdate(path, platform, move, bytes);
   return "Update installed. Run pano --version to check it.";
 }

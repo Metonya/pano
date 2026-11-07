@@ -235,6 +235,74 @@ async function prepareTest(key: string, index: number) {
     await api(`/items/${key}/records`, { kind: "check", message }, "codex");
 }
 
+async function seedCard(card: Card, index: number) {
+  const item = await api<Item>("/projects/DRIFT/items", {
+    title: card.title,
+    body_md: card.body,
+    criteria: card.criteria,
+    priority: card.priority,
+    assignee: card.status === "backlog" ? "claude:po" : "codex",
+  });
+  if (card.status === "backlog") return;
+  await api(`/items/${item.key}/move`, { status: "in_progress" }, "codex");
+  const complete = card.status === "done" || card.status === "test";
+  for (const criterion of complete ? item.criteria : item.criteria.slice(0, 1))
+    await api(
+      `/items/${item.key}/criteria/${criterion.id}`,
+      { done: true },
+      "codex",
+      "PATCH",
+    );
+  if (card.status === "test") {
+    await prepareTest(item.key, index);
+    await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
+    await api(`/items/${item.key}/move`, { status: "test" }, "codex");
+  } else if (card.status === "done") {
+    await api(
+      `/items/${item.key}/records`,
+      {
+        kind: "check",
+        message: "Acceptance criteria verified; unit tests passed",
+      },
+      "codex",
+    );
+    await api(`/items/${item.key}/move`, { status: "done" }, "codex");
+  }
+  if (index === 4) {
+    await api(
+      `/items/${item.key}/send-back`,
+      {
+        note: "Text size resets after reload. Please persist the reader preference before another review.",
+      },
+      "alex",
+    );
+    await api(
+      `/items/${item.key}`,
+      {
+        body_md: `${card.body}\n\nPersist text size in browser storage and restore it before rendering.`,
+      },
+      "codex",
+      "PATCH",
+    );
+    await api(`/items/${item.key}/records`, {
+      kind: "decision",
+      message:
+        "Keep text size per browser so shared-server readers can choose independently.",
+    });
+    await api(
+      `/items/${item.key}/records`,
+      {
+        kind: "note",
+        message:
+          "Fixed preference restoration and checked reload behavior. Ready for another review.",
+      },
+      "codex",
+    );
+    await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
+    await api(`/items/${item.key}/move`, { status: "test" }, "codex");
+  }
+}
+
 async function main() {
   const projects = await api<{ key: string }[]>(
     "/projects?includeArchived=true",
@@ -254,75 +322,7 @@ async function main() {
   });
   await api("/settings", { userName: "alex" }, "alex", "PATCH");
   await api("/projects/DRIFT/star", { starred: true }, "alex");
-  for (const [index, card] of cards.entries()) {
-    const item = await api<Item>("/projects/DRIFT/items", {
-      title: card.title,
-      body_md: card.body,
-      criteria: card.criteria,
-      priority: card.priority,
-      assignee: card.status === "backlog" ? "claude:po" : "codex",
-    });
-    if (card.status === "backlog") continue;
-    await api(`/items/${item.key}/move`, { status: "in_progress" }, "codex");
-    const complete = card.status === "done" || card.status === "test";
-    for (const criterion of complete
-      ? item.criteria
-      : item.criteria.slice(0, 1))
-      await api(
-        `/items/${item.key}/criteria/${criterion.id}`,
-        { done: true },
-        "codex",
-        "PATCH",
-      );
-    if (card.status === "test") {
-      await prepareTest(item.key, index);
-      await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
-      await api(`/items/${item.key}/move`, { status: "test" }, "codex");
-    } else if (card.status === "done") {
-      await api(
-        `/items/${item.key}/records`,
-        {
-          kind: "check",
-          message: "Acceptance criteria verified; unit tests passed",
-        },
-        "codex",
-      );
-      await api(`/items/${item.key}/move`, { status: "done" }, "codex");
-    }
-    if (index === 4) {
-      await api(
-        `/items/${item.key}/send-back`,
-        {
-          note: "Text size resets after reload. Please persist the reader preference before another review.",
-        },
-        "alex",
-      );
-      await api(
-        `/items/${item.key}`,
-        {
-          body_md: `${card.body}\n\nPersist text size in browser storage and restore it before rendering.`,
-        },
-        "codex",
-        "PATCH",
-      );
-      await api(`/items/${item.key}/records`, {
-        kind: "decision",
-        message:
-          "Keep text size per browser so shared-server readers can choose independently.",
-      });
-      await api(
-        `/items/${item.key}/records`,
-        {
-          kind: "note",
-          message:
-            "Fixed preference restoration and checked reload behavior. Ready for another review.",
-        },
-        "codex",
-      );
-      await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
-      await api(`/items/${item.key}/move`, { status: "test" }, "codex");
-    }
-  }
+  for (const [index, card] of cards.entries()) await seedCard(card, index);
   if (!projects.some((project) => project.key === "NOTES")) {
     await api("/projects", {
       key: "NOTES",

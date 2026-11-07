@@ -128,6 +128,106 @@ function assigneeLabel(assignee: string | null) {
   );
 }
 
+function ItemDescription({
+  d,
+  editing,
+  setEditing,
+  expanded,
+  setExpanded,
+  body,
+  setBody,
+  itemKey,
+  change,
+}: {
+  d: Detail | undefined;
+  editing: boolean;
+  setEditing: (value: boolean) => void;
+  expanded: boolean;
+  setExpanded: (value: boolean) => void;
+  body: string;
+  setBody: (value: string) => void;
+  itemKey: string;
+  change: (path: string, data: object, method?: string) => Promise<boolean>;
+}) {
+  return (
+    d && (
+      <section className="sheet-section">
+        <div className="sheet-section-heading">
+          <h3>{t("description")}</h3>
+          {!editing && (
+            <button
+              type="button"
+              className="sheet-link"
+              onClick={() => {
+                setBody(d.body_md);
+                setEditing(true);
+              }}
+            >
+              {t("edit")}
+            </button>
+          )}
+        </div>
+        {editing ? (
+          <>
+            <textarea
+              className="sheet-textarea"
+              aria-label={t("description")}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+            />
+            <div className="sheet-form-actions">
+              <button
+                type="button"
+                className="sheet-button"
+                onClick={() => setEditing(false)}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                type="button"
+                className="primary"
+                onClick={async () => {
+                  if (
+                    await change(
+                      `/items/${itemKey}`,
+                      { body_md: body },
+                      "PATCH",
+                    )
+                  ) {
+                    setEditing(false);
+                  }
+                }}
+              >
+                {t("save")}
+              </button>
+            </div>
+          </>
+        ) : d.body_md.trim() ? (
+          <>
+            <div
+              className={`markdown ${d.body_md.length > LONG_BODY && !expanded ? "is-clamped" : ""}`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {d.body_md}
+              </ReactMarkdown>
+            </div>
+            {d.body_md.length > LONG_BODY && (
+              <button
+                type="button"
+                className="sheet-link"
+                aria-expanded={expanded}
+                onClick={() => setExpanded(!expanded)}
+              >
+                {t(expanded ? "showLess" : "showMore")}
+              </button>
+            )}
+          </>
+        ) : null}
+      </section>
+    )
+  );
+}
+
 export function ItemDialog({
   projectKey,
   item,
@@ -392,75 +492,6 @@ export function ItemDialog({
   )?.actor;
   const recent = d?.activity.filter(isImportant).slice(0, 3) ?? [];
   const criteriaDone = d?.criteria.filter((c) => c.done).length ?? 0;
-  const description = d && (
-    <section className="sheet-section">
-      <div className="sheet-section-heading">
-        <h3>{t("description")}</h3>
-        {!editing && (
-          <button
-            type="button"
-            className="sheet-link"
-            onClick={() => {
-              setBody(d.body_md);
-              setEditing(true);
-            }}
-          >
-            {t("edit")}
-          </button>
-        )}
-      </div>
-      {editing ? (
-        <>
-          <textarea
-            className="sheet-textarea"
-            aria-label={t("description")}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-          <div className="sheet-form-actions">
-            <button
-              type="button"
-              className="sheet-button"
-              onClick={() => setEditing(false)}
-            >
-              {t("cancel")}
-            </button>
-            <button
-              type="button"
-              className="primary"
-              onClick={async () => {
-                if (await change(`/items/${key}`, { body_md: body }, "PATCH")) {
-                  setEditing(false);
-                }
-              }}
-            >
-              {t("save")}
-            </button>
-          </div>
-        </>
-      ) : d.body_md.trim() ? (
-        <>
-          <div
-            className={`markdown ${d.body_md.length > LONG_BODY && !expanded ? "is-clamped" : ""}`}
-          >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {d.body_md}
-            </ReactMarkdown>
-          </div>
-          {d.body_md.length > LONG_BODY && (
-            <button
-              type="button"
-              className="sheet-link"
-              aria-expanded={expanded}
-              onClick={() => setExpanded(!expanded)}
-            >
-              {t(expanded ? "showLess" : "showMore")}
-            </button>
-          )}
-        </>
-      ) : null}
-    </section>
-  );
   return (
     <ManagedDialog
       className="item-sheet"
@@ -743,7 +774,17 @@ export function ItemDialog({
               composing={composing}
               setComposing={setComposing}
             >
-              {description}
+              <ItemDescription
+                d={d}
+                editing={editing}
+                setEditing={setEditing}
+                expanded={expanded}
+                setExpanded={setExpanded}
+                body={body}
+                setBody={setBody}
+                itemKey={key}
+                change={change}
+              />
               <section className="sheet-section">
                 <h3>{t("criteria")}</h3>
                 <div className="criteria-list">

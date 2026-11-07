@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { parseBacklog } from "./import";
+import { checkboxLine, headingLine, parseBacklog } from "./import";
 import { runCli } from "./index";
 
 test("parser preserves CRLF Markdown and ignores fenced examples when extracting criteria", () => {
@@ -38,6 +38,56 @@ test("frontmatter closing separators require a complete line and may end at EOF"
 
   const malformed = `${prefix}${"---not a separator\n".repeat(10_000)}`;
   expect(() => parseBacklog(malformed)).toThrow("PBI frontmatter bulunamadı.");
+});
+
+test("acceptance heading handles closing hashes and long whitespace safely", () => {
+  const prefix =
+    "---\nid: PBI-012\ntitle: Boundary\nstatus: backlog\npriority: P2\n---\n";
+  const longHeading = `## ${" ".repeat(50_000)}not a heading`;
+  const parsed = parseBacklog(
+    `${prefix}${longHeading}\n## Kabul kriterleri ###\n- [x] Works\n`,
+  );
+  expect(parsed.criteria).toEqual([{ text: "Works", done: true }]);
+  expect(parsed.item.body_md).toContain(longHeading);
+});
+
+test("line parsers preserve heading and checkbox whitespace matching", () => {
+  const parts = [
+    "",
+    " ",
+    "  ",
+    "\t",
+    "\u00a0",
+    "a",
+    " a ",
+    "a\nb",
+    "\r\n",
+    "\u2028x",
+  ];
+  for (const prefix of [
+    "# ",
+    "  ##\t",
+    "####### ",
+    "- [x] ",
+    " * [ ]\t",
+    "+ [X] ",
+  ]) {
+    for (const part of parts) {
+      for (const suffix of ["", " ", "\n", "\r\n"]) {
+        const line = prefix + part + suffix;
+        const heading = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*$/.exec(line);
+        const checkbox = /^\s*[-*+]\s+\[([ xX])\]\s+(.+?)\s*$/.exec(line);
+        expect(headingLine(line)).toEqual(
+          heading ? { level: heading[1].length, text: heading[2] } : undefined,
+        );
+        expect(checkboxLine(line)).toEqual(
+          checkbox
+            ? { text: checkbox[2], done: checkbox[1] !== " " }
+            : undefined,
+        );
+      }
+    }
+  }
 });
 
 test("backlog fixtures parse with their source IDs and checkbox completion", async () => {

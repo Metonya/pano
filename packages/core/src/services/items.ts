@@ -29,6 +29,39 @@ export function createItems(
   /** Agents can hand work to the person without knowing their name. */
   const resolveAssignee = (assignee: string | null | undefined) =>
     assignee?.toLowerCase() === HUMAN_ALIAS ? userName() : assignee;
+  function validateItemUpdate(
+    data: z.output<typeof itemPatch>,
+    row: Row,
+    p: Row,
+    id: string,
+    actor: string,
+  ) {
+    if (
+      data.status === "cancelled" &&
+      row.status !== "cancelled" &&
+      !data.reason
+    )
+      throw new Error("Cancellation requires a reason");
+    if (data.status === "test" && !p.test_column)
+      throw new Error("Test column is disabled for this project");
+    if (
+      data.status === "done" &&
+      !p.ai_can_close &&
+      isAiActor(actor, userName())
+    )
+      throw new Error("AI cannot close items in this project");
+    if (
+      data.status === "done" &&
+      row.status === "test" &&
+      get(
+        "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed' LIMIT 1",
+        id,
+      )
+    )
+      throw new Error("Failed test scenarios prevent approval");
+    if (data.status === "in_progress" && row.status === "test" && !data.reason)
+      throw new Error("Sending an item back requires a reason");
+  }
   const items = {
     list(
       projectKey: string,
@@ -215,35 +248,7 @@ export function createItems(
         const id = str(row.id);
         const pid = str(row.project_id);
         const p = project(str(row.project_key));
-        if (
-          data.status === "cancelled" &&
-          row.status !== "cancelled" &&
-          !data.reason
-        )
-          throw new Error("Cancellation requires a reason");
-        if (data.status === "test" && !p.test_column)
-          throw new Error("Test column is disabled for this project");
-        if (
-          data.status === "done" &&
-          !p.ai_can_close &&
-          isAiActor(actor, userName())
-        )
-          throw new Error("AI cannot close items in this project");
-        if (
-          data.status === "done" &&
-          row.status === "test" &&
-          get(
-            "SELECT id FROM test_scenarios WHERE item_id = ? AND removed_at IS NULL AND result = 'failed' LIMIT 1",
-            id,
-          )
-        )
-          throw new Error("Failed test scenarios prevent approval");
-        if (
-          data.status === "in_progress" &&
-          row.status === "test" &&
-          !data.reason
-        )
-          throw new Error("Sending an item back requires a reason");
+        validateItemUpdate(data, row, p, id, actor);
         const { reason, ...fields } = data;
         const patch: Values = {};
         for (const [k, v] of Object.entries(fields))
@@ -360,6 +365,24 @@ export function createItems(
       });
     },
   };
+  function previousAiAssignee(key: string): string | null {
+    const history = activity.list(key);
+    // Back to whoever worked on it last; nobody yet leaves it unassigned.
+    let assignee: string | null = null;
+    for (const entry of history) {
+      const candidates = [entry.actor];
+      for (const value of [entry.after_json, entry.before_json]) {
+        if (typeof value === "string")
+          candidates.push(JSON.parse(value).assignee);
+      }
+      const found = candidates.find((value) => isAiActor(value, userName()));
+      if (typeof found === "string") {
+        assignee = found;
+        break;
+      }
+    }
+    return assignee;
+  }
   function transition(
     key: string,
     kind: "approved" | "sent_back",
@@ -394,21 +417,7 @@ export function createItems(
             "Attachment does not belong to item or is already linked",
           );
       }
-      const history = activity.list(key);
-      // Back to whoever worked on it last; nobody yet leaves it unassigned.
-      let assignee: string | null = null;
-      for (const entry of history) {
-        const candidates = [entry.actor];
-        for (const value of [entry.after_json, entry.before_json]) {
-          if (typeof value === "string")
-            candidates.push(JSON.parse(value).assignee);
-        }
-        const found = candidates.find((value) => isAiActor(value, userName()));
-        if (typeof found === "string") {
-          assignee = found;
-          break;
-        }
-      }
+      const assignee = previousAiAssignee(key);
       const patch: Values =
         kind === "approved"
           ? { status: "done", done_at: now(), seen_at: null }
