@@ -1,9 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
+import { stripTrailingSlashes } from "@pano/core/url";
 import { chromium, expect } from "@playwright/test";
 import en from "../src/i18n/en.json" with { type: "json" };
 
-const baseURL = process.env.PANO_URL?.replace(/\/+$/, "");
+const baseURL = process.env.PANO_URL
+  ? stripTrailingSlashes(process.env.PANO_URL)
+  : undefined;
 const token = process.env.PANO_TOKEN;
 if (!baseURL || !token)
   throw new Error("Set PANO_URL and PANO_TOKEN for the demo installation.");

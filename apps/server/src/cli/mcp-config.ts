@@ -1,5 +1,7 @@
+import { stripTrailingSlashes } from "@pano/core/url";
+
 export function mcpConfig(target: string, env: NodeJS.ProcessEnv) {
-  const url = `${(env.PANO_URL || "http://127.0.0.1:7777").replace(/\/+$/, "")}/mcp`;
+  const url = `${stripTrailingSlashes(env.PANO_URL || "http://127.0.0.1:7777")}/mcp`;
   switch (target) {
     case "claude":
       return `claude mcp add --transport http pano ${JSON.stringify(url)}${env.PANO_TOKEN ? ` --header ${JSON.stringify(`Authorization: Bearer ${env.PANO_TOKEN}`)}` : ""}`;

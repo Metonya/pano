@@ -1,7 +1,9 @@
 // Run only against a disposable demo installation. Never the working Pano database.
-export {};
+import { stripTrailingSlashes } from "../packages/core/src/url";
 
-const base = process.env.PANO_URL?.replace(/\/+$/, "");
+const base = process.env.PANO_URL
+  ? stripTrailingSlashes(process.env.PANO_URL)
+  : undefined;
 const token = process.env.PANO_TOKEN;
 if (!base || !token)
   throw new Error("Set PANO_URL and PANO_TOKEN for the demo installation.");

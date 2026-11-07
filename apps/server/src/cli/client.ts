@@ -1,7 +1,9 @@
+import { stripTrailingSlashes } from "@pano/core/url";
+
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 export function client(env: NodeJS.ProcessEnv, fetcher: Fetch) {
-  const base = (env.PANO_URL || "http://127.0.0.1:7777").replace(/\/+$/, "");
+  const base = stripTrailingSlashes(env.PANO_URL || "http://127.0.0.1:7777");
   return async (
     path: string,
     method = "GET",
