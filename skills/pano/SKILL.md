@@ -18,8 +18,19 @@ Set `PANO_URL` if the server uses a different address. If the installation requi
 1. Read the board, project settings, Definition of Done, and relevant item before changing work. Create a PBI with a clear outcome and verifiable acceptance criteria when planning new work. Avoid duplicate items.
 2. Assign work to the appropriate agent by tool name, such as `codex`, and move the item to In Progress. A PO coordinates and verifies delegated work when the user requests that role.
 3. Record decisions, progress, and actual verification results in the item. Use MCP `add_record` with `kind: "check"` or REST for test results; CLI `task note` creates a note. Mark only criteria that have been verified, using their returned IDs.
-4. If a person needs to verify the result, add scenarios with steps and expected outcomes, assign to `human`, and move the item to Test. Tell the user what to try. Otherwise, move it to Done after verification if project settings allow agents to close it.
-5. Keep history. Cancel obsolete work with a reason rather than deleting it. Report usage with `record_usage` or `pano task usage` only when values are known; never invent measurements.
+4. After every run on an item, before moving it on, you must report usage: model, tokens, peak context size, and duration. This applies to every agent and tool, including a coordinating PO. Use MCP `record_usage`, REST `POST /items/{key}/usage`, or `pano task usage`. Never invent values; omit anything you cannot read. Record a run covering several items once, on one item, with `--note` (or `note`) naming all covered items.
+5. If a person needs to verify the result, add scenarios with steps and expected outcomes, assign to `human`, and move the item to Test. Tell the user what to try. Otherwise, move it to Done after verification if project settings allow agents to close it.
+6. Keep history. Cancel obsolete work with a reason rather than deleting it.
+
+## Read usage
+
+The bundled readers need only Python's standard library and print JSON:
+
+- Claude Code logs: `~/.claude/projects/<project>/`. Run `python scripts/usage_from_claude.py <transcript.jsonl> [--since 2026-11-07T15:00:00Z]` from this skill folder. `--since` limits usage to the current run; repeated lines for one message count once.
+- Codex logs: `~/.codex/sessions/`. Run `python scripts/usage_from_codex.py <rollout.jsonl>` or `python scripts/usage_from_codex.py --cwd <folder>`. Resumed sessions share a file; record a session covering several items once and name them in `--note`.
+- Other tools: use the usage the tool reports, for example OpenCode's session result.
+
+Send the known usage fields from the JSON, omitting nulls and reader metadata (`messages`, `file`, `cwd`). Cached reads are excluded from the readers' totals; peak context is separate from usage.
 
 ## Commits
 
