@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp, createCore } from "./app";
-import { serverConfig } from "./main";
+import { serverConfig } from "./serve";
 
 const core = createCore(":memory:");
 const dirs: string[] = [];

@@ -141,7 +141,7 @@ export async function runCli(
           await (
             options.serve ??
             (async () => {
-              const { serve } = await import("../main");
+              const { serve } = await import("../serve");
               await serve();
             })
           )();

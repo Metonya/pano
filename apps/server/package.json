@@ -10,7 +10,7 @@
     "@hono/zod-openapi": "^1.6.3",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@pano/core": "workspace:*",
-    "hono": "^4.10.0",
+    "hono": "^4.13.17",
     "zod": "^4.6.7"
   }
 }
