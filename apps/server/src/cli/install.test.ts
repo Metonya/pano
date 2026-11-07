@@ -37,7 +37,7 @@ describe.skipIf(!shell || !supported)("one-line installer", () => {
       fetch(request) {
         if (mode === "missing") return new Response("missing", { status: 404 });
         if (new URL(request.url).pathname === `/${asset}`)
-          return new Response(binary);
+          return new Response(new Uint8Array(binary));
         if (new URL(request.url).pathname === "/SHA256SUMS.txt") {
           return new Response(
             `${mode === "bad" ? "0".repeat(64) : hash}  ${asset}\n`,

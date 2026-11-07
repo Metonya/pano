@@ -10,7 +10,7 @@ scratch/
 scratch.*
 
 # Local editor/agent launch settings
-.claude/launch.json
+.claude/
 
 # Playwright output
 apps/web/test-results/
