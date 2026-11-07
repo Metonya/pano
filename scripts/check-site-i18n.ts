@@ -16,12 +16,13 @@ async function checkTextFiles(directory: string) {
 
 await checkTextFiles("site");
 
+const byName = (a: string, b: string) => a.localeCompare(b);
 const dir = "site/i18n";
 const files = (await readdir(dir)).filter((name) => name.endsWith(".json"));
 const expected = ["az", "de", "en", "es", "fr", "hi", "ja", "ko", "nl", "pl", "pt", "sv", "tr", "zh"];
-if (files.map((file) => file.slice(0, -5)).sort().join() !== expected.join()) throw new Error("Locale list differs");
+if (files.map((file) => file.slice(0, -5)).sort(byName).join() !== expected.join()) throw new Error("Locale list differs");
 const english: Record<string, string> = JSON.parse(await readFile(`${dir}/en.json`, "utf8"));
-const reference = Object.keys(english).sort();
+const reference = Object.keys(english).sort(byName);
 // These are product terms shared unchanged across languages.
 const allowedIdentical = new Set(["skills"]);
 // "Suggestions" is also the natural French heading.
@@ -32,7 +33,7 @@ for (const file of files) {
   const raw = await readFile(`${dir}/${file}`, "utf8");
   if (raw.includes("\u2014") || raw.charCodeAt(0) === 0xfeff || raw.includes("\ufffd")) throw new Error(`Invalid character in ${file}`);
   const data = JSON.parse(raw);
-  if (Object.keys(data).sort().join() !== reference.join()) errors.push(`Key mismatch in ${file}`);
+  if (Object.keys(data).sort(byName).join() !== reference.join()) errors.push(`Key mismatch in ${file}`);
   if (Object.values(data).some((value) => typeof value !== "string" || !value)) errors.push(`Empty value in ${file}`);
   for (const key of reference) {
     const value = data[key];
@@ -53,7 +54,7 @@ if (errors.length) throw new Error(errors.join("\n"));
 const promptRaw = await readFile("site/prompts.json", "utf8");
 if (promptRaw.includes("\u2014") || promptRaw.charCodeAt(0) === 0xfeff || promptRaw.includes("\ufffd")) throw new Error("Invalid character in prompts.json");
 const prompts: Record<string, string> = JSON.parse(promptRaw);
-if (Object.keys(prompts).sort().join() !== expected.join()) throw new Error("Prompt locale list differs");
+if (Object.keys(prompts).sort(byName).join() !== expected.join()) throw new Error("Prompt locale list differs");
 for (const code of expected) {
   const prompt = prompts[code];
   if (typeof prompt !== "string" || !prompt || (code !== "en" && prompt === prompts.en)) throw new Error(`Untranslated starter prompt: ${code}`);
