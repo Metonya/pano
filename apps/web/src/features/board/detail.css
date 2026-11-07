@@ -210,6 +210,28 @@
   flex-shrink: 0;
   color: var(--muted);
 }
+/* The same control inside a form: a labelled field like its text neighbours. */
+.is-field {
+  gap: 8px;
+}
+.is-field > span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: inherit;
+}
+.is-field .sheet-property-button {
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  margin-left: 0;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+  font-size: 15px;
+  font-weight: 400;
+}
 .status-inline {
   display: inline-flex;
   align-items: center;
@@ -236,6 +258,9 @@
 .sheet-unassigned {
   color: var(--muted);
   font-weight: 500;
+}
+.is-field .sheet-unassigned {
+  font-weight: 400;
 }
 .sheet-body {
   flex: 1;

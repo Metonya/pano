@@ -1,19 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronDown,
-  CircleAlert,
-  Ellipsis,
-  Pencil,
-  Trash2,
-  X,
-} from "lucide-react";
-import {
-  type ReactNode,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { CircleAlert, Ellipsis, Pencil, Trash2, X } from "lucide-react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ManagedDialog } from "@/components/ManagedDialog";
@@ -22,22 +9,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AgentAvatar, AgentOption } from "@/features/agents/AgentAvatar";
-import {
-  agentInfo,
-  assigneeKey,
-  assigneeKeys,
-} from "@/features/agents/agentInfo";
+import { AgentAvatar } from "@/features/agents/AgentAvatar";
+import { assigneeKey, assigneeKeys } from "@/features/agents/agentInfo";
 import { ActivityTimeline } from "@/features/history/ActivityTimeline";
 import { isImportant, StatusFlow, statusFlow } from "@/features/history/entry";
 import { InlineConfirm, TestPanel } from "@/features/testing/TestPanel";
 import { date, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { activityText } from "./format";
+import { AssigneeProperty, PriorityProperty, Property } from "./ItemProperty";
 import {
   agentName,
   type BoardItem,
@@ -52,58 +34,6 @@ import "./detail.css";
 
 const LONG_BODY = 700;
 
-function Property({
-  label,
-  shown,
-  value,
-  onChange,
-  options,
-  disabled,
-  spoken,
-}: Readonly<{
-  label: string;
-  shown: ReactNode;
-  /** What the button says when the options alone do not tell it all. */
-  spoken?: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: ReactNode; text: string }[];
-  disabled?: boolean;
-}>) {
-  const text = spoken ?? options.find((o) => o.value === value)?.text ?? value;
-  return (
-    <div className="sheet-property">
-      <span aria-hidden="true">{label}</span>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild disabled={disabled}>
-          <button
-            type="button"
-            className="sheet-property-button"
-            aria-label={`${label}: ${text}`}
-          >
-            {shown}
-            {!disabled && <ChevronDown size={12} aria-hidden="true" />}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="menu-content"
-          align="start"
-          // Keep focus inside the sheet instead of jumping back to the trigger's scroll spot.
-          aria-label={label}
-        >
-          <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-            {options.map((option) => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>
-                {option.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
 const statusLabel = (status: Status) => (
   <span className="status-inline">
     <span className={`status-chip status-${status}`}>
@@ -112,21 +42,6 @@ const statusLabel = (status: Status) => (
     {labels[status]}
   </span>
 );
-
-function assigneeLabel(assignee: string | null) {
-  if (!assignee)
-    return <span className="sheet-unassigned">{t("unassigned")}</span>;
-  const { name, role } = agentInfo(assignee);
-  return (
-    <>
-      <span className="assignee sheet-assignee" title={assignee}>
-        <AgentAvatar id={assignee} />
-        {name}
-      </span>
-      {role && <small className="sheet-assignee-role">{role}</small>}
-    </>
-  );
-}
 
 function ItemDescription({
   d,
@@ -679,32 +594,16 @@ export function ItemDialog({
                 } else void change(`/items/${key}/move`, { status });
               }}
             />
-            <Property
-              label={t("priority")}
-              shown={t(d.priority)}
+            <PriorityProperty
               value={d.priority}
-              options={(["high", "medium", "low"] as const).map((p) => ({
-                value: p,
-                label: t(p),
-                text: t(p),
-              }))}
               onChange={(priority) =>
                 void change(`/items/${key}`, { priority }, "PATCH")
               }
             />
-            <Property
-              label={t("assignee")}
-              shown={assigneeLabel(d.assignee)}
-              spoken={d.assignee ? agentName(d.assignee) : undefined}
+            <AssigneeProperty
+              assignee={d.assignee}
               value={assigneeValue}
-              options={[
-                { value: "", label: t("unassigned"), text: t("unassigned") },
-                ...actors.map((a) => ({
-                  value: a,
-                  label: <AgentOption id={a} />,
-                  text: agentInfo(a).name,
-                })),
-              ]}
+              actors={actors}
               onChange={(value) => {
                 if (value !== assigneeValue)
                   void change(`/items/${key}/assign`, {
