@@ -11,9 +11,13 @@ export function eventsResponse(
     start(controller) {
       const send = (text: string) => controller.enqueue(encoder.encode(text));
       const listener = (event: ChangeEvent) => {
+        const kind =
+          event.kind === "created" || event.kind === "moved"
+            ? event.kind
+            : "updated";
         if (!project || event.projectId === project.id)
           send(
-            `event: ${event.itemId ? "item" : "project"}.${event.kind === "created" ? "created" : event.kind === "moved" ? "moved" : "updated"}\ndata: ${JSON.stringify(event)}\n\n`,
+            `event: ${event.itemId ? "item" : "project"}.${kind}\ndata: ${JSON.stringify(event)}\n\n`,
           );
       };
       const timer = setInterval(() => send(": heartbeat\n\n"), 15000);

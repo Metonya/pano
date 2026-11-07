@@ -7,13 +7,22 @@ export function Toolbar({
   archive,
   setMobile,
   setCreate,
-}: {
+}: Readonly<{
   all: Project[];
   archive: boolean;
   setMobile: (v: boolean) => void;
   setCreate: (v: boolean) => void;
-}) {
+}>) {
   const location = useLocation();
+  function title() {
+    if (location.pathname === "/waiting") return t("waiting");
+    if (location.pathname.startsWith("/projects/"))
+      return (
+        all.find((p) => location.pathname === `/projects/${p.key}`)?.name ??
+        t("projects")
+      );
+    return archive ? t("archive") : t("projects");
+  }
   return (
     <div className="toolbar">
       <button
@@ -24,16 +33,7 @@ export function Toolbar({
       >
         <Menu size={20} />
       </button>
-      <h1>
-        {location.pathname === "/waiting"
-          ? t("waiting")
-          : location.pathname.startsWith("/projects/")
-            ? (all.find((p) => location.pathname === `/projects/${p.key}`)
-                ?.name ?? t("projects"))
-            : archive
-              ? t("archive")
-              : t("projects")}
-      </h1>
+      <h1>{title()}</h1>
       <div id="page-toolbar-actions" />
       {/* /settings shows the settings window on top of the home page. */}
       {(location.pathname === "/" || location.pathname === "/settings") && (

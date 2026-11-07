@@ -254,6 +254,7 @@ test("klavyeyle kolonlar arasında taşınan kart yenilemede kalır", async ({
   const handle = card;
   await handle.focus();
   await page.keyboard.press("Space");
+  // The keyboard sensor exposes no observable ready state, so this wait stays.
   await page.waitForTimeout(200);
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(300);
@@ -456,6 +457,9 @@ test("açıklama alanı panel genişliğinde; iptal etiketi ile alan arasında b
   const sheetBody = page.locator(".sheet-body");
   await page.getByRole("button", { name: "Düzenle", exact: true }).click();
   const field = page.getByRole("textbox", { name: "Açıklama" });
+  await expect
+    .poll(async () => (await field.boundingBox())?.height ?? 0)
+    .toBeGreaterThanOrEqual(220);
   const [fieldBox, bodyBox] = [
     await field.boundingBox(),
     await sheetBody.boundingBox(),

@@ -3,12 +3,12 @@ export function Switch({
   onChange,
   labelledBy,
   describedBy,
-}: {
+}: Readonly<{
   checked: boolean;
   onChange: (checked: boolean) => void;
   labelledBy: string;
   describedBy?: string;
-}) {
+}>) {
   return (
     <button
       type="button"

@@ -453,6 +453,7 @@ section h2 {
   gap: 24px;
 }
 .project-card {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -1052,6 +1053,8 @@ section h2 {
   }
   .content {
     overflow: visible;
+    padding: 18px 16px 48px;
+    gap: 28px;
   }
   .nav-project-row .nav-project {
     min-height: 44px;
@@ -1133,10 +1136,6 @@ section h2 {
   .toolbar .primary {
     width: 44px;
     padding: 0;
-  }
-  .content {
-    padding: 18px 16px 48px;
-    gap: 28px;
   }
   .icon {
     min-width: 44px;
@@ -1248,9 +1247,6 @@ section h2 {
   }
 }
 
-.project-card {
-  position: relative;
-}
 .project-stretched-link::after {
   content: "";
   position: absolute;

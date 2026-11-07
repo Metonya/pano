@@ -7,12 +7,12 @@ export function relativeTime(value: string, now = Date.now()): string {
     Math.floor((now - new Date(value).getTime()) / 60000),
   );
   if (language() !== "tr" && minutes >= 1) {
+    const longer =
+      minutes < 1440
+        ? ([Math.floor(minutes / 60), "hour"] as const)
+        : ([Math.floor(minutes / 1440), "day"] as const);
     const [value, unit] =
-      minutes < 60
-        ? ([minutes, "minute"] as const)
-        : minutes < 1440
-          ? ([Math.floor(minutes / 60), "hour"] as const)
-          : ([Math.floor(minutes / 1440), "day"] as const);
+      minutes < 60 ? ([minutes, "minute"] as const) : longer;
     return new Intl.RelativeTimeFormat(language(), { numeric: "auto" }).format(
       -value,
       unit,
@@ -152,12 +152,8 @@ const reasonKinds = new Set(["edited", "moved", "assigned", "cancelled"]);
 /** The rationale someone actually gave for this record, if there is one. */
 export function activityReason(entry: Entry): string | null {
   const stated = parseSnapshot(entry.after_json).reason;
-  const reason =
-    typeof stated === "string"
-      ? stated
-      : reasonKinds.has(entry.kind)
-        ? entry.message
-        : "";
+  const fallback = reasonKinds.has(entry.kind) ? entry.message : "";
+  const reason = typeof stated === "string" ? stated : fallback;
   return reason.trim() && !isSystemMessage(reason, entry.kind) ? reason : null;
 }
 

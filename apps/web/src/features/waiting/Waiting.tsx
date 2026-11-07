@@ -26,7 +26,7 @@ function details(item: WaitingItem) {
   return parts.join(" · ");
 }
 
-export function Waiting({ active }: { active: Project[] }) {
+export function Waiting({ active }: Readonly<{ active: Project[] }>) {
   // The server lists each project's items oldest first.
   const projects = active
     .filter((p) => p.waiting.length)

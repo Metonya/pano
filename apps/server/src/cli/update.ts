@@ -38,8 +38,9 @@ async function installUpdate(
       if (moved) await move(old, path);
       else if (backedUp && platform !== "win32") await copyFile(backup, path);
     } catch (restoreError) {
+      const previousExecutable = moved ? `; previous executable: ${old}` : "";
       throw new Error(
-        `Update failed: ${error instanceof Error ? error.message : String(error)}. Could not restore the previous binary: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}. Backup: ${backup}${moved ? `; previous executable: ${old}` : ""}.`,
+        `Update failed: ${error instanceof Error ? error.message : String(error)}. Could not restore the previous binary: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}. Backup: ${backup}${previousExecutable}.`,
         { cause: error },
       );
     }

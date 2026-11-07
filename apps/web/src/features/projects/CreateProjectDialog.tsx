@@ -8,11 +8,11 @@ export function CreateProjectDialog({
   create,
   setCreate,
   all,
-}: {
+}: Readonly<{
   create: boolean;
   setCreate: (v: boolean) => void;
   all: Project[];
-}) {
+}>) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [key, setKey] = useState("");

@@ -61,7 +61,8 @@ try {
     });
   }
   async function board(item?: number) {
-    await page.goto(`/projects/DRIFT${item ? `?item=${item}` : ""}`, {
+    const itemQuery = item ? `?item=${item}` : "";
+    await page.goto(`/projects/DRIFT${itemQuery}`, {
       waitUntil: "domcontentloaded",
     });
     await expect(page.locator(".board-card")).toHaveCount(14);

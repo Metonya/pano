@@ -25,7 +25,7 @@ import "./history.css";
 type Attachment = { id: string; activity_id: string | null; file_name: string };
 type Entry = Detail["activity"][number];
 
-function Thumbnail({ attachment }: { attachment: Attachment }) {
+function Thumbnail({ attachment }: Readonly<{ attachment: Attachment }>) {
   const [url, setUrl] = useState("");
   useEffect(() => {
     const controller = new AbortController();
@@ -35,7 +35,7 @@ function Thumbnail({ attachment }: { attachment: Attachment }) {
       signal: controller.signal,
     })
       .then((response) => {
-        if (!response.ok) throw new Error();
+        if (!response.ok) throw new Error("Attachment request failed");
         return response.blob();
       })
       .then((blob) => {
@@ -83,10 +83,10 @@ const diffKinds = new Set(["edited", "criterion_updated", "scenario_edited"]);
 function Row({
   entry,
   attachments,
-}: {
+}: Readonly<{
   entry: Entry;
   attachments: Attachment[];
-}) {
+}>) {
   const after = parseSnapshot(entry.after_json);
   const before = parseSnapshot(entry.before_json);
   const actor = agentName(entry.actor);
@@ -115,11 +115,8 @@ function Row({
         {flow && <StatusFlow from={flow.from} to={flow.to} />}
         {entry.kind === "check" && !isLegacyCheck(entry) && (
           <span className={`history-check ${result}`}>
-            {result === "passed"
-              ? `✓ ${t("scenarioPassed")}: `
-              : result === "failed"
-                ? `✕ ${t("scenarioFailed")}: `
-                : ""}
+            {result === "passed" && `✓ ${t("scenarioPassed")}: `}
+            {result === "failed" && `✕ ${t("scenarioFailed")}: `}
             {entry.message}
           </span>
         )}
@@ -163,12 +160,12 @@ export function ActivityTimeline({
   attachments = [],
   panelId,
   tabId,
-}: {
+}: Readonly<{
   itemKey: string;
   attachments?: Attachment[];
   panelId: string;
   tabId: string;
-}) {
+}>) {
   const [filter, setFilter] = useState<HistoryFilter>("important");
   // Tests combine several kinds, so only decisions can be filtered by the server.
   const serverKind = filter === "decision" ? "&kind=decision" : "";

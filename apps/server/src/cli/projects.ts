@@ -3,13 +3,15 @@ import { type Client, segment } from "./client";
 
 export async function projects(args: string[], api: Client) {
   const [command, ...rest] = args;
+  const nonCreateOptions: Record<string, { type: "boolean" }> =
+    command === "list"
+      ? { all: { type: "boolean" as const } }
+      : { off: { type: "boolean" as const } };
   const { values, positionals } = parse(
     rest,
     command === "create"
       ? { description: { type: "string" } }
-      : command === "list"
-        ? { all: { type: "boolean" } }
-        : { off: { type: "boolean" } },
+      : nonCreateOptions,
   );
   switch (command) {
     case "list":

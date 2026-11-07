@@ -4,6 +4,20 @@ import { userInfo } from "node:os";
 import { ulid } from "ulid";
 import { actorSchema, itemKeySchema, projectKeySchema } from "./schemas";
 import type { ChangeEvent, ItemRow, Row, Values } from "./types";
+
+type SqlValue = string | number | null;
+
+function changed(row: Row, patch: Values) {
+  const before: Values = {};
+  const after: Values = {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (row[key] !== value) {
+      before[key] = row[key] ?? null;
+      after[key] = value;
+    }
+  }
+  return { before, after };
+}
 /** PANO_USER, else the operating system's account name; containers may have neither. */
 export function defaultUserName() {
   const configured = process.env.PANO_USER?.trim();
@@ -15,9 +29,9 @@ export function defaultUserName() {
   }
 }
 export function createContext(db: Database, events: EventEmitter) {
-  const get = (sql: string, ...params: (string | number | null)[]) =>
+  const get = (sql: string, ...params: SqlValue[]) =>
     db.query(sql).get(...params) as Row | null;
-  const all = (sql: string, ...params: (string | number | null)[]) =>
+  const all = (sql: string, ...params: SqlValue[]) =>
     db.query(sql).all(...params) as Row[];
   const now = () => new Date().toISOString();
   const userName = () =>
@@ -49,10 +63,12 @@ export function createContext(db: Database, events: EventEmitter) {
   }
   function update(table: string, id: string, data: Values) {
     const keys = Object.keys(data);
+    const assignments = keys.map((key) => `${key} = ?`).join(",");
     if (keys.length)
-      db.query(
-        `UPDATE ${table} SET ${keys.map((key) => `${key} = ?`).join(",")} WHERE id = ?`,
-      ).run(...Object.values(data), id);
+      db.query(`UPDATE ${table} SET ${assignments} WHERE id = ?`).run(
+        ...Object.values(data),
+        id,
+      );
   }
   function log(
     projectId: string,
@@ -93,18 +109,7 @@ export function createContext(db: Database, events: EventEmitter) {
     kind: string,
     actor: string,
   ): ChangeEvent => ({ projectId, itemId, kind, actor });
-  const str = (value: string | number | null) => String(value);
-  function changed(row: Row, patch: Values) {
-    const before: Values = {};
-    const after: Values = {};
-    for (const [key, value] of Object.entries(patch)) {
-      if (row[key] !== value) {
-        before[key] = row[key] ?? null;
-        after[key] = value;
-      }
-    }
-    return { before, after };
-  }
+  const str = String;
   return {
     db,
     get,

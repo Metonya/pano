@@ -11,11 +11,11 @@ export function ProjectSettings({
   project,
   testCount,
   close,
-}: {
+}: Readonly<{
   project: Project;
   testCount: number;
   close: () => void;
-}) {
+}>) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState(project.name);

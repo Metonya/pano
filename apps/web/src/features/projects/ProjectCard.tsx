@@ -7,7 +7,7 @@ import { date, type Project, type ProjectAction } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { ProjectMenu } from "./ProjectMenu";
 
-function UpdatedTime({ value }: { value: string }) {
+function UpdatedTime({ value }: Readonly<{ value: string }>) {
   return (
     <time dateTime={value} title={date(value)}>
       {relativeTime(value)}
@@ -20,12 +20,12 @@ export function ProjectCard({
   archive,
   act,
   onDelete,
-}: {
+}: Readonly<{
   p: Project;
   archive: boolean;
   act: ProjectAction;
   onDelete: (p: Project) => void;
-}) {
+}>) {
   const large = !!p.starred && !archive;
   const [settings, setSettings] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

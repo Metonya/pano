@@ -13,12 +13,12 @@ export function BoardColumn({
   items,
   open,
   mobileActive,
-}: {
+}: Readonly<{
   status: Status;
   items: BoardItem[];
   open: (item: BoardItem) => void;
   mobileActive: boolean;
-}) {
+}>) {
   const { setNodeRef, isOver, over } = useDroppable({ id: status });
   const [limit, setLimit] = useState(30);
   const dropTarget = isOver || over?.data.current?.item?.status === status;

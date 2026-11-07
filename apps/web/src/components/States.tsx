@@ -10,7 +10,7 @@ export function LoadingState() {
     </div>
   );
 }
-export function ErrorState({ retry }: { retry: () => void }) {
+export function ErrorState({ retry }: Readonly<{ retry: () => void }>) {
   return (
     <div className="state">
       <WifiOff />
@@ -26,11 +26,11 @@ export function Placeholder({
   text,
   help,
   waiting = false,
-}: {
+}: Readonly<{
   text: string;
   help?: string;
   waiting?: boolean;
-}) {
+}>) {
   return (
     <div className="state">
       {waiting ? <Inbox /> : <FolderKanban />}

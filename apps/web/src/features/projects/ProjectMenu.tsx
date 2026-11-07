@@ -14,14 +14,14 @@ export function ProjectMenu({
   act,
   onDelete,
   onSettings,
-}: {
+}: Readonly<{
   p: Project;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   act: ProjectAction;
   onDelete: (p: Project) => void;
   onSettings: () => void;
-}) {
+}>) {
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>

@@ -159,9 +159,11 @@ export async function runCli(
     return 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    stderr(
-      `${json || args.includes("--json") ? JSON.stringify({ error: { message } }) : `Hata: ${message}`}\n`,
-    );
+    const output =
+      json || args.includes("--json")
+        ? JSON.stringify({ error: { message } })
+        : `Hata: ${message}`;
+    stderr(`${output}\n`);
     return 1;
   }
 }

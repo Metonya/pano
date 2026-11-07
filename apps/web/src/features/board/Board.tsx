@@ -31,7 +31,7 @@ import {
   sortItems,
 } from "./types";
 
-export function Board({ projects }: { projects: Project[] }) {
+export function Board({ projects }: Readonly<{ projects: Project[] }>) {
   const { key = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const project = projects.find((p) => p.key === key);
@@ -126,12 +126,10 @@ export function Board({ projects }: { projects: Project[] }) {
         : group.length;
     const before = group[index - 1]?.position;
     const after = group[index]?.position;
-    const position =
-      before === undefined
-        ? (after ?? 1) - 1
-        : after === undefined
-          ? before + 1
-          : (before + after) / 2;
+    let position: number;
+    if (before === undefined) position = (after ?? 1) - 1;
+    else if (after === undefined) position = before + 1;
+    else position = (before + after) / 2;
     const previous = query.data;
     await qc.cancelQueries({ queryKey: boardKey });
     qc.setQueryData(
@@ -147,6 +145,15 @@ export function Board({ projects }: { projects: Project[] }) {
     } finally {
       void qc.invalidateQueries({ queryKey: boardKey });
     }
+  }
+  function dragLocation({ active, over }: DragEndEvent) {
+    const item = all.find((i) => i.id === active.id);
+    const target = all.find((i) => i.id === over?.id);
+    let destination = "";
+    if (target) destination = `#${target.number}`;
+    else if (over?.id && statuses.includes(over.id as Status))
+      destination = labels[over.id as Status];
+    return `#${item?.number ?? ""} ${destination}`;
   }
   if (query.isPending) return <LoadingState />;
   if (query.isError || !project)
@@ -201,16 +208,8 @@ export function Board({ projects }: { projects: Project[] }) {
                   const item = all.find((i) => i.id === active.id);
                   return `${t("drag")}: #${item?.number ?? ""}`;
                 },
-                onDragOver({ active, over }) {
-                  const item = all.find((i) => i.id === active.id);
-                  const target = all.find((i) => i.id === over?.id);
-                  return `#${item?.number ?? ""} ${target ? `#${target.number}` : over?.id && statuses.includes(over.id as Status) ? labels[over.id as Status] : ""}`;
-                },
-                onDragEnd({ active, over }) {
-                  const item = all.find((i) => i.id === active.id);
-                  const target = all.find((i) => i.id === over?.id);
-                  return `#${item?.number ?? ""} ${target ? `#${target.number}` : over?.id && statuses.includes(over.id as Status) ? labels[over.id as Status] : ""}`;
-                },
+                onDragOver: dragLocation,
+                onDragEnd: dragLocation,
                 onDragCancel({ active }) {
                   const item = all.find((i) => i.id === active.id);
                   return `#${item?.number ?? ""}: ${t("cancel")}`;

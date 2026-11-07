@@ -8,11 +8,11 @@ export function DeleteProjectDialog({
   deleting,
   setDeleting,
   setActionError,
-}: {
+}: Readonly<{
   deleting: Project | null;
   setDeleting: (p: Project | null) => void;
   setActionError: (v: boolean) => void;
-}) {
+}>) {
   const qc = useQueryClient();
   const [confirm, setConfirm] = useState("");
   return (

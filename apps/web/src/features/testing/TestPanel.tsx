@@ -23,7 +23,7 @@ import { actorHeaders, authHeaders, ensureUser, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import "./testing.css";
 
-function Markdown({ children }: { children: string }) {
+function Markdown({ children }: Readonly<{ children: string }>) {
   return (
     <div className="markdown">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
@@ -39,14 +39,14 @@ export function InlineConfirm({
   buttonClassName,
   onCancel,
   onConfirm,
-}: {
+}: Readonly<{
   message: string;
   cancelId?: string;
   disabled?: boolean;
   buttonClassName?: string;
   onCancel: () => void;
   onConfirm: () => void;
-}) {
+}>) {
   const cancel = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     cancel.current?.focus();
@@ -88,7 +88,7 @@ export function TestPanel({
   composing,
   setComposing,
   children,
-}: {
+}: Readonly<{
   itemKey: string;
   detail: Detail;
   onDone: () => void;
@@ -97,7 +97,7 @@ export function TestPanel({
   setComposing: (composing: boolean) => void;
   /** The rest of the sheet; the actions stay pinned below it while scrolling. */
   children: ReactNode;
-}) {
+}>) {
   const qc = useQueryClient();
   const id = useId();
   const noteField = useRef<HTMLTextAreaElement>(null);
@@ -297,8 +297,9 @@ export function TestPanel({
         e.preventDefault();
         void save(async () => {
           const author = (await ensureUser()) ?? "me";
+          const scenarioSuffix = editing ? `/${editing}` : "";
           await change(
-            `/items/${itemKey}/scenarios${editing ? `/${editing}` : ""}`,
+            `/items/${itemKey}/scenarios${scenarioSuffix}`,
             {
               steps_md: steps,
               expected_md: expected,
@@ -623,11 +624,11 @@ export function TestPanel({
                 const result = checkResult(a.message, data);
                 return (
                   <li key={a.id} className={`test-check-${result}`}>
-                    {result === "passed" ? (
+                    {result === "passed" && (
                       <Check size={14} aria-hidden="true" />
-                    ) : result === "failed" ? (
-                      <X size={14} aria-hidden="true" />
-                    ) : (
+                    )}
+                    {result === "failed" && <X size={14} aria-hidden="true" />}
+                    {result === "unknown" && (
                       <CircleAlert size={14} aria-hidden="true" />
                     )}
                     <span>

@@ -15,7 +15,7 @@ export function checkResult(
     "",
   );
   if (
-    /(?<![\p{L}\p{N}_])(fail(?:ed|ure|ures)?|error(?:s)?|kaldı|başarısız)(?![\p{L}\p{N}_])|✕|❌/iu.test(
+    /(?<![\p{L}\p{N}_])(fail(?:ed|ures?)?|errors?|kaldı|başarısız)(?![\p{L}\p{N}_])|✕|❌/iu.test(
       summary,
     )
   )

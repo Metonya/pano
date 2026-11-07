@@ -12,10 +12,10 @@ const cardClass = (item: BoardItem) =>
 export function BoardCard({
   item,
   open,
-}: {
+}: Readonly<{
   item: BoardItem;
   open: (item: BoardItem) => void;
-}) {
+}>) {
   const {
     attributes,
     listeners,
@@ -48,7 +48,7 @@ export function BoardCard({
   );
 }
 
-export function BoardCardOverlay({ item }: { item: BoardItem }) {
+export function BoardCardOverlay({ item }: Readonly<{ item: BoardItem }>) {
   return (
     <div className={`${cardClass(item)} is-overlay`}>
       <CardContents item={item} />
@@ -56,7 +56,7 @@ export function BoardCardOverlay({ item }: { item: BoardItem }) {
   );
 }
 
-function CardContents({ item }: { item: BoardItem }) {
+function CardContents({ item }: Readonly<{ item: BoardItem }>) {
   const tokens = item.usage?.total_tokens ?? 0;
   return (
     <>

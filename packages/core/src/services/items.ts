@@ -258,14 +258,12 @@ export function createItems(
         if (data.status && data.status !== row.status)
           patch.done_at = data.status === "done" ? now() : null;
         const delta = changed(row, patch);
-        const kind =
-          data.status && data.status !== row.status
-            ? data.status === "cancelled"
-              ? "cancelled"
-              : "moved"
-            : data.assignee !== undefined && data.assignee !== row.assignee
-              ? "assigned"
-              : "edited";
+        let kind =
+          data.assignee !== undefined && data.assignee !== row.assignee
+            ? "assigned"
+            : "edited";
+        if (data.status && data.status !== row.status)
+          kind = data.status === "cancelled" ? "cancelled" : "moved";
         if (Object.keys(delta.after).length) {
           update("items", id, { ...delta.after, updated_at: now() });
           log(

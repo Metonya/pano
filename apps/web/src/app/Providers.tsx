@@ -8,7 +8,7 @@ export const LanguageContext = createContext<
 import { BrowserRouter } from "react-router-dom";
 
 const client = new QueryClient();
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   const [, setLang] = useState(language);
   return (
     // A new function on every language change also re-renders its consumers.

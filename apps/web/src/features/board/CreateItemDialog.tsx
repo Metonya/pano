@@ -8,11 +8,11 @@ export function CreateItemDialog({
   projectKey,
   open,
   close,
-}: {
+}: Readonly<{
   projectKey: string;
   open: boolean;
   close: () => void;
-}) {
+}>) {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");

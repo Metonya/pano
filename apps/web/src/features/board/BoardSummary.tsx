@@ -22,7 +22,7 @@ type Summary = {
   usage?: { total_tokens: number };
 };
 
-function BurnUp({ data }: { data: Summary }) {
+function BurnUp({ data }: Readonly<{ data: Summary }>) {
   const [selected, setSelected] = useState<number | null>(null);
   const hintId = useId();
   const days = data.burn_up;
@@ -170,10 +170,10 @@ function BurnUp({ data }: { data: Summary }) {
 export function BoardSummary({
   items,
   project,
-}: {
+}: Readonly<{
   items: BoardItem[];
   project: Project;
-}) {
+}>) {
   const [now, setNow] = useState(Date.now());
   const titleId = useId();
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -240,16 +240,18 @@ export function BoardSummary({
           aria-labelledby={titleId}
         >
           <h2 id={titleId}>{t("summaryDetails")}</h2>
-          {query.isError ? (
+          {query.isError && (
             <p role="alert">
               {t("failed")}{" "}
               <button type="button" onClick={() => void query.refetch()}>
                 {t("summaryRetry")}
               </button>
             </p>
-          ) : !query.data ? (
+          )}
+          {!query.isError && !query.data && (
             <p role="status">{t("summaryLoading")}</p>
-          ) : (
+          )}
+          {!query.isError && query.data && (
             <>
               <dl>
                 <div>

@@ -32,7 +32,10 @@ function fileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function Copyable({ value, label }: { value: string; label: string }) {
+function Copyable({
+  value,
+  label,
+}: Readonly<{ value: string; label: string }>) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="settings-copy">
@@ -56,10 +59,10 @@ function Copyable({ value, label }: { value: string; label: string }) {
 export function SettingsDialog({
   open,
   onOpenChange,
-}: {
+}: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) {
+}>) {
   return (
     <ManagedDialog
       open={open}
@@ -129,6 +132,7 @@ function Settings() {
   const icons = [SettingsIcon, Contrast, Bot, CircleHelp];
   const updatesOn = settings.data?.updateCheck !== "false";
   const mcpUrl = `${location.origin}/mcp`;
+  const tokenKey = system.data?.authRequired ? "tokenNeeded" : "tokenNotNeeded";
   return (
     <section className="app-settings">
       <DialogTitle className="settings-title">{tabs[tab]}</DialogTitle>
@@ -137,8 +141,9 @@ function Settings() {
         aria-label={t("settings")}
         className="settings-tabs"
         onKeyDown={(event) => {
-          const direction =
-            event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+          let direction = 0;
+          if (event.key === "ArrowRight") direction = 1;
+          if (event.key === "ArrowLeft") direction = -1;
           if (!direction) return;
           event.preventDefault();
           const next = (tab + direction + tabs.length) % tabs.length;
@@ -334,13 +339,7 @@ function Settings() {
               </div>
               <span>{t("tokenLabel")}:</span>
               <span className="settings-muted">
-                {system.data
-                  ? t(
-                      system.data.authRequired
-                        ? "tokenNeeded"
-                        : "tokenNotNeeded",
-                    )
-                  : t("unknownValue")}
+                {system.data ? t(tokenKey) : t("unknownValue")}
               </span>
             </div>
           </>

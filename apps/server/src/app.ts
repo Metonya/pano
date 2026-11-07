@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { type Core, createCore } from "@pano/core";
+import type { Core } from "@pano/core";
 import { version } from "../../../package.json";
 import { agentsGuide } from "./agents";
 import { handleError } from "./errors";
@@ -44,4 +44,4 @@ export function createApp(options: {
 }
 export const defaultDataDir =
   process.env.PANO_DATA_DIR || join(homedir(), ".pano");
-export { createCore };
+export { createCore } from "@pano/core";

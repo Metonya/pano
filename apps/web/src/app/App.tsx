@@ -160,11 +160,11 @@ export function App() {
           </div>
         )}
         <div className="content">
-          {projects.isPending ? (
-            <LoadingState />
-          ) : projects.isError && !projects.data ? (
+          {projects.isPending && <LoadingState />}
+          {!projects.isPending && projects.isError && !projects.data && (
             <ErrorState retry={() => void projects.refetch()} />
-          ) : (
+          )}
+          {!projects.isPending && !(projects.isError && !projects.data) && (
             <Routes>
               <Route path="/" element={home} />
               <Route path="/waiting" element={<Waiting active={active} />} />

@@ -102,7 +102,7 @@ function extractCriteria(body: string) {
 function splitFrontmatter(source: string) {
   const bomOffset = source.startsWith("\uFEFF") ? 1 : 0;
   const openingEnd = bomOffset + 3;
-  if (source.slice(bomOffset, openingEnd) !== "---")
+  if (!source.startsWith("---", bomOffset))
     throw new Error("PBI frontmatter bulunamadı.");
   const openingLineEnd =
     source[openingEnd] === "\r" ? openingEnd + 2 : openingEnd + 1;

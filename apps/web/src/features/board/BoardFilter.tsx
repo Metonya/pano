@@ -26,11 +26,11 @@ export function BoardFilter({
   items,
   filters,
   setFilters,
-}: {
+}: Readonly<{
   items: BoardItem[];
   filters: Filters;
   setFilters: (filters: Filters) => void;
-}) {
+}>) {
   const active =
     Number(!!filters.assignee) +
     Number(!!filters.priority) +

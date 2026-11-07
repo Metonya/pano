@@ -60,7 +60,7 @@ function Property({
   options,
   disabled,
   spoken,
-}: {
+}: Readonly<{
   label: string;
   shown: ReactNode;
   /** What the button says when the options alone do not tell it all. */
@@ -69,7 +69,7 @@ function Property({
   onChange: (value: string) => void;
   options: { value: string; label: ReactNode; text: string }[];
   disabled?: boolean;
-}) {
+}>) {
   const text = spoken ?? options.find((o) => o.value === value)?.text ?? value;
   return (
     <div className="sheet-property">
@@ -138,7 +138,7 @@ function ItemDescription({
   setBody,
   itemKey,
   change,
-}: {
+}: Readonly<{
   d: Detail | undefined;
   editing: boolean;
   setEditing: (value: boolean) => void;
@@ -148,7 +148,7 @@ function ItemDescription({
   setBody: (value: string) => void;
   itemKey: string;
   change: (path: string, data: object, method?: string) => Promise<boolean>;
-}) {
+}>) {
   return (
     d && (
       <section className="sheet-section">
@@ -167,7 +167,7 @@ function ItemDescription({
             </button>
           )}
         </div>
-        {editing ? (
+        {editing && (
           <>
             <textarea
               className="sheet-textarea"
@@ -202,7 +202,8 @@ function ItemDescription({
               </button>
             </div>
           </>
-        ) : d.body_md.trim() ? (
+        )}
+        {!editing && !!d.body_md.trim() && (
           <>
             <div
               className={`markdown ${d.body_md.length > LONG_BODY && !expanded ? "is-clamped" : ""}`}
@@ -222,7 +223,7 @@ function ItemDescription({
               </button>
             )}
           </>
-        ) : null}
+        )}
       </section>
     )
   );
@@ -233,12 +234,12 @@ export function ItemDialog({
   item,
   close,
   statuses,
-}: {
+}: Readonly<{
   projectKey: string;
   item: BoardItem | null;
   close: () => void;
   statuses: Status[];
-}) {
+}>) {
   const tabsId = useId();
   const qc = useQueryClient();
   const key = item ? `${projectKey}-${item.number}` : "";

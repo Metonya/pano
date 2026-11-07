@@ -9,14 +9,14 @@ export function ProjectList({
   act,
   onDelete,
   onCreate,
-}: {
+}: Readonly<{
   active: Project[];
   archived: Project[];
   archive: boolean;
   act: ProjectAction;
   onDelete: (p: Project) => void;
   onCreate: () => void;
-}) {
+}>) {
   const projects = archive ? archived : active;
   const cards = (items: Project[]) =>
     items.map((p) => (
@@ -34,7 +34,7 @@ export function ProjectList({
         {active.length} {t("summaryActive")} · {archived.length}{" "}
         {t("summaryArchive")}
       </p>
-      {!projects.length ? (
+      {!projects.length && (
         <div className="state">
           <FolderKanban />
           <h2>{t(archive ? "emptyArchive" : "empty")}</h2>
@@ -47,12 +47,14 @@ export function ProjectList({
             </>
           )}
         </div>
-      ) : archive ? (
+      )}
+      {!!projects.length && archive && (
         <section>
           <h2>{t("archive")}</h2>
           <div className="grid">{cards(projects)}</div>
         </section>
-      ) : (
+      )}
+      {!!projects.length && !archive && (
         <>
           {active.some((p) => p.starred) && (
             <section>

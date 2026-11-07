@@ -600,8 +600,14 @@ test("Seni bekliyor satırı en eski önce listelenir ve kartı doğrudan açar"
       data: { status: "test", assignee: "mert" },
       headers: { "X-Pano-Actor": "claude:po" },
     });
-  await send("WAIT-2");
-  await page.waitForTimeout(5);
+  const firstSent = await (await send("WAIT-2")).json();
+  const firstMove = firstSent.activity.find(
+    (entry: { kind: string }) => entry.kind === "moved",
+  );
+  expect(firstMove).toBeDefined();
+  await expect
+    .poll(() => Date.now())
+    .toBeGreaterThan(Date.parse(firstMove.created_at));
   await send("WAIT-1");
   await page.request.post("/api/v1/items/WAIT-2/scenarios", {
     data: { steps_md: "Aç", expected_md: "Açılır", author: "claude:po" },

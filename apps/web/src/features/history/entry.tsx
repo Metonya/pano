@@ -56,17 +56,18 @@ export function childContent(
   const after = parseSnapshot(entry.after_json);
   const expected = (value: unknown) =>
     typeof value === "string" ? [`${t("historyExpected")}: ${value}`] : [];
-  const lines =
-    entry.kind === "scenario_removed"
-      ? [
-          ...(typeof before.steps_md === "string" ? [before.steps_md] : []),
-          ...expected(before.expected_md),
-        ]
-      : entry.kind === "criterion_removed" && typeof before.text === "string"
-        ? [before.text]
-        : entry.kind === "scenario_added"
-          ? expected(after.expected_md)
-          : [];
+  let lines: string[] = [];
+  if (entry.kind === "scenario_removed")
+    lines = [
+      ...(typeof before.steps_md === "string" ? [before.steps_md] : []),
+      ...expected(before.expected_md),
+    ];
+  else if (
+    entry.kind === "criterion_removed" &&
+    typeof before.text === "string"
+  )
+    lines = [before.text];
+  else if (entry.kind === "scenario_added") lines = expected(after.expected_md);
   if (!lines.length) return null;
   return {
     kind: entry.kind === "scenario_added" ? "added" : "removed",
@@ -88,7 +89,7 @@ export function statusFlow(entry: Entry): { from: Status; to: Status } | null {
   return null;
 }
 
-export function StatusChip({ status }: { status: Status }) {
+export function StatusChip({ status }: Readonly<{ status: Status }>) {
   return (
     <span className={`status-chip status-${status}`}>
       <span className="status-dot" aria-hidden="true" />
@@ -97,7 +98,10 @@ export function StatusChip({ status }: { status: Status }) {
   );
 }
 
-export function StatusFlow({ from, to }: { from: Status; to: Status }) {
+export function StatusFlow({
+  from,
+  to,
+}: Readonly<{ from: Status; to: Status }>) {
   return (
     <span className="status-flow">
       <StatusChip status={from} />

@@ -15,7 +15,7 @@ export function ManagedDialog({
   hideClose,
   focusContent = false,
   onEscapeKeyDown,
-}: {
+}: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dirty?: boolean;
@@ -29,7 +29,7 @@ export function ManagedDialog({
   focusContent?: boolean;
   // Radix sees Esc on the document first; preventDefault keeps the dialog open.
   onEscapeKeyDown?: (event: KeyboardEvent) => void;
-}) {
+}>) {
   const [confirmClose, setConfirmClose] = useState(false);
   const continueButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {

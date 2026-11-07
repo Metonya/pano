@@ -1,6 +1,6 @@
 import { z } from "zod";
 export const projectKeySchema = z.string().regex(/^[A-Z0-9]{2,10}$/);
-export const itemKeySchema = z.string().regex(/^[A-Z0-9]{2,10}-[1-9][0-9]*$/);
+export const itemKeySchema = z.string().regex(/^[A-Z0-9]{2,10}-[1-9]\d*$/);
 export const statusSchema = z.enum([
   "backlog",
   "in_progress",

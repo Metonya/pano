@@ -2,7 +2,7 @@ import { useState } from "react";
 import { authHeaders, setToken } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
-export function TokenLogin({ onSuccess }: { onSuccess: () => void }) {
+export function TokenLogin({ onSuccess }: Readonly<{ onSuccess: () => void }>) {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);

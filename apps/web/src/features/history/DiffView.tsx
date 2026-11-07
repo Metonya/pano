@@ -1,36 +1,40 @@
 import { useId, useState } from "react";
-import { parseSnapshot, priorityLabel } from "@/features/board/format";
+import { priorityLabel } from "@/features/board/format";
 import { t } from "@/lib/i18n";
 import { type DiffLine, lineDiff } from "./lineDiff";
 
-export { parseSnapshot };
+export { parseSnapshot } from "@/features/board/format";
 
 type Snapshot = Record<string, unknown>;
 type Field = { name: string; label: string };
 
+function diffPrefix(kind: DiffLine["kind"]) {
+  if (kind === "added") return "+ ";
+  if (kind === "removed") return "− ";
+  return "  ";
+}
+
+function diffLabel(kind: DiffLine["kind"]) {
+  if (kind === "added") return t("historyAdded");
+  if (kind === "removed") return t("historyRemoved");
+  return "";
+}
+
 function DiffLines({
   lines,
   struck = false,
-}: {
+}: Readonly<{
   lines: DiffLine[];
   struck?: boolean;
-}) {
+}>) {
   return lines.map((line, index) => (
     <div
       // biome-ignore lint/suspicious/noArrayIndexKey: immutable diff lines retain their position.
       key={`${index}-${line.kind}`}
       className={`history-diff-line ${line.kind}`}
     >
-      <span aria-hidden="true">
-        {line.kind === "added" ? "+ " : line.kind === "removed" ? "− " : "  "}
-      </span>
-      <span className="sr-only">
-        {line.kind === "added"
-          ? t("historyAdded")
-          : line.kind === "removed"
-            ? t("historyRemoved")
-            : ""}{" "}
-      </span>
+      <span aria-hidden="true">{diffPrefix(line.kind)}</span>
+      <span className="sr-only">{diffLabel(line.kind)} </span>
       {struck ? <del>{line.text}</del> : line.text}
     </div>
   ));
@@ -41,18 +45,16 @@ function FieldDiff({
   before,
   after,
   heading,
-}: {
+}: Readonly<{
   field: Field;
   before: Snapshot;
   after: Snapshot;
   heading: boolean;
-}) {
-  const value = (v: unknown): string =>
-    field.name === "priority"
-      ? priorityLabel(v)
-      : typeof v === "string"
-        ? v
-        : "";
+}>) {
+  const value = (v: unknown): string => {
+    if (field.name === "priority") return priorityLabel(v);
+    return typeof v === "string" ? v : "";
+  };
   return (
     <section aria-label={field.label}>
       {heading && <h4>{field.label}</h4>}
@@ -67,10 +69,10 @@ function FieldDiff({
 export function DiffView({
   before,
   after,
-}: {
+}: Readonly<{
   before: Snapshot;
   after: Snapshot;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const changed = ({ name }: Field) =>
@@ -130,10 +132,10 @@ export function DiffView({
 export function ChildContent({
   kind,
   lines,
-}: {
+}: Readonly<{
   kind: "added" | "removed";
   lines: string[];
-}) {
+}>) {
   return (
     <div className="history-diff">
       <section>

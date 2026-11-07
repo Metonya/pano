@@ -31,15 +31,10 @@ export function openedSummary(
 ): string {
   const started = new Date(startedAt);
   const today = localDate(started, timeZone) === localDate(now, timeZone);
-  return t(
-    today
-      ? completed === 0
-        ? "summaryOpenedTodayZero"
-        : "summaryOpenedToday"
-      : completed === 0
-        ? "summaryOpenedOnZero"
-        : "summaryOpenedOn",
-  )
+  const todayKey =
+    completed === 0 ? "summaryOpenedTodayZero" : "summaryOpenedToday";
+  const dateKey = completed === 0 ? "summaryOpenedOnZero" : "summaryOpenedOn";
+  return t(today ? todayKey : dateKey)
     .replace("{count}", String(completed))
     .replace(
       "{date}",

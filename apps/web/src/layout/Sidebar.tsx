@@ -20,7 +20,7 @@ export function Sidebar({
   showArchive,
   onStar,
   openSettings,
-}: {
+}: Readonly<{
   mobile: boolean;
   setMobile: (v: boolean) => void;
   active: Project[];
@@ -29,7 +29,7 @@ export function Sidebar({
   showArchive: (v: boolean) => void;
   onStar: (project: Project) => void;
   openSettings: () => void;
-}) {
+}>) {
   const { pathname } = useLocation();
   const system = useQuery<{ updateAvailable: boolean; latestVersion?: string }>(
     {

@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("Değiştir key'i açar; elle düzenlenen değer korunur ve hatalar gösterilir", async ({
   page,
 }) => {
+  await page.clock.install();
   await page.goto("/");
   await page.getByRole("button", { name: "Yeni proje" }).first().click();
   await page.getByLabel("Proje adı").fill("Örnek Proje");
@@ -10,7 +11,7 @@ test("Değiştir key'i açar; elle düzenlenen değer korunur ve hatalar göster
   const key = page.getByLabel("Key", { exact: true });
   await key.fill("küçük");
   await page.getByLabel("Proje adı").fill("Başka ad");
-  await page.waitForTimeout(400);
+  await page.clock.fastForward(400);
   await expect(key).toHaveValue("küçük");
   await page.getByRole("button", { name: "Oluştur", exact: true }).click();
   await expect(page.getByRole("alert")).toHaveText(
@@ -58,7 +59,11 @@ test("boş ve sıfırlanmış form kapanır; dolu form tüm kapatma yollarında 
     () => page.getByRole("button", { name: "Vazgeç" }).click(),
     () => page.getByRole("button", { name: "Kapat", exact: true }).click(),
   ]) {
-    await page.waitForTimeout(250); // let the open animation settle
+    await dialog.evaluate((element) =>
+      Promise.all(
+        element.getAnimations().map((animation) => animation.finished),
+      ),
+    );
     const before = await dialog.boundingBox();
     if (!before) throw new Error("Dialog is not visible");
     await close();
