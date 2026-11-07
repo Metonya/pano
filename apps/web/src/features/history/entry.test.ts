@@ -1,10 +1,15 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
+import { setLanguage } from "@/lib/i18n";
 import {
   childContent,
   isImportant,
   isTestRecord,
   matchesFilter,
 } from "./entry";
+
+beforeAll(async () => {
+  await setLanguage("tr", false);
+});
 
 const entry = (
   kind: string,
