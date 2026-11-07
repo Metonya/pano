@@ -43,7 +43,7 @@ Replace `DEMO` with the requested project key and use the item key and criterion
 ```sh
 pano project list --json
 pano board DEMO --json
-pano task create DEMO "Add search" --criteria "Search finds matching titles" --priority medium --json
+pano task create DEMO "Add search" --body "Why this is needed, the scope and any decisions." --criteria "Search finds matching titles" --priority medium --json
 pano task assign DEMO-1 codex
 pano task move DEMO-1 in_progress
 pano task show DEMO-1 --json
