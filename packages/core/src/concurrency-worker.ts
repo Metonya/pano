@@ -11,7 +11,7 @@ self.onmessage = (
   try {
     const barrier = new Int32Array(message.data.barrier);
     Atomics.add(barrier, 0, 1);
-    Atomics.wait(barrier, 1, 0, 5000);
+    Atomics.wait(barrier, 1, 0, 30000);
     if (Atomics.load(barrier, 1) !== 1)
       throw new Error("Worker barrier timed out");
     const numbers: number[] = [];

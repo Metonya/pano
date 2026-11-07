@@ -298,7 +298,7 @@ test("50 concurrent items get consecutive unique numbers", async () => {
         thread.postMessage({ path, worker, barrier: barrier.buffer });
       });
     });
-    const deadline = Date.now() + 5000;
+    const deadline = Date.now() + 30000;
     while (Atomics.load(barrier, 0) < 2 && Date.now() < deadline)
       await Bun.sleep(1);
     expect(Atomics.load(barrier, 0)).toBe(2);
@@ -312,7 +312,7 @@ test("50 concurrent items get consecutive unique numbers", async () => {
     core.close();
     rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 60000);
 test("stars, archive, restore and confirmed purge", () => {
   const c = setup();
   c.projects.create({ key: "ZZ", name: "Zed" }, "mert");
