@@ -258,9 +258,9 @@ test("empty folders report zero and API errors do not trigger project creation",
   });
 });
 
-test("the repository backlog imports through an injected in-memory API without touching ~/.pano", async () => {
+test("backlog fixtures import through an injected in-memory API without touching ~/.pano", async () => {
   await fixture({}, async (_folder, core, fetcher) => {
-    const folder = resolve(import.meta.dir, "../../../..", "backlog");
+    const folder = resolve(import.meta.dir, "fixtures/backlog");
     const files = Array.from(new Bun.Glob("PBI-*.md").scanSync(folder)).sort();
     const result = await run(
       ["import", folder, "--project", "PANO", "--json"],

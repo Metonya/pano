@@ -6,7 +6,7 @@
 - `apps/web`: React, Vite, Tailwind and shadcn/ui frontend.
 - `packages/core`: shared domain code.
 - `docs/`: product and architecture decisions; decisions in `docs/` are binding.
-- `backlog/`: PBI files and board until Pano manages its own backlog.
+- Pano: project backlog and PBI history.
 - `.github/workflows/`: CI configuration.
 
 ## Commands
@@ -15,7 +15,7 @@ Use Bun 1.3 or newer. Run `bun install`, `bun run dev`, `bun run build`, `bun ru
 
 ## PBI workflow
 
-Read the relevant PBI in `backlog/` and the applicable decisions in `docs/` before starting. Implement its scope and verify its acceptance criteria; record progress in the relevant PBI when authorized.
+Read the relevant PBI in Pano and the applicable decisions in `docs/` before starting. Implement its scope and verify its acceptance criteria; record progress in the relevant PBI when authorized.
 
 ## Writing
 

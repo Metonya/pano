@@ -14,16 +14,48 @@ const frontmatter = z.object({
 });
 
 export function parseBacklog(source: string) {
-  const match = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(
-    source,
-  );
-  if (!match) throw new Error("PBI frontmatter bulunamadı.");
+  const bomOffset = source.startsWith("\uFEFF") ? 1 : 0;
+  const openingEnd = bomOffset + 3;
+  if (source.slice(bomOffset, openingEnd) !== "---")
+    throw new Error("PBI frontmatter bulunamadı.");
+  const openingLineEnd =
+    source[openingEnd] === "\r" ? openingEnd + 2 : openingEnd + 1;
+  if (
+    source[openingEnd] !== "\n" &&
+    !(source[openingEnd] === "\r" && source[openingEnd + 1] === "\n")
+  )
+    throw new Error("PBI frontmatter bulunamadı.");
+
+  let closingStart = source.indexOf("\n---", openingLineEnd);
+  let closingEnd = -1;
+  while (closingStart !== -1) {
+    const markerStart = closingStart + 1;
+    let lineEnd = markerStart + 3;
+    while (source[lineEnd] === " " || source[lineEnd] === "\t") lineEnd++;
+    if (
+      source[lineEnd] === "\n" ||
+      (source[lineEnd] === "\r" && source[lineEnd + 1] === "\n")
+    ) {
+      closingEnd = source[lineEnd] === "\r" ? lineEnd + 2 : lineEnd + 1;
+      break;
+    }
+    if (lineEnd === source.length) {
+      closingEnd = lineEnd;
+      break;
+    }
+    closingStart = source.indexOf("\n---", markerStart + 3);
+  }
+  if (closingEnd === -1) throw new Error("PBI frontmatter bulunamadı.");
+  const yamlEnd =
+    source[closingStart - 1] === "\r" ? closingStart - 1 : closingStart;
+  const yaml = source.slice(openingLineEnd, yamlEnd);
+  const bodyStart = closingEnd;
   // The legacy backlog uses a bare '-' for an unassigned item (not valid YAML).
-  const yaml = match[1].replace(
+  const normalizedYaml = yaml.replace(
     /^assignee:[ \t]*-[ \t]*\r?$/gm,
     "assignee: null",
   );
-  const meta = frontmatter.parse(Bun.YAML.parse(yaml));
+  const meta = frontmatter.parse(Bun.YAML.parse(normalizedYaml));
   const status = statusSchema.parse(
     meta.status === "in-progress" ? "in_progress" : meta.status,
   );
@@ -31,7 +63,7 @@ export function parseBacklog(source: string) {
   const kept: string[] = [];
   let section = 0;
   let fence: { char: string; length: number } | undefined;
-  for (const line of source.slice(match[0].length).split(/(?<=\n)/)) {
+  for (const line of source.slice(bodyStart).split(/(?<=\n)/)) {
     const marker = /^ {0,3}(`{3,}|~{3,})(.*)/.exec(line);
     const inFence = !!fence;
     if (marker) {

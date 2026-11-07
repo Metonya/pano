@@ -28,8 +28,21 @@ test("parser preserves CRLF Markdown and ignores fenced examples when extracting
   ]);
 });
 
-test("all repository PBIs parse with their source IDs and checkbox completion", async () => {
-  const folder = resolve(import.meta.dir, "../../../..", "backlog");
+test("frontmatter closing separators require a complete line and may end at EOF", () => {
+  const prefix =
+    "---\nid: PBI-012\ntitle: Boundary\nstatus: backlog\npriority: P2\n";
+  expect(parseBacklog(`${prefix}--- \t`).id).toBe("PBI-012");
+  expect(
+    parseBacklog(`${prefix}---not: separator\n---\n## Body\nKept.`).item
+      .body_md,
+  ).toBe("Kaynak: PBI-012\n\n## Body\nKept.");
+
+  const malformed = `${prefix}${"---not a separator\n".repeat(10_000)}`;
+  expect(() => parseBacklog(malformed)).toThrow("PBI frontmatter bulunamadı.");
+});
+
+test("backlog fixtures parse with their source IDs and checkbox completion", async () => {
+  const folder = resolve(import.meta.dir, "fixtures/backlog");
   const files = Array.from(new Bun.Glob("PBI-*.md").scanSync(folder));
   expect(files.length).toBeGreaterThan(0);
   for (const file of files) {

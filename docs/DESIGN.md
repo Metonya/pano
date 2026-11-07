@@ -1,6 +1,6 @@
 # Pano: Tasarım sistemi
 
-> Durum: v0.1, onaylandı (2026-11-06, Mert). Ekranlar: [Claude Design canvas](https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK) · Ürün: [product.md](product.md) · Denetim: [reviews/2026-11-05-tasarim-denetimi.md](reviews/2026-11-05-tasarim-denetimi.md)
+> Durum: v0.1, onaylandı (2026-11-06, Mert). Ekranlar: [Claude Design canvas](https://claude.ai/artifact/CGbiEtLAeiTVBijmAw7SvK) · Ürün: [product.md](product.md)
 >
 > Bu dosya tek başına yeterli olmalı: UI'ı kuran agent buradaki token'lar ve kurallar dışında bir değer uydurmaz. Değer yoksa sorar, yeni bir değer eklerse bu dosyayı da günceller.
 

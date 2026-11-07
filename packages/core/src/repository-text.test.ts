@@ -1,15 +1,19 @@
 import { expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 test("tracked text files contain no U+2014", () => {
   const root = fileURLToPath(new URL("../../../", import.meta.url));
-  const paths = execFileSync("git", ["ls-files", "-z"], {
-    cwd: root,
-    encoding: "utf8",
-  })
+  const paths = execFileSync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
+  )
     .split("\0")
     .filter(Boolean);
   const binaryExtensions = new Set([
@@ -42,6 +46,7 @@ test("tracked text files contain no U+2014", () => {
   const decoder = new TextDecoder("utf-8", { fatal: true });
   for (const path of paths) {
     if (binaryExtensions.has(extname(path).toLowerCase())) continue;
+    if (!existsSync(resolve(root, path))) continue;
     const bytes = readFileSync(resolve(root, path));
     if (bytes.includes(0)) continue;
     let text: string;

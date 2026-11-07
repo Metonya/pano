@@ -1,5 +1,7 @@
 # Kararlar
 
+Bu kayıt geçmişte alınan kararları tarih sırasıyla saklar. Sonraki kararlar önceki kararların yerini alabilir. Güncel ürün ve mimari davranış için product.md ve architecture.md dosyalarına bakın.
+
 | Tarih      | Karar                                                                                                                                                                                                                        | Neden                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | 2026-11-05 | Hazır araç (Backlog.md, Vibe Kanban) yerine kendi aracımızı yazıyoruz                                                                                                                                                        | Merkezi çok-projeli board, yıldız/arşiv ve agent ataması hazır araçlarda birlikte yok               |
