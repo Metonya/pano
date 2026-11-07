@@ -155,6 +155,51 @@ test("all commands produce JSON; project toggles, assignment, check and note wor
   }
 });
 
+test("task usage sends only the given values and rejects bad ones", async () => {
+  const { run, core } = setup();
+  await run(["project", "create", "PANO", "Pano"]);
+  await run(["task", "create", "PANO", "İş"]);
+  const result = await run([
+    "task",
+    "usage",
+    "PANO-1",
+    "--model",
+    "gpt-6.1-sol",
+    "--effort",
+    "high",
+    "--input",
+    "1",
+    "--output",
+    "2",
+    "--duration",
+    "3",
+    "--json",
+  ]);
+  expect(result.err).toBe("");
+  expect(result.code).toBe(0);
+  const record = JSON.parse(result.out);
+  expect(record).toMatchObject({ kind: "usage", actor: "codex:cli" });
+  expect(JSON.parse(record.after_json)).toEqual({
+    model: "gpt-6.1-sol",
+    effort: "high",
+    input_tokens: 1,
+    output_tokens: 2,
+    duration_ms: 3,
+  });
+  expect(core.items.get("PANO-1").usage.total_tokens).toBe(3);
+  for (const args of [
+    ["task", "usage", "PANO-1"],
+    ["task", "usage", "PANO-1", "--input", "-1"],
+    ["task", "usage", "PANO-1", "--output", "many"],
+    ["task", "usage", "--model", "x"],
+  ]) {
+    const failed = await run(args);
+    expect(failed.code).toBe(1);
+    expect(failed.out).toBe("");
+  }
+  expect(core.items.get("PANO-1").usage.runs).toBe(1);
+});
+
 test("help is offline; serve JSON dispatch is injectable; default URL and headers", async () => {
   let out = "";
   const offline: Fetch = async () => {

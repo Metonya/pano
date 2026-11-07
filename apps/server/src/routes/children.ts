@@ -1,6 +1,15 @@
 import { z } from "@hono/zod-openapi";
 import type { Core } from "@pano/core";
-import { actor, id, json, key, type Route, scenario, text } from "./shared";
+import {
+  actor,
+  id,
+  json,
+  key,
+  type Route,
+  scenario,
+  text,
+  usage,
+} from "./shared";
 
 export function registerChildren(route: Route, core: Core) {
   const criterion = z
@@ -70,6 +79,13 @@ export function registerChildren(route: Route, core: Core) {
     async (c) =>
       c.json(core.records.add(key(c), await json(c, record), actor(c))),
     record,
+  );
+  route(
+    "post",
+    "/items/:key/usage",
+    async (c) =>
+      c.json(core.records.usage(key(c), await json(c, usage), actor(c))),
+    usage,
   );
   const historyQuery = z.object({
     limit: z.coerce.number().int().min(1).max(200).optional(),

@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "@/components/States";
+import { matchesAssignee } from "@/features/agents/agentInfo";
 import { ProjectSettings } from "@/features/testing/ProjectSettings";
 import { type Project, queryKey, request } from "@/lib/api";
 import { language, t } from "@/lib/i18n";
@@ -73,7 +74,7 @@ export function Board({ projects }: { projects: Project[] }) {
   const shown = all.filter(
     (i) =>
       (filters.cancelled || i.status !== "cancelled") &&
-      (!filters.assignee || i.assignee === filters.assignee) &&
+      matchesAssignee(i.assignee, filters.assignee) &&
       (!filters.priority || i.priority === filters.priority) &&
       i.title
         .toLocaleLowerCase(language())

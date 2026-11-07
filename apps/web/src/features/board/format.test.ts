@@ -1,9 +1,65 @@
 import { beforeEach, expect, test } from "bun:test";
 import { setLanguage } from "@/lib/i18n";
 import { activityReason, activityText, relativeTime } from "./format";
+import { tokensLabel, usageRecordLine, usageSummaryLine } from "./usage";
+
+const record = {
+  id: "1",
+  actor: "codex",
+  kind: "",
+  message: "Usage recorded",
+  before_json: null,
+  after_json: "{}",
+  created_at: "",
+};
 
 beforeEach(async () => {
   await setLanguage("tr", false);
+});
+
+test("usage lines follow the language and leave out what was not reported", async () => {
+  const compact = (value: number, locale: string) =>
+    new Intl.NumberFormat(locale, { notation: "compact" }).format(value);
+  expect(tokensLabel(42000)).toBe(`${compact(42000, "tr")} token`);
+  expect(
+    usageRecordLine({
+      model: "gpt-6.1-sol",
+      effort: "high",
+      input_tokens: 12000,
+      output_tokens: 3000,
+      cache_tokens: 0,
+      duration_ms: 120000,
+    }),
+  ).toBe(
+    `gpt-6.1-sol · high · ${compact(12000, "tr")} giriş · ${compact(3000, "tr")} çıkış · ${new Intl.NumberFormat("tr", { style: "unit", unit: "minute", unitDisplay: "short" }).format(2)}`,
+  );
+  expect(usageRecordLine({ note: "Sadece not" })).toBe("");
+  const usage = {
+    total_tokens: 42000,
+    runs: 3,
+    models: ["gpt-6.1-sol"],
+    actors: ["codex"],
+    efforts: ["high"],
+  };
+  expect(usageSummaryLine(usage)).toBe(
+    `Codex · gpt-6.1-sol · yüksek · ${compact(42000, "tr")} token · 3 çalışma`,
+  );
+  expect(
+    usageSummaryLine({
+      ...usage,
+      total_tokens: 0,
+      runs: 1,
+      models: [],
+      efforts: [],
+    }),
+  ).toBe("Codex · 1 çalışma");
+  await setLanguage("en", false);
+  expect(usageSummaryLine({ ...usage, runs: 1 })).toBe(
+    "Codex · gpt-6.1-sol · high · 42K tokens · 1 run",
+  );
+  expect(activityText({ ...record, kind: "usage" })).toBe(
+    "Codex recorded a run",
+  );
 });
 
 test("relative times follow the selected language", async () => {

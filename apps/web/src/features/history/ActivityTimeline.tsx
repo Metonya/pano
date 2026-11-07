@@ -1,11 +1,13 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { AgentAvatar } from "@/features/agents/AgentAvatar";
 import {
   activityReason,
   activityText,
   scenarioResultChanged,
 } from "@/features/board/format";
 import { agentName, type Detail } from "@/features/board/types";
+import { usageRecordLine } from "@/features/board/usage";
 import { authHeaders, request } from "@/lib/api";
 import { language, t } from "@/lib/i18n";
 import { checkResult } from "./checkResult";
@@ -102,6 +104,7 @@ function Row({
       <div className="history-entry">
         <div className="history-line">
           <div>
+            <AgentAvatar id={entry.actor} />
             <strong title={entry.actor}>{actor}</strong>
             {summary.startsWith(actor)
               ? summary.slice(actor.length)
@@ -128,6 +131,14 @@ function Row({
         {quoted && <blockquote>{entry.message}</blockquote>}
         {(entry.kind === "note" || entry.kind === "decision") && (
           <p>{entry.message}</p>
+        )}
+        {entry.kind === "usage" && usageRecordLine(after) && (
+          <p className="history-usage" title={t("usageReported")}>
+            {usageRecordLine(after)}
+          </p>
+        )}
+        {entry.kind === "usage" && typeof after.note === "string" && (
+          <p>{after.note}</p>
         )}
         {diffKinds.has(entry.kind) && (
           <DiffView before={before} after={after} />

@@ -192,6 +192,7 @@ export function activityText(entry: Entry): string {
     restored: t("historyRestored"),
     decision: t("historyDecisionRecorded"),
     note: t("historyNoteRecorded"),
+    usage: t("usageRecorded"),
     criterion_updated: t("activityCriterionUpdated"),
     criterion_added: named(
       "activityCriterionAdded",

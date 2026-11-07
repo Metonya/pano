@@ -11,11 +11,21 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:15173",
     ...devices["Desktop Chrome"],
   },
+  // Renaming the person changes who counts as human for every test, so that
+  // spec waits until the parallel tests sharing this database have finished.
+  projects: [
+    { name: "paralel", testIgnore: /user-name\.spec\.ts/ },
+    {
+      name: "kullanici-adi",
+      testMatch: /user-name\.spec\.ts/,
+      dependencies: ["paralel"],
+    },
+  ],
   webServer: [
     {
       command: "bun ../server/src/main.ts serve",
       cwd: import.meta.dir,
-      env: { PANO_PORT: "17777", PANO_DATA_DIR: dataDir },
+      env: { PANO_PORT: "17777", PANO_DATA_DIR: dataDir, PANO_USER: "mert" },
       url: "http://127.0.0.1:17777/api/v1/health",
       reuseExistingServer: false,
     },

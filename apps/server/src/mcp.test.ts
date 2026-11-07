@@ -28,6 +28,7 @@ test("MCP client exercises all tools, actor precedence and history", async () =>
       "get_board",
       "get_item",
       "list_projects",
+      "record_usage",
       "update_item",
     ]);
     const call = async (name: string, args: Record<string, unknown> = {}) => {
@@ -78,8 +79,37 @@ test("MCP client exercises all tools, actor precedence and history", async () =>
     const history = await call("get_item", { key: "MCP-1", history: true });
     expect(history.activity.length).toBeGreaterThan(5);
     expect(history.activity.at(-1).actor).toBe("header");
+    const usage = await call("record_usage", {
+      key: "MCP-1",
+      model: "gpt-6.1-sol",
+      effort: "high",
+      input_tokens: 10,
+      output_tokens: 5,
+      actor: "tool",
+    });
+    expect(usage).toMatchObject({ kind: "usage", actor: "header" });
+    expect(JSON.parse(usage.after_json)).toEqual({
+      model: "gpt-6.1-sol",
+      effort: "high",
+      input_tokens: 10,
+      output_tokens: 5,
+    });
+    expect((await call("get_item", { key: "MCP-1" })).usage).toEqual({
+      total_tokens: 15,
+      runs: 1,
+      models: ["gpt-6.1-sol"],
+      actors: ["header"],
+      efforts: ["high"],
+    });
+    const empty = await client.callTool({
+      name: "record_usage",
+      arguments: { key: "MCP-1" },
+    });
+    expect(empty.isError).toBe(true);
     expect((await app.request("/mcp", { method: "POST" })).status).toBe(401);
-    expect((await app.request("/agents.md")).status).toBe(200);
+    const guide = await app.request("/agents.md");
+    expect(guide.status).toBe(200);
+    expect(await guide.text()).toContain("record_usage");
   } finally {
     await client.close();
     core.close();

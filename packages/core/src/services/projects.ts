@@ -1,9 +1,9 @@
 import { ulid } from "ulid";
 import { z } from "zod";
 import type { Context } from "../context";
+import { isAiActor, isAwaitingHuman, toolOf } from "../identity";
 import { projectCreate, projectPatch } from "../schemas";
 import type { Row, Values } from "../types";
-import { isAiActor, isAwaitingHuman } from "./waiting";
 export function createProjects(context: Context) {
   const {
     db,
@@ -18,6 +18,7 @@ export function createProjects(context: Context) {
     changed,
     update,
     get,
+    userName,
   } = context;
   const projects = {
     suggestKey(name: string) {
@@ -69,7 +70,10 @@ export function createProjects(context: Context) {
             ]),
           );
           const waiting = items
-            .filter((item) => !!project.test_column && isAwaitingHuman(item))
+            .filter(
+              (item) =>
+                !!project.test_column && isAwaitingHuman(item, userName()),
+            )
             .map((item): Row => {
               const sent = get(
                 "SELECT actor, created_at FROM activity WHERE item_id = ? AND kind = 'moved' AND json_extract(after_json, '$.status') = 'test' ORDER BY created_at DESC, id DESC LIMIT 1",
@@ -92,13 +96,15 @@ export function createProjects(context: Context) {
                 str(a.sent_at).localeCompare(str(b.sent_at)) ||
                 Number(a.number) - Number(b.number),
             );
+          // Counted per tool: `claude:po` and `claude:kart` are one Claude.
           const agents = new Set(
             items
               .filter(
                 (item) =>
-                  item.status === "in_progress" && isAiActor(item.assignee),
+                  item.status === "in_progress" &&
+                  isAiActor(item.assignee, userName()),
               )
-              .map((item) => item.assignee),
+              .map((item) => toolOf(str(item.assignee))),
           ).size;
           return { ...project, counts, waiting, agents } as unknown as Row & {
             counts: Record<string, number>;

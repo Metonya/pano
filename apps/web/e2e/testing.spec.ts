@@ -60,7 +60,10 @@ test("insan testi geri gönderme ve onay", async ({ page, request }) => {
     .locator(".test-panel")
     .getByRole("button", { name: "Ekle", exact: true })
     .click();
-  await expect(page.getByText("İkinci senaryo", { exact: true })).toBeVisible();
+  // The saved card can appear just before the form closes, with the same text.
+  await expect(
+    page.locator(".test-scenario p", { hasText: "İkinci senaryo" }),
+  ).toBeVisible();
   await expect(page.getByLabel("Adımlar", { exact: true })).toHaveCount(0);
   await page
     .getByRole("group", { name: /1: Sayfayı aç/ })

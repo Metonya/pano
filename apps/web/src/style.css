@@ -535,9 +535,10 @@ section h2 {
   font-weight: 600;
 }
 .counts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 12px;
 }
 .counts div {
   display: flex;
@@ -546,25 +547,119 @@ section h2 {
 }
 .counts strong {
   font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .counts span {
   color: var(--muted);
   font-size: 12px;
+  white-space: nowrap;
 }
 .card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   border-top: 1px solid var(--line);
   padding-top: 14px;
   color: var(--muted);
   font-size: 13px;
+  white-space: nowrap;
 }
-.card-foot span:last-child {
+.foot-updated {
   display: flex;
+  min-width: 0;
+}
+.foot-updated span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+.project-card time {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.foot-agents {
+  display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 6px;
+}
+.foot-agents.is-active {
+  color: var(--text);
+}
+.foot-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.foot-agents.is-active .foot-dot {
+  background: var(--accent);
+}
+.card-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: inherit;
+}
+.compact h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The clipped title would cut the link's own ring, so the card carries it. */
+.compact .project-stretched-link:focus-visible {
+  outline-color: transparent;
+}
+.compact .project-stretched-link:focus-visible::after {
+  border-radius: 20px;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.card-info {
+  display: flex;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+.card-info-count {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Takes no room while hidden: the name and info line use the full width. */
+.compact .card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  gap: 0;
+  border-radius: 8px;
+  background: var(--card);
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+.compact:hover .card-actions,
+.compact:focus-within .card-actions,
+.compact.menu-open .card-actions {
+  opacity: 1;
+}
+.compact .card-actions .icon {
+  width: 28px;
+  height: 28px;
+}
+@media (hover: none), (max-width: 700px) {
+  .compact .card-actions {
+    position: static;
+    background: transparent;
+    opacity: 1;
+  }
+  .compact .card-actions .icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 .menu-content {
   background: var(--sheet);
@@ -1054,9 +1149,6 @@ section h2 {
   .large {
     padding: 16px;
   }
-  .card-foot {
-    flex-wrap: wrap;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   html body * {
@@ -1111,7 +1203,7 @@ section h2 {
 .agent-row {
   gap: 8px;
 }
-.agent-row span {
+.agent-name {
   flex: 1;
   min-width: 0;
 }
@@ -1122,15 +1214,8 @@ section h2 {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.agent-dot {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.agent-row.is-silent .agent-dot {
-  background: var(--muted);
+.agent-row.is-silent .assignee-avatar {
+  opacity: 0.55;
 }
 @media (max-width: 700px) {
   .mobile-columns {
@@ -1175,6 +1260,16 @@ section h2 {
 .project-card .wait-pill {
   position: relative;
   z-index: 1;
+}
+.compact .card-actions svg {
+  width: 16px;
+  height: 16px;
+}
+@media (hover: none), (max-width: 700px) {
+  .compact .card-actions svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 .pano-switch {
   display: flex;

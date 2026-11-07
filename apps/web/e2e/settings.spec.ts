@@ -144,7 +144,7 @@ test("proje ayarları pencerede odaklı açılır; form pencereleri ilk alana od
   await expect(dialog).toHaveCount(0);
 
   await page.getByRole("button", { name: "Yeni PBI" }).click();
-  await expect(page.getByLabel("Başlık")).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "Başlık" })).toBeFocused();
 });
 
 test.describe("14 dil", () => {

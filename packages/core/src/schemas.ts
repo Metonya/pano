@@ -60,6 +60,23 @@ export const scenarioCreate = z
     position: z.number().finite().optional(),
   })
   .strict();
+const usageCount = z.number().int().nonnegative().optional();
+/** What an agent reports about a run. Pano stores these values, it does not measure them. */
+export const usageFields = z.object({
+  model: text.optional(),
+  effort: text.optional(),
+  input_tokens: usageCount,
+  output_tokens: usageCount,
+  cache_tokens: usageCount,
+  duration_ms: usageCount,
+  note: text.optional(),
+});
+export const usageCreate = usageFields
+  .strict()
+  .refine(
+    (usage) => Object.values(usage).some((value) => value !== undefined),
+    "At least one usage field is required",
+  );
 export const attachmentSchema = z
   .object({
     activity_id: z.string().optional(),

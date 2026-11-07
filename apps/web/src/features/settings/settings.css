@@ -178,6 +178,17 @@
 .settings-control .settings-copy {
   align-self: stretch;
 }
+.dialog .settings-name {
+  width: 180px;
+  height: 30px;
+  min-height: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+}
 .dialog .settings-copy input {
   flex: 1;
   width: auto;
@@ -333,6 +344,17 @@
   }
   .settings-grid select,
   .settings-button,
+  .dialog .settings-name {
+    width: 180px;
+    height: 30px;
+    min-height: 0;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 13px;
+  }
   .dialog .settings-copy input {
     height: 44px;
   }

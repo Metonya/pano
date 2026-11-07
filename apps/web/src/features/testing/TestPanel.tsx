@@ -19,7 +19,7 @@ import {
 import type { Detail } from "@/features/board/types";
 import { checkResult } from "@/features/history/checkResult";
 import { isLegacyCheck } from "@/features/history/entry";
-import { authHeaders, request } from "@/lib/api";
+import { actorHeaders, authHeaders, ensureUser, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import "./testing.css";
 
@@ -261,7 +261,7 @@ export function TestPanel({
     form.append("file", attachment.file);
     const response = await fetch(`/api/v1/items/${itemKey}/attachments`, {
       method: "POST",
-      headers: { ...authHeaders(), "X-Pano-Actor": "mert" },
+      headers: { ...authHeaders(), ...(await actorHeaders()) },
       body: form,
     });
     if (!response.ok) throw new Error("upload");
@@ -296,12 +296,13 @@ export function TestPanel({
       onSubmit={(e) => {
         e.preventDefault();
         void save(async () => {
+          const author = (await ensureUser()) ?? "me";
           await change(
             `/items/${itemKey}/scenarios${editing ? `/${editing}` : ""}`,
             {
               steps_md: steps,
               expected_md: expected,
-              ...(editing ? {} : { author: "mert" }),
+              ...(editing ? {} : { author }),
             },
             editing ? "PATCH" : "POST",
           );

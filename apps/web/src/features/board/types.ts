@@ -1,4 +1,8 @@
+import { isAwaitingHuman as isCoreAwaitingHuman } from "@pano/core/identity";
 import { t } from "@/lib/i18n";
+import { currentUser } from "@/lib/identity";
+
+export { agentName, isAiActor } from "@/features/agents/agentInfo";
 
 export type Status = "backlog" | "in_progress" | "test" | "done" | "cancelled";
 export type Priority = "high" | "medium" | "low";
@@ -16,8 +20,15 @@ export type BoardItem = {
   last_activity: string;
   criteria_total: number;
   criteria_done: number;
+  usage?: UsageTotals;
 };
-export type Detail = BoardItem & {
+export type UsageTotals = {
+  total_tokens: number;
+  runs: number;
+  models: string[];
+};
+export type Detail = Omit<BoardItem, "usage"> & {
+  usage?: UsageTotals & { actors: string[]; efforts: string[] };
   body_md: string;
   what_changed_md: string;
   how_to_test_md: string;
@@ -55,26 +66,8 @@ export const sortItems = (items: BoardItem[]) =>
       a.position - b.position ||
       a.number - b.number,
   );
-export function agentName(id: string) {
-  const [name, role] = id.split(":");
-  const names: Record<string, string> = {
-    claude: "Claude",
-    codex: "Codex",
-    mert: "Mert",
-  };
-  const roles: Record<string, string> = {
-    po: "PO",
-    design: t("designRole"),
-    tasarim: t("designRole"),
-  };
-  return `${names[name.toLowerCase()] ?? name}${role ? ` · ${roles[role.toLowerCase()] ?? role}` : ""}`;
-}
-
-const AI_ACTOR = /^(codex|claude|agent)(:|$)/i;
-export const isAiActor = (actor: string) => AI_ACTOR.test(actor);
 export const isAwaitingHuman = (item: BoardItem) =>
-  item.status === "test" && !isAiActor(item.assignee ?? "");
-export const initial = (id: string) => agentName(id).charAt(0).toUpperCase();
+  isCoreAwaitingHuman(item, currentUser() ?? "");
 
 /** Done reads like a log: the most recently finished item comes first. */
 export const sortColumn = (status: Status, items: BoardItem[]) =>

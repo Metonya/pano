@@ -1,7 +1,10 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { AgentAvatar } from "@/features/agents/AgentAvatar";
+import { agentInfo } from "@/features/agents/agentInfo";
 import { t } from "@/lib/i18n";
-import { agentName, type BoardItem, initial, isAwaitingHuman } from "./types";
+import { type BoardItem, isAwaitingHuman } from "./types";
+import { tokensLabel } from "./usage";
 
 const cardClass = (item: BoardItem) =>
   `board-card ${item.status === "in_progress" ? "working" : ""} ${isAwaitingHuman(item) ? "awaiting" : ""}`;
@@ -54,6 +57,7 @@ export function BoardCardOverlay({ item }: { item: BoardItem }) {
 }
 
 function CardContents({ item }: { item: BoardItem }) {
+  const tokens = item.usage?.total_tokens ?? 0;
   return (
     <>
       <div className="board-card-meta">
@@ -70,14 +74,12 @@ function CardContents({ item }: { item: BoardItem }) {
         )}
       </div>
       <div className="card-open">{item.title}</div>
-      {(item.assignee || item.criteria_total > 0) && (
+      {(item.assignee || item.criteria_total > 0 || tokens > 0) && (
         <div className="board-card-foot">
           {item.assignee && (
-            <span className="assignee">
-              <span className="assignee-avatar" aria-hidden="true">
-                {initial(item.assignee)}
-              </span>
-              {agentName(item.assignee)}
+            <span className="assignee" title={item.assignee}>
+              <AgentAvatar id={item.assignee} />
+              {agentInfo(item.assignee).name}
             </span>
           )}
           {item.criteria_total > 0 && (
@@ -90,6 +92,11 @@ function CardContents({ item }: { item: BoardItem }) {
                 />
               </span>
               {item.criteria_done}/{item.criteria_total}
+            </span>
+          )}
+          {tokens > 0 && (
+            <span className="card-usage" title={t("usageReported")}>
+              {tokensLabel(tokens)}
             </span>
           )}
         </div>

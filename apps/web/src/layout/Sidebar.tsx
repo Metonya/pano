@@ -3,6 +3,7 @@ import { Archive, Inbox, Settings, Star } from "lucide-react";
 import { useEffect, useReducer } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PanoLogo } from "@/components/PanoLogo";
+import { AgentAvatar } from "@/features/agents/AgentAvatar";
 import { relativeTime } from "@/features/board/format";
 import type { BoardItem } from "@/features/board/types";
 import type { Project } from "@/lib/api";
@@ -54,6 +55,7 @@ export function Sidebar({
         )
       ).flat(),
   });
+  const agentRows = latestPerAgent(agents.data ?? []);
   // Elapsed time must advance even when no SSE event refreshes the query.
   const [, tick] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
@@ -135,19 +137,20 @@ export function Sidebar({
             );
           })}
         </div>
-        {!!agents.data?.length && (
+        {!!agentRows.length && (
           <div className="nav-group">
             <div className="nav-label">{t("agents")}</div>
-            {latestPerAgent(agents.data).map(({ name, item, project }) => {
+            {agentRows.map(({ name, item, project }) => {
               const silent = silentMinutes(item.last_activity);
               return (
                 <Link
                   className={`nav-project agent-row ${silent === null ? "" : "is-silent"}`}
                   key={name}
                   to={`/projects/${project.key}`}
+                  title={item.assignee ?? undefined}
                 >
-                  <i className="agent-dot" aria-hidden="true" />
-                  <span>{name}</span>
+                  <AgentAvatar id={item.assignee as string} />
+                  <span className="agent-name">{name}</span>
                   <small>
                     {silent === null
                       ? `#${item.number} · ${relativeTime(item.last_activity)}`

@@ -89,6 +89,14 @@ test("Tests gathers checks, scenario results and the verdict", () => {
     expect(isTestRecord(hidden)).toBe(false);
 });
 
+test("usage records appear only under All", () => {
+  const usage = entry("usage", null, { model: "gpt-6.1-sol" });
+  expect(matchesFilter(usage, "important")).toBe(false);
+  expect(matchesFilter(usage, "decision")).toBe(false);
+  expect(matchesFilter(usage, "check")).toBe(false);
+  expect(matchesFilter(usage, "all")).toBe(true);
+});
+
 test("filters route each record", () => {
   const decision = entry("decision", null, {}, "Karar");
   expect(matchesFilter(decision, "decision")).toBe(true);

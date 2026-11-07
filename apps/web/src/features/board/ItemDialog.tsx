@@ -20,6 +20,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AgentAvatar, AgentOption } from "@/features/agents/AgentAvatar";
+import {
+  agentInfo,
+  assigneeKey,
+  assigneeKeys,
+} from "@/features/agents/agentInfo";
 import { ActivityTimeline } from "@/features/history/ActivityTimeline";
 import { isImportant, StatusFlow, statusFlow } from "@/features/history/entry";
 import { InlineConfirm, TestPanel } from "@/features/testing/TestPanel";
@@ -30,16 +36,15 @@ import {
   agentName,
   type BoardItem,
   type Detail,
-  initial,
   isAiActor,
   isAwaitingHuman,
   labels,
   type Status,
 } from "./types";
+import { usageSummaryLine } from "./usage";
 import "./detail.css";
 
 const LONG_BODY = 700;
-const knownActors = ["mert", "claude:po", "codex"];
 
 function Property({
   label,
@@ -48,15 +53,18 @@ function Property({
   onChange,
   options,
   disabled,
+  spoken,
 }: {
   label: string;
   shown: ReactNode;
+  /** What the button says when the options alone do not tell it all. */
+  spoken?: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: ReactNode; text: string }[];
   disabled?: boolean;
 }) {
-  const text = options.find((o) => o.value === value)?.text ?? value;
+  const text = spoken ?? options.find((o) => o.value === value)?.text ?? value;
   return (
     <div className="sheet-property">
       <span aria-hidden="true">{label}</span>
@@ -99,17 +107,20 @@ const statusLabel = (status: Status) => (
   </span>
 );
 
-const assigneeLabel = (assignee: string | null) =>
-  assignee ? (
-    <span className="assignee sheet-assignee">
-      <span className="assignee-avatar" aria-hidden="true">
-        {initial(assignee)}
+function assigneeLabel(assignee: string | null) {
+  if (!assignee)
+    return <span className="sheet-unassigned">{t("unassigned")}</span>;
+  const { name, role } = agentInfo(assignee);
+  return (
+    <>
+      <span className="assignee sheet-assignee" title={assignee}>
+        <AgentAvatar id={assignee} />
+        {name}
       </span>
-      {agentName(assignee)}
-    </span>
-  ) : (
-    <span className="sheet-unassigned">{t("unassigned")}</span>
+      {role && <small className="sheet-assignee-role">{role}</small>}
+    </>
   );
+}
 
 export function ItemDialog({
   projectKey,
@@ -358,15 +369,17 @@ export function ItemDialog({
       <span className={titleEditing ? "sr-only" : undefined}>{title}</span>
     </DialogTitle>
   );
-  const actors = [
-    ...new Set([
-      ...knownActors,
+  const actors = assigneeKeys(
+    [
       ...(qc.getQueryData<BoardItem[]>(["board", projectKey]) ?? []).map(
         (i) => i.assignee,
       ),
       d?.assignee,
-    ]),
-  ].filter((a): a is string => !!a);
+    ],
+    { includeKnown: true, includeUser: true },
+  );
+  // Roles are the agent's own record, so choosing its tool again changes nothing.
+  const assigneeValue = d?.assignee ? assigneeKey(d.assignee) : "";
   const requester = d?.activity.find(
     (a) => a.kind === "moved" && statusFlow(a)?.to === "test",
   )?.actor;
@@ -641,17 +654,18 @@ export function ItemDialog({
             <Property
               label={t("assignee")}
               shown={assigneeLabel(d.assignee)}
-              value={d.assignee ?? ""}
+              spoken={d.assignee ? agentName(d.assignee) : undefined}
+              value={assigneeValue}
               options={[
                 { value: "", label: t("unassigned"), text: t("unassigned") },
                 ...actors.map((a) => ({
                   value: a,
-                  label: agentName(a),
-                  text: agentName(a),
+                  label: <AgentOption id={a} />,
+                  text: agentInfo(a).name,
                 })),
               ]}
               onChange={(value) => {
-                if (value !== (d.assignee ?? ""))
+                if (value !== assigneeValue)
                   void change(`/items/${key}/assign`, {
                     assignee: value || null,
                   });
@@ -668,6 +682,12 @@ export function ItemDialog({
               <b>{date(d.updated_at)}</b>
             </div>
           </div>
+        )}
+        {!!d?.usage?.runs && (
+          <p className="sheet-usage">
+            {usageSummaryLine(d.usage)}
+            <small>{t("usageReported")}</small>
+          </p>
         )}
       </header>
       {d && (
@@ -835,7 +855,8 @@ export function ItemDialog({
                             {date(entry.created_at)}
                           </time>
                           <span>
-                            <strong>{actor}</strong>
+                            <AgentAvatar id={entry.actor} />
+                            <strong title={entry.actor}>{actor}</strong>
                             {summary.startsWith(actor)
                               ? summary.slice(actor.length)
                               : ` ${summary}`}

@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { onlyProjects } from "./helpers";
 
 test("proje oluşturulur, yıldızlanır, arşivlenir ve geri alınır", async ({
   page,
 }) => {
+  await onlyProjects(page, "DP");
   await page.goto("/");
   await page.getByRole("button", { name: "Yeni proje" }).first().click();
   await page.getByLabel("Proje adı").fill("Deneme proje");
@@ -114,6 +116,7 @@ test("proje ayarları adı kaydeder, kuralları uygular ve satır içi onayla ar
 test("proje açıklaması yazılır ve silinir, boş kartta metin çıkmaz", async ({
   page,
 }) => {
+  await onlyProjects(page, "ACIK");
   await page.request.post("/api/v1/projects", {
     data: { key: "ACIK", name: "Açıklama denemesi" },
   });
@@ -194,6 +197,7 @@ test("açıklaması olmayan PBI'da başlık ve Düzenle kalır, boş metin çık
 test("kart menüsü ayarları aynı sayfada açar, yıldız kartta kalır", async ({
   page,
 }) => {
+  await onlyProjects(page, "MENU");
   await page.request.post("/api/v1/projects", {
     data: { key: "MENU", name: "Menü denemesi" },
   });
@@ -245,9 +249,238 @@ test("kart menüsü ayarları aynı sayfada açar, yıldız kartta kalır", asyn
   ).toHaveCount(0);
 });
 
+test("büyük kartta alt satır tek satırdır: göreli tarih ve aktif agent sayısı", async ({
+  page,
+}) => {
+  await onlyProjects(page, "AGSIFIR", "AGIKI");
+  for (const [key, name] of [
+    ["AGSIFIR", "Agentsiz kart"],
+    ["AGIKI", "İki agentli kart"],
+  ] as const) {
+    await page.request.post("/api/v1/projects", { data: { key, name } });
+    await page.request.post(`/api/v1/projects/${key}/star`, {
+      data: { starred: true },
+    });
+  }
+  // Three items, two different agents; the person does not count.
+  for (const assignee of ["claude:a", "claude:a", "codex:b", "mert"]) {
+    const created = await page.request.post("/api/v1/projects/AGIKI/items", {
+      data: { title: `İş ${assignee}` },
+    });
+    await page.request.patch(`/api/v1/items/${(await created.json()).key}`, {
+      data: { status: "in_progress", assignee },
+    });
+  }
+  await page.goto("/");
+  const zero = page.locator("article").filter({ hasText: "Agentsiz kart" });
+  const two = page.locator("article").filter({ hasText: "İki agentli kart" });
+  const accent = await page.evaluate(() => {
+    const probe = document.createElement("i");
+    probe.style.color = "var(--accent)";
+    document.body.append(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+    return color;
+  });
+
+  await expect(two.locator(".foot-agents")).toHaveText("2 aktif agent");
+  await expect(two.locator(".foot-dot")).toHaveCSS("background-color", accent);
+  await expect(zero.locator(".foot-agents")).toHaveText("0 aktif agent");
+  await expect(zero.locator(".foot-dot")).not.toHaveCSS(
+    "background-color",
+    accent,
+  );
+  await expect(zero).not.toContainText("Agent yok");
+
+  const updatedAt = (
+    await (await page.request.get("/api/v1/projects/AGIKI")).json()
+  ).updated_at as string;
+  const time = two.locator(".card-foot time");
+  await expect(two.locator(".foot-updated")).toHaveText("Güncellendi az önce");
+  await expect(time).toHaveAttribute("datetime", updatedAt);
+  await expect(time).toHaveAttribute("title", /2\d{3}/);
+
+  for (const width of [1440, 375, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    const foot = await two.locator(".card-foot").evaluate((el) => ({
+      height: el.getBoundingClientRect().height,
+      padding: Number.parseFloat(getComputedStyle(el).paddingTop),
+      fits: el.scrollWidth <= el.clientWidth,
+    }));
+    expect(foot.fits).toBe(true);
+    // Border, padding and one 13px line: a second line would add about 20px.
+    expect(foot.height - foot.padding).toBeLessThan(26);
+    const single = await time.evaluate(
+      (el) =>
+        el.getClientRects().length === 1 &&
+        el.scrollWidth <= el.clientWidth + 1,
+    );
+    expect(single).toBe(true);
+  }
+
+  // The whole card still opens the board.
+  await page.setViewportSize({ width: 1440, height: 800 });
+  const foot = await two.locator(".foot-agents").boundingBox();
+  if (!foot) throw new Error("Agent indicator is not visible");
+  await page.mouse.click(foot.x + 4, foot.y + 4);
+  await expect(page).toHaveURL(/\/projects\/AGIKI$/);
+});
+
+test("aktif agent araç düzeyinde sayılır: üç Claude rolü ve Codex iki eder", async ({
+  page,
+}) => {
+  await onlyProjects(page, "AGROL");
+  await page.request.post("/api/v1/projects", {
+    data: { key: "AGROL", name: "Rollü kart" },
+  });
+  await page.request.post("/api/v1/projects/AGROL/star", {
+    data: { starred: true },
+  });
+  for (const assignee of [
+    "claude:kimlik",
+    "claude:kullanim",
+    "claude:po",
+    "codex",
+    "mert",
+  ]) {
+    const created = await page.request.post("/api/v1/projects/AGROL/items", {
+      data: { title: `İş ${assignee}` },
+    });
+    await page.request.patch(`/api/v1/items/${(await created.json()).key}`, {
+      data: { status: "in_progress", assignee },
+    });
+  }
+  await page.goto("/");
+  const card = page.locator("article").filter({ hasText: "Rollü kart" });
+  await expect(card.locator(".foot-agents")).toHaveText("2 aktif agent");
+  const saved = await page.request.get("/api/v1/projects");
+  const project = (await saved.json()).find(
+    (entry: { key: string }) => entry.key === "AGROL",
+  );
+  expect(project.agents).toBe(2);
+});
+
+test("küçük kartta butonlar yer tutmaz, hover ve Tab ile görünür", async ({
+  page,
+}) => {
+  await onlyProjects(page, "KUCUK");
+  const name = "Çok uzun adlı küçük kart ".repeat(4).trim();
+  await page.request.post("/api/v1/projects", {
+    data: { key: "KUCUK", name },
+  });
+  await page.request.post("/api/v1/projects/KUCUK/items", {
+    data: { title: "Açık iş" },
+  });
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await page.goto("/");
+  await page.mouse.move(0, 0);
+  const card = page.locator("article").filter({ hasText: "küçük kart" });
+  const link = card.getByRole("link");
+  const star = card.getByRole("button", { name: /^Yıldızla / });
+  const more = card.getByRole("button", { name: /^Diğer işlemler / });
+  const info = card.locator(".card-info");
+
+  await expect(info).toContainText("1 açık iş");
+  await expect(info.locator("time")).toHaveText("az önce");
+  await expect(info.locator("time")).toHaveAttribute("title", /2\d{3}/);
+  expect((await info.boundingBox())?.height).toBeLessThan(24);
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "0");
+  const rest = await card.boundingBox();
+  // The title runs under the hidden buttons up to the card's padding.
+  const title = await card.locator("h3").boundingBox();
+  expect((title?.x ?? 0) + (title?.width ?? 0)).toBeCloseTo(
+    (rest?.x ?? 0) + (rest?.width ?? 0) - 25,
+    0,
+  );
+
+  await card.hover();
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "1");
+  for (const button of [star, more]) {
+    const box = await button.boundingBox();
+    expect(box?.width).toBe(28);
+    expect(box?.height).toBe(28);
+  }
+  expect((await card.boundingBox())?.height).toBe(rest?.height);
+
+  // Stays visible while its menu is open, even with the pointer gone.
+  await more.click();
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(more).toBeFocused();
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "0");
+
+  // Reachable by keyboard: hidden with opacity, not removed.
+  await link.focus();
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Tab");
+  await expect(star).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(more).toBeFocused();
+
+  // Touch size and always visible on the narrow layout, next to the text.
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.mouse.move(0, 0);
+  await expect(card.locator(".card-actions")).toHaveCSS("opacity", "1");
+  for (const button of [star, more]) {
+    const box = await button.boundingBox();
+    expect(box?.width).toBe(44);
+    expect(box?.height).toBe(44);
+  }
+  const titleBox = await card.locator(".project-title").boundingBox();
+  const starBox = await star.boundingBox();
+  expect((titleBox?.x ?? 0) + (titleBox?.width ?? 0)).toBeLessThanOrEqual(
+    starBox?.x ?? 0,
+  );
+  await expect(info.locator("time")).toHaveText("az önce");
+  expect(
+    await info
+      .locator("time")
+      .evaluate((el) => el.getBoundingClientRect().right),
+  ).toBeLessThanOrEqual(starBox?.x ?? 0);
+});
+
+test.describe("uzun dil", () => {
+  test.use({ locale: "de-DE" });
+  test("sayı etiketleri ve alt satır taşmaz", async ({ page }) => {
+    await onlyProjects(page, "DEUTSCH");
+    await page.request.post("/api/v1/projects", {
+      data: { key: "DEUTSCH", name: "Deutsche Karte" },
+    });
+    await page.request.post("/api/v1/projects/DEUTSCH/star", {
+      data: { starred: true },
+    });
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto("/");
+    const card = page.locator("article").filter({ hasText: "Deutsche Karte" });
+    await expect(card.locator(".foot-agents")).toHaveText("Aktive Agents: 0");
+    for (const area of [".counts", ".card-foot"]) {
+      const fits = await card
+        .locator(area)
+        .evaluate((el) => el.scrollWidth <= el.clientWidth);
+      expect(fits).toBe(true);
+    }
+    const labels = card.locator(".counts span");
+    for (let i = 0; i < 4; i += 1) {
+      expect((await labels.nth(i).boundingBox())?.height).toBeLessThan(22);
+    }
+    // The time stays whole; only the label before it may give way.
+    const time = card.locator(".card-foot time");
+    const agents = await card.locator(".foot-agents").boundingBox();
+    expect(
+      await time.evaluate((el) => el.getBoundingClientRect().right),
+    ).toBeLessThanOrEqual(agents?.x ?? 0);
+  });
+});
+
 test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu gösterir", async ({
   page,
 }) => {
+  await onlyProjects(page, "SIDEA", "SIDEB");
   await page.request.post("/api/v1/projects", {
     data: { key: "SIDEA", name: "Yıldızsız panel" },
   });
@@ -302,6 +535,7 @@ test("sol panel tek listede yıldızlıyı üstte ve aktif projeyi vurgulu göst
 test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", async ({
   page,
 }) => {
+  await onlyProjects(page, "STARZ", "STARB");
   await page.request.post("/api/v1/projects", {
     data: { key: "STARZ", name: "Durak bir" },
   });
@@ -311,7 +545,6 @@ test("sol paneldeki yıldız projeyi üste alır ve sayfayı değiştirmez", asy
   });
   await page.goto("/waiting");
   const sidebar = page.locator("aside");
-  // Other tests share this database, so compare only this test's two rows.
   const pair = sidebar.locator(".nav-project-row").filter({ hasText: "Durak" });
   const row = pair.filter({ hasText: "Durak bir" });
   await expect(pair.first()).toContainText("Durak iki");

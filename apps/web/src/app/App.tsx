@@ -14,11 +14,21 @@ import { Sidebar } from "@/layout/Sidebar";
 import { Toolbar } from "@/layout/Toolbar";
 import { type Project, queryKey, request, sorted } from "@/lib/api";
 import { t } from "@/lib/i18n";
+import { setCurrentUser, useCurrentUser } from "@/lib/identity";
 import { useProjectEvents } from "@/lib/sse";
 export function App() {
   // The context value changes with the language, so every t() below re-runs
   // without remounting the app (an open settings window stays open).
   useContext(LanguageContext);
+  // Who counts as the person decides what waits for them, across the whole app.
+  useCurrentUser();
+  const userName = useQuery<{ userName?: string }>({
+    queryKey: ["system"],
+    queryFn: () => request("/system"),
+  }).data?.userName;
+  useEffect(() => {
+    if (userName) setCurrentUser(userName);
+  }, [userName]);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { pathname } = useLocation();

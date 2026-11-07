@@ -9,13 +9,18 @@ import {
   projectKeySchema,
   scenarioCreate,
   text,
+  usageFields,
 } from "@pano/core";
 import { z } from "zod";
+import { decodeActor } from "./routes/shared";
 
 export async function handleMcp(request: Request, core: Core) {
   const server = new McpServer({ name: "pano", version: "0.1.0" });
   const headerActor = request.headers.get("X-Pano-Actor");
-  const actor = (value?: string) => headerActor ?? value ?? "anonymous";
+  const actor = (value?: string) =>
+    (headerActor === null ? null : decodeActor(headerActor)) ??
+    value ??
+    "anonymous";
   const result = (value: unknown) => ({
     content: [{ type: "text" as const, text: JSON.stringify(value) }],
   });
@@ -117,6 +122,20 @@ export async function handleMcp(request: Request, core: Core) {
     },
     ({ key, actor: who, ...data }) =>
       result(core.records.add(key, data, actor(who))),
+  );
+  server.registerTool(
+    "record_usage",
+    {
+      description:
+        "When a run ends, report its model, effort, tokens and duration. At least one field is required; omit what you do not know.",
+      inputSchema: {
+        key: itemKeySchema,
+        ...usageFields.shape,
+        actor: actorField,
+      },
+    },
+    ({ key, actor: who, ...data }) =>
+      result(core.records.usage(key, data, actor(who))),
   );
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,

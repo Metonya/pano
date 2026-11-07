@@ -43,6 +43,9 @@ test("project suggestions skip active and archived keys and cap suffix length", 
 function setup() {
   const core = createCore(":memory:");
   cores.push(core);
+  core.db
+    .query("INSERT OR REPLACE INTO settings VALUES ('userName', 'mert')")
+    .run();
   core.projects.create({ key: "PANO", name: "Pano" }, "mert");
   return core;
 }
@@ -63,6 +66,93 @@ test("board list reports active criteria and a new completion becomes unseen", (
 afterEach(() => {
   for (const core of cores.splice(0)) core.close();
 });
+test("usage reports need one valid field; totals skip cache and add up per item", () => {
+  const core = createCore(":memory:");
+  try {
+    core.projects.create({ key: "USE", name: "Use" }, "mert");
+    core.items.create("USE", { title: "Reported" }, "codex");
+    core.items.create("USE", { title: "Silent" }, "codex");
+    for (const invalid of [
+      {},
+      { input_tokens: -1 },
+      { duration_ms: 1.5 },
+      { model: "  " },
+      { cost: 3 },
+    ])
+      expect(() =>
+        core.records.usage("USE-1", invalid as { model?: string }, "codex"),
+      ).toThrow(ZodError);
+    core.records.usage(
+      "USE-1",
+      {
+        model: "gpt-6.1-sol",
+        effort: "high",
+        input_tokens: 10,
+        output_tokens: 5,
+        cache_tokens: 1000,
+      },
+      "codex",
+    );
+    core.records.usage(
+      "USE-1",
+      { model: "gpt-6.1-sol", input_tokens: 1 },
+      "codex",
+    );
+    core.records.usage("USE-1", { model: "opus", effort: "low" }, "claude:dev");
+    core.records.usage("USE-1", { note: "No numbers" }, "codex");
+    expect(core.activity.list("USE-1")[0]).toMatchObject({
+      kind: "usage",
+      before_json: null,
+      after_json: '{"note":"No numbers"}',
+    });
+    const [reported, silent] = core.items.list("USE");
+    expect(reported?.usage).toEqual({
+      total_tokens: 16,
+      runs: 4,
+      models: ["gpt-6.1-sol", "opus"],
+    });
+    expect(silent?.usage).toEqual({ total_tokens: 0, runs: 0, models: [] });
+    expect(core.items.board("USE").columns.backlog?.[0]?.usage.runs).toBe(4);
+    expect(core.items.get("USE-1").usage).toEqual({
+      total_tokens: 16,
+      runs: 4,
+      models: ["gpt-6.1-sol", "opus"],
+      actors: ["codex", "claude:dev"],
+      efforts: ["high", "low"],
+    });
+    expect(core.projects.summary("USE").usage.total_tokens).toBe(16);
+    // Tokens already spent still count after the item is cancelled.
+    core.items.move("USE-1", "cancelled", "mert", undefined, "Gerek kalmadı");
+    expect(core.projects.summary("USE").usage.total_tokens).toBe(16);
+  } finally {
+    core.close();
+  }
+});
+
+test("board reads usage in one query, however many items there are", () => {
+  const core = createCore(":memory:");
+  try {
+    core.projects.create({ key: "BIG", name: "Big" }, "mert");
+    for (let i = 1; i <= 5; i++) {
+      core.items.create("BIG", { title: `Item ${i}` }, "codex");
+      core.records.usage(`BIG-${i}`, { input_tokens: i }, "codex");
+    }
+    const queries: string[] = [];
+    const query = core.db.query.bind(core.db);
+    core.db.query = ((sql: string) => {
+      queries.push(sql);
+      return query(sql);
+    }) as typeof core.db.query;
+    expect(core.items.list("BIG").map((i) => i.usage.total_tokens)).toEqual([
+      1, 2, 3, 4, 5,
+    ]);
+    expect(queries.filter((sql) => sql.includes("'usage'"))).toHaveLength(1);
+    core.db.query = query;
+  } finally {
+    core.close();
+  }
+});
+
 test("migrations repeat and foreign keys are active", () => {
   const c = setup();
   c.migrate();
@@ -144,6 +234,9 @@ test("50 concurrent items get consecutive unique numbers", async () => {
   const core = createCore(path);
   const workers: Worker[] = [];
   try {
+    core.db
+      .query("INSERT OR REPLACE INTO settings VALUES ('userName', 'mert')")
+      .run();
     core.projects.create({ key: "PANO", name: "Pano" }, "mert");
     const barrier = new Int32Array(new SharedArrayBuffer(8));
     const tasks = Array.from({ length: 2 }, (_, worker) => {

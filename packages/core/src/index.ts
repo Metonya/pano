@@ -10,7 +10,15 @@ import { createProjects } from "./services/projects";
 import { createScenarios } from "./services/scenarios";
 import { createSummary } from "./services/summary";
 
+export { defaultUserName } from "./context";
 export type { ChangeEvent } from "./events";
+export {
+  HUMAN_ALIAS,
+  isAiActor,
+  isAwaitingHuman,
+  isHumanActor,
+  toolOf,
+} from "./identity";
 export { positionBetween } from "./position";
 export {
   actorSchema,
@@ -22,6 +30,8 @@ export {
   scenarioCreate,
   statusSchema,
   text,
+  usageCreate,
+  usageFields,
 } from "./schemas";
 export function createCore(path?: string) {
   const db = openDatabase(path);
@@ -46,6 +56,7 @@ export function createCore(path?: string) {
     attachments: createAttachments(context),
     activity,
     records,
+    userName: context.userName,
     close: () => db.close(),
   };
 }

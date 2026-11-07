@@ -15,7 +15,7 @@ export function isLegacyCheck(entry: Entry): boolean {
   return entry.kind === "check" && "done" in parseSnapshot(entry.after_json);
 }
 
-const quiet = new Set(["seen", "criterion_checked"]);
+const quiet = new Set(["seen", "criterion_checked", "usage"]);
 const scopeFields = [
   "title",
   "body_md",

@@ -1,4 +1,70 @@
 import { expect, test } from "@playwright/test";
+import { onlyProjects } from "./helpers";
+
+test("agent'ın bildirdiği kullanım veri varken görünür, yokken hiç görünmez", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "USAGE", name: "Kullanım" },
+  });
+  await request.post("/api/v1/projects/USAGE/items", {
+    data: { title: "Sessiz iş", assignee: "codex", criteria: ["Bir"] },
+  });
+  await page.goto("/projects/USAGE");
+  const quiet = page.locator(".board-card").filter({ hasText: "Sessiz iş" });
+  await expect(quiet).toBeVisible();
+  await expect(quiet.locator(".card-usage")).toHaveCount(0);
+  await expect(quiet).not.toContainText("token");
+  await quiet.click();
+  await expect(page.getByRole("button", { name: /^Durum/ })).toBeVisible();
+  await expect(page.locator(".sheet-usage")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.locator(".board-summary").click();
+  await expect(page.locator(".summary-popover dl").first()).toBeVisible();
+  await expect(page.locator(".summary-popover")).not.toContainText("token");
+  await page.keyboard.press("Escape");
+
+  await request.post("/api/v1/projects/USAGE/items", {
+    data: {
+      title: "Kullanımlı iş",
+      assignee: "claude:gelistirici-cok-uzun-bir-ad",
+      criteria: ["Bir", "İki"],
+    },
+  });
+  for (let run = 0; run < 3; run++)
+    await request.post("/api/v1/items/USAGE-2/usage", {
+      data: {
+        model: "gpt-6.1-sol",
+        effort: "high",
+        input_tokens: 10000,
+        output_tokens: 4000,
+      },
+      headers: { "X-Pano-Actor": "codex" },
+    });
+  const card = page.locator(".board-card").filter({ hasText: "Kullanımlı iş" });
+  await expect(card.locator(".card-usage")).toHaveText(/^42\sB token$/);
+  await expect(card.locator(".criteria-progress")).toBeVisible();
+  // A long agent name squeezes the tokens first: the progress keeps its room.
+  const progress = await card.locator(".criteria-progress").boundingBox();
+  expect(progress?.width ?? 0).toBeGreaterThanOrEqual(60);
+  const foot = await card.locator(".board-card-foot").boundingBox();
+  const usage = await card.locator(".card-usage").boundingBox();
+  expect((usage?.x ?? 0) + (usage?.width ?? 0)).toBeLessThanOrEqual(
+    (foot?.x ?? 0) + (foot?.width ?? 0) + 1,
+  );
+  await card.click();
+  const line = page.locator(".sheet-usage");
+  await expect(line).toContainText(
+    /Codex · gpt-6\.1-sol · yüksek · 42\sB token · 3 çalışma/,
+  );
+  await expect(line).toContainText("Agent'ın bildirdiği değerler");
+  await page.keyboard.press("Escape");
+  await page.locator(".board-summary").click();
+  await expect(page.locator(".summary-popover")).toContainText(
+    /Toplam token \(bildirilen\)\s*42\sB/,
+  );
+});
 
 test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async ({
   page,
@@ -9,7 +75,8 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   });
   await page.goto("/projects/BOARD");
   await page.getByRole("button", { name: "Yeni PBI" }).click();
-  await page.getByLabel("Başlık").fill("Board işi");
+  // Not by label: the sidebar's star buttons carry other projects' names.
+  await page.getByRole("textbox", { name: "Başlık" }).fill("Board işi");
   await page.getByRole("button", { name: "Oluştur" }).click();
   const card = page.locator(".board-card").filter({ hasText: "Board işi" });
   await card.click();
@@ -68,6 +135,13 @@ test("board oluşturma, kriter, taşıma, canlı güncelleme ve filtre", async (
   await expect(
     page.locator(".board-column").filter({ hasText: "Test" }),
   ).toContainText("Board işi");
+  // The card moves at once; a later move must not overtake this request.
+  await expect
+    .poll(
+      async () =>
+        (await (await request.get("/api/v1/items/BOARD-1")).json()).status,
+    )
+    .toBe("test");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(card).toHaveCSS("opacity", "1");
   expect(
@@ -561,4 +635,91 @@ test("logo ve favicon aynı board ikonunu kullanır", async ({
     ),
   ))
     expect(svg).toContain(bar);
+});
+
+test("atanan listesi araç düzeyinde: üç Claude rolü tek satır", async ({
+  page,
+  request,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("pano-language", "tr"));
+  await onlyProjects(page, "ROLES");
+  await request.post("/api/v1/projects", {
+    data: { key: "ROLES", name: "Roller" },
+  });
+  for (const assignee of ["claude:po", "claude:kimlik", "claude:kart", "codex"])
+    await request.post("/api/v1/projects/ROLES/items", {
+      data: { title: `İş ${assignee}`, assignee },
+    });
+  await page.goto("/projects/ROLES");
+  const card = page
+    .locator(".board-card")
+    .filter({ hasText: "İş claude:kimlik" });
+  // The card shows the tool; the full identity stays in its title.
+  await expect(card.locator(".assignee")).toHaveText("CClaude");
+  await expect(card.locator(".assignee")).toHaveAttribute(
+    "title",
+    "claude:kimlik",
+  );
+
+  await page.getByRole("button", { name: "Filtre", exact: true }).click();
+  await expect(page.getByRole("menuitemradio", { name: "Claude" })).toHaveCount(
+    1,
+  );
+  await page.getByRole("menuitemradio", { name: "Claude" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".board-card")).toHaveCount(3);
+  await expect(
+    page.locator(".board-card").filter({ hasText: "İş codex" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Filtre: 1" }).click();
+  await page.getByRole("menuitemradio", { name: "Tümü" }).first().click();
+  await page.keyboard.press("Escape");
+
+  await card.click();
+  const assignee = page.getByRole("button", {
+    name: "Atanan: Claude · Kimlik",
+  });
+  await expect(assignee).toBeVisible();
+  await expect(page.locator(".sheet-assignee-role")).toHaveText("Kimlik");
+  await assignee.click();
+  await expect(page.getByRole("menuitemradio", { name: "Claude" })).toHaveCount(
+    1,
+  );
+  await expect(
+    page.getByRole("menuitemradio", { name: "Claude" }),
+  ).toBeChecked();
+  await expect(page.getByRole("menuitemradio", { name: "Mert" })).toHaveCount(
+    1,
+  );
+  await expect(page.getByRole("menuitemradio", { name: "Cursor" })).toHaveCount(
+    1,
+  );
+  // The same tool again keeps the role and sends nothing.
+  let assigned = 0;
+  page.on("request", (r) => {
+    if (r.url().includes("/assign")) assigned++;
+  });
+  await page.getByRole("menuitemradio", { name: "Claude" }).click();
+  await expect(assignee).toBeVisible();
+  expect(assigned).toBe(0);
+  // Another tool from the menu is stored as the tool name.
+  await assignee.click();
+  await page.getByRole("menuitemradio", { name: "Cursor" }).click();
+  await expect(
+    page.getByRole("button", { name: "Atanan: Cursor" }),
+  ).toBeVisible();
+  const saved = await (await request.get("/api/v1/items/ROLES-2")).json();
+  expect(saved.assignee).toBe("cursor");
+  await page.keyboard.press("Escape");
+
+  // In the sidebar every role of a tool is one row.
+  await request.post("/api/v1/items/ROLES-1/move", {
+    data: { status: "in_progress" },
+  });
+  await request.post("/api/v1/items/ROLES-3/move", {
+    data: { status: "in_progress" },
+  });
+  await page.reload();
+  await expect(page.locator(".agent-row")).toHaveCount(1);
+  await expect(page.locator(".agent-row")).toContainText("Claude");
 });

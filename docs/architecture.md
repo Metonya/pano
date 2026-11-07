@@ -21,7 +21,7 @@ flowchart LR
     H["Hono HTTP server<br/>127.0.0.1:7777"]
     WEB["/  · Web UI<br/>(React + shadcn, gömülü statik)"]
     API["/api/v1 · REST<br/>+ OpenAPI"]
-    MCP["/mcp · MCP<br/>(Streamable HTTP, 7 tool)"]
+    MCP["/mcp · MCP<br/>(Streamable HTTP, 8 tool)"]
     SSE["/api/v1/events · SSE<br/>(canlı güncelleme)"]
     DOC["/agents.md<br/>(agent rehberi)"]
     CORE["core<br/>(domain servisleri + zod şemaları)"]
@@ -54,7 +54,7 @@ flowchart LR
 | `pano mcp-config <claude\|codex\|cursor>` | İlgili istemci için MCP bağlantı komutunu/JSON'unu yazdırır |
 | Docker | `docker run -p 7777:7777 -v pano-data:/data ghcr.io/metonya/pano` |
 
-Ortam değişkenleri: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `PANO_URL` (CLI'ın bağlanacağı sunucu).
+Ortam değişkenleri: `PANO_PORT`, `PANO_HOST`, `PANO_DATA_DIR`, `PANO_TOKEN`, `PANO_URL` (CLI'ın bağlanacağı sunucu), `PANO_USER` (insan kimliğinin varsayılanı).
 
 ## Güvenlik (v0.1)
 
@@ -93,7 +93,7 @@ erDiagram
     text body_md "amaç, kapsam, bağlam, test planı"
     text status "backlog|in_progress|test|done|cancelled"
     text priority "high|medium|low"
-    text assignee "claude:pbi-12-dev | codex | mert | null"
+    text assignee "claude | codex:review | userName | null"
     real position "kolon içi sıra"
     text seen_at "kullanıcı son baktığında"
     text created_at
@@ -128,8 +128,8 @@ erDiagram
     text id PK
     text project_id FK
     text item_id FK "nullable"
-    text actor "mert | claude:... | codex"
-    text kind "created|moved|assigned|edited|check|note|sent_back|cancelled|..."
+    text actor "userName | claude:... | codex"
+    text kind "created|moved|assigned|edited|check|note|sent_back|cancelled|usage|..."
     text before_json "değişen alanların eski hali"
     text after_json "yeni hali"
     text message "insan okuyacak tek satır"
@@ -146,7 +146,7 @@ erDiagram
 
 ## MCP tool'ları (bilerek az)
 
-Her MCP tool'u agent'ın her konuşmasında token harcar; bu yüzden 7 tool ile sınırlı:
+Her MCP tool'u agent'ın her konuşmasında token harcar; bu yüzden az tool ile sınırlı (8; `record_usage` 2026-11-07'de Mert'in isteğiyle eklendi):
 
 | Tool | Amaç |
 |---|---|

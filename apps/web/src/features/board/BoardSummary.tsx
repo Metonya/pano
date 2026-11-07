@@ -7,6 +7,7 @@ import { language, t } from "@/lib/i18n";
 import { relativeTime } from "./format";
 import { chartDateLabel, openedSummary } from "./summaryDates";
 import type { BoardItem } from "./types";
+import { formatTokens } from "./usage";
 import "./summary.css";
 
 type Summary = {
@@ -18,6 +19,7 @@ type Summary = {
   remaining_by_priority: Record<"high" | "medium" | "low", number>;
   completed_last_7_days: number;
   burn_up: { date: string; total: number; completed: number }[];
+  usage?: { total_tokens: number };
 };
 
 function BurnUp({ data }: { data: Summary }) {
@@ -260,6 +262,12 @@ export function BoardSummary({
                   <dt>{t("summaryLastSeven")}</dt>
                   <dd>{query.data.completed_last_7_days}</dd>
                 </div>
+                {!!query.data.usage?.total_tokens && (
+                  <div>
+                    <dt>{t("summaryUsageTokens")}</dt>
+                    <dd>{formatTokens(query.data.usage.total_tokens)}</dd>
+                  </div>
+                )}
               </dl>
               <h3>{t("summaryPriorities")}</h3>
               <dl>

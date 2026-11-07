@@ -1,14 +1,29 @@
 import type { Database } from "bun:sqlite";
 import type { EventEmitter } from "node:events";
+import { userInfo } from "node:os";
 import { ulid } from "ulid";
 import { actorSchema, itemKeySchema, projectKeySchema } from "./schemas";
 import type { ChangeEvent, ItemRow, Row, Values } from "./types";
+/** PANO_USER, else the operating system's account name; containers may have neither. */
+export function defaultUserName() {
+  const configured = process.env.PANO_USER?.trim();
+  if (configured) return configured;
+  try {
+    return userInfo().username.trim().toLowerCase() || "me";
+  } catch {
+    return "me";
+  }
+}
 export function createContext(db: Database, events: EventEmitter) {
   const get = (sql: string, ...params: (string | number | null)[]) =>
     db.query(sql).get(...params) as Row | null;
   const all = (sql: string, ...params: (string | number | null)[]) =>
     db.query(sql).all(...params) as Row[];
   const now = () => new Date().toISOString();
+  const userName = () =>
+    String(
+      get("SELECT value FROM settings WHERE key = 'userName'")?.value ?? "",
+    ) || defaultUserName();
   function project(key: string) {
     projectKeySchema.parse(key);
     const row = get("SELECT * FROM projects WHERE key = ?", key);
@@ -104,6 +119,7 @@ export function createContext(db: Database, events: EventEmitter) {
     event,
     str,
     changed,
+    userName,
   };
 }
 export type Context = ReturnType<typeof createContext>;

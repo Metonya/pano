@@ -1,10 +1,20 @@
-import { Bot, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { relativeTime } from "@/features/board/format";
 import { ProjectSettings } from "@/features/testing/ProjectSettings";
 import { date, type Project, type ProjectAction } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { ProjectMenu } from "./ProjectMenu";
+
+function UpdatedTime({ value }: { value: string }) {
+  return (
+    <time dateTime={value} title={date(value)}>
+      {relativeTime(value)}
+    </time>
+  );
+}
+
 export function ProjectCard({
   p,
   archive,
@@ -19,10 +29,12 @@ export function ProjectCard({
   const large = !!p.starred && !archive;
   const [settings, setSettings] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // The label may be cut on a narrow card, the time around it never is.
+  const [updatedBefore, updatedAfter] = t("updatedAgo").split("{time}");
   return (
     <>
       <article
-        className={large ? "project-card large" : "project-card compact"}
+        className={`project-card ${large ? "large" : "compact"}${menuOpen ? " menu-open" : ""}`}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenuOpen(true);
@@ -41,28 +53,37 @@ export function ProjectCard({
                 {p.name}
               </Link>
             </h3>
-            <span>
-              {large
-                ? p.key
-                : `${p.counts.backlog + p.counts.in_progress + p.counts.test} ${t("open")} · ${date(p.updated_at)}`}
-            </span>
+            {large ? (
+              <span>{p.key}</span>
+            ) : (
+              <span className="card-info">
+                <span className="card-info-count">
+                  {p.counts.backlog + p.counts.in_progress + p.counts.test}{" "}
+                  {t("open")}
+                </span>
+                <span aria-hidden="true">·</span>
+                <UpdatedTime value={p.updated_at} />
+              </span>
+            )}
           </div>
-          <button
-            type="button"
-            className={`icon star ${p.starred ? "selected" : ""}`}
-            aria-label={`${t(p.starred ? "unstar" : "star")} ${p.name}`}
-            onClick={() => act(p, "star", !p.starred)}
-          >
-            <Star size={20} fill={p.starred ? "currentColor" : "none"} />
-          </button>
-          <ProjectMenu
-            p={p}
-            open={menuOpen}
-            onOpenChange={setMenuOpen}
-            act={act}
-            onDelete={onDelete}
-            onSettings={() => setSettings(true)}
-          />
+          <div className="card-actions">
+            <button
+              type="button"
+              className={`icon star ${p.starred ? "selected" : ""}`}
+              aria-label={`${t(p.starred ? "unstar" : "star")} ${p.name}`}
+              onClick={() => act(p, "star", !p.starred)}
+            >
+              <Star size={20} fill={p.starred ? "currentColor" : "none"} />
+            </button>
+            <ProjectMenu
+              p={p}
+              open={menuOpen}
+              onOpenChange={setMenuOpen}
+              act={act}
+              onDelete={onDelete}
+              onSettings={() => setSettings(true)}
+            />
+          </div>
         </div>
         {large && (
           <>
@@ -88,12 +109,14 @@ export function ProjectCard({
               ))}
             </div>
             <div className="card-foot">
-              <span>
-                {t("updated")}: {date(p.updated_at)}
+              <span className="foot-updated">
+                <span>{updatedBefore}</span>
+                <UpdatedTime value={p.updated_at} />
+                <span>{updatedAfter}</span>
               </span>
-              <span>
-                <Bot size={14} />{" "}
-                {p.agents ? `${p.agents} ${t("agent")}` : t("noAgent")}
+              <span className={`foot-agents${p.agents ? " is-active" : ""}`}>
+                <span className="foot-dot" aria-hidden="true" />
+                {t("activeAgents").replace("{count}", String(p.agents))}
               </span>
             </div>
           </>

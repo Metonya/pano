@@ -50,9 +50,33 @@ export const scenario = z
     position: z.number().finite().optional(),
   })
   .strict();
+const usageCount = z.number().int().nonnegative().optional();
+export const usage = z
+  .object({
+    model: text.optional(),
+    effort: text.optional(),
+    input_tokens: usageCount,
+    output_tokens: usageCount,
+    cache_tokens: usageCount,
+    duration_ms: usageCount,
+    note: text.optional(),
+  })
+  .strict()
+  .refine(
+    (fields) => Object.values(fields).some((value) => value !== undefined),
+    "At least one usage field is required",
+  );
 
+/** Headers carry Latin-1 only, so the web app percent-encodes names like Şükrü. */
+export function decodeActor(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 export const actor = (c: Context) =>
-  c.req.header("X-Pano-Actor") ?? "anonymous";
+  decodeActor(c.req.header("X-Pano-Actor") ?? "anonymous");
 export const key = (c: Context) => c.req.param("key") as string;
 export const id = (c: Context) => c.req.param("id") as string;
 export const json = async <T extends z.ZodType>(

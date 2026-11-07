@@ -10,8 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AgentOption } from "@/features/agents/AgentAvatar";
+import { assigneeKeys, UNASSIGNED_FILTER } from "@/features/agents/agentInfo";
 import { t } from "@/lib/i18n";
-import { agentName, type BoardItem } from "./types";
+import type { BoardItem } from "./types";
 
 export type Filters = {
   search: string;
@@ -33,9 +35,7 @@ export function BoardFilter({
     Number(!!filters.assignee) +
     Number(!!filters.priority) +
     Number(filters.cancelled);
-  const assignees = [
-    ...new Set(items.map((i) => i.assignee).filter((x): x is string => !!x)),
-  ];
+  const assignees = assigneeKeys(items.map((i) => i.assignee));
   // Selecting keeps the menu open so several filters can be set in one go.
   const stayOpen = (event: Event) => event.preventDefault();
   return (
@@ -61,9 +61,17 @@ export function BoardFilter({
           <DropdownMenuRadioItem value="" onSelect={stayOpen}>
             {t("all")}
           </DropdownMenuRadioItem>
+          {items.some((i) => !i.assignee) && (
+            <DropdownMenuRadioItem
+              value={UNASSIGNED_FILTER}
+              onSelect={stayOpen}
+            >
+              {t("unassigned")}
+            </DropdownMenuRadioItem>
+          )}
           {assignees.map((a) => (
             <DropdownMenuRadioItem key={a} value={a} onSelect={stayOpen}>
-              {agentName(a)}
+              <AgentOption id={a} />
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

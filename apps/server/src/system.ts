@@ -21,6 +21,7 @@ export function createSystem(
         }[]
       ).map((row) => [row.key, row.value]),
     );
+  const allSettings = () => ({ ...settings(), userName: core.userName() });
   async function check() {
     if (settings().updateCheck === "false") return;
     try {
@@ -58,6 +59,7 @@ export function createSystem(
       );
     return {
       version,
+      userName: core.userName(),
       buildDate: buildDate(),
       dataDir,
       dbSize,
@@ -65,5 +67,5 @@ export function createSystem(
       updateAvailable,
     };
   }
-  return { settings, check, info };
+  return { settings: allSettings, check, info };
 }

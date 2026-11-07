@@ -45,6 +45,11 @@ export function registerSummary(route: Route, core: Core) {
         )
         .min(1)
         .max(180),
+      usage: z.object({
+        total_tokens: count,
+        runs: count,
+        models: z.array(z.string()),
+      }),
     }),
   );
 }

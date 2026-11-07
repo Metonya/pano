@@ -110,6 +110,14 @@ export function registerRoutes(
           .optional(),
         theme: z.enum(["light", "dark", "auto"]).optional(),
         updateCheck: z.boolean().optional(),
+        // A colon would make the name read as an agent's tool:role.
+        userName: z
+          .string()
+          .trim()
+          .min(1)
+          .max(64)
+          .regex(/^[^:\p{Cc}]+$/u)
+          .optional(),
       })
       .strict()
       .parse(await c.req.json());

@@ -250,6 +250,7 @@ async function main() {
     dod_md:
       "- Acceptance criteria verified\n- Automated checks recorded\n- Human-facing changes reviewed in Test",
   });
+  await api("/settings", { userName: "alex" }, "alex", "PATCH");
   await api("/projects/DRIFT/star", { starred: true }, "alex");
   for (const [index, card] of cards.entries()) {
     const item = await api<Item>("/projects/DRIFT/items", {
@@ -273,7 +274,7 @@ async function main() {
       );
     if (card.status === "test") {
       await prepareTest(item.key, index);
-      await api(`/items/${item.key}/assign`, { assignee: "alex" }, "codex");
+      await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
       await api(`/items/${item.key}/move`, { status: "test" }, "codex");
     } else if (card.status === "done") {
       await api(
@@ -316,7 +317,7 @@ async function main() {
         },
         "codex",
       );
-      await api(`/items/${item.key}/assign`, { assignee: "alex" }, "codex");
+      await api(`/items/${item.key}/assign`, { assignee: "human" }, "codex");
       await api(`/items/${item.key}/move`, { status: "test" }, "codex");
     }
   }

@@ -25,7 +25,7 @@ test("an agent with several items gets one row, using the latest activity", () =
     work(3, "claude:po", "2026-11-06T11:00:00Z"),
   ]);
   expect(rows).toHaveLength(1);
-  expect(rows[0].name).toBe("Claude · PO");
+  expect(rows[0].name).toBe("Claude");
   expect(rows[0].item.number).toBe(2);
 });
 
@@ -37,7 +37,7 @@ test("the latest item is found across projects and keeps its project", () => {
   expect(rows.map((r) => [r.item.number, r.project])).toEqual([[9, "SITE"]]);
 });
 
-test("spellings of the same agent merge; different roles stay apart", () => {
+test("all roles and spellings of a tool are one row with its latest work", () => {
   const rows = latestPerAgent([
     work(1, "claude:po", "2026-11-06T10:00:00Z"),
     work(2, "Claude:PO", "2026-11-06T11:00:00Z"),
@@ -45,8 +45,7 @@ test("spellings of the same agent merge; different roles stay apart", () => {
     work(4, "codex", "2026-11-06T08:00:00Z"),
   ]);
   expect(rows.map((r) => [r.name, r.item.number])).toEqual([
-    ["Claude · PO", 2],
-    ["Claude · Tasarım", 3],
+    ["Claude", 2],
     ["Codex", 4],
   ]);
 });

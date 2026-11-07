@@ -11,8 +11,9 @@ import { LanguageContext } from "@/app/Providers";
 import { ManagedDialog } from "@/components/ManagedDialog";
 import { Switch } from "@/components/Switch";
 import { DialogTitle } from "@/components/ui/dialog";
-import { request } from "@/lib/api";
+import { queryKey, request } from "@/lib/api";
 import { type Language, language, languages, t } from "@/lib/i18n";
+import { setCurrentUser } from "@/lib/identity";
 import "./settings.css";
 
 type System = {
@@ -78,6 +79,10 @@ function Settings() {
     localStorage.getItem("pano-theme") || "auto",
   );
   const qc = useQueryClient();
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<
+    "userNameInvalid" | "failed" | null
+  >(null);
   const system = useQuery<System>({
     queryKey: ["system"],
     queryFn: () => request("/system"),
@@ -90,6 +95,28 @@ function Settings() {
     void request("/settings", value, "PATCH").then(() =>
       qc.invalidateQueries({ queryKey: ["settings"] }),
     );
+  }
+  function saveName() {
+    const userName = nameDraft?.trim();
+    if (!userName || userName === settings.data?.userName) {
+      setNameDraft(null);
+      setNameError(null);
+      return;
+    }
+    if (userName.includes(":")) {
+      setNameError("userNameInvalid");
+      return;
+    }
+    void request("/settings", { userName }, "PATCH")
+      .then((saved: { userName: string }) => {
+        setCurrentUser(saved.userName);
+        setNameDraft(null);
+        setNameError(null);
+        // The waiting lists depend on the name, so everything is read again.
+        for (const key of [["settings"], ["system"], queryKey, ["board"]])
+          void qc.invalidateQueries({ queryKey: key });
+      })
+      .catch(() => setNameError("failed"));
   }
   const tabs = [
     t("general"),
@@ -124,6 +151,26 @@ function Settings() {
       <div role="tabpanel" aria-label={tabs[tab]} className="settings-body">
         {tab === 0 && (
           <div className="settings-grid">
+            <label htmlFor="app-user-name">{t("userName")}:</label>
+            <div className="settings-control">
+              <input
+                id="app-user-name"
+                className="settings-name"
+                maxLength={64}
+                value={nameDraft ?? settings.data?.userName ?? ""}
+                aria-invalid={!!nameError}
+                onChange={(e) => {
+                  setNameError(null);
+                  setNameDraft(e.target.value);
+                }}
+                onBlur={saveName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveName();
+                }}
+              />
+              <small>{t("userNameHelp")}</small>
+              {nameError && <small role="alert">{t(nameError)}</small>}
+            </div>
             <label htmlFor="app-language">{t("language")}:</label>
             <div className="settings-control">
               <select

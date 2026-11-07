@@ -219,6 +219,15 @@
 .sheet-assignee {
   min-width: 0;
 }
+.sheet-assignee-role {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.recent-records .assignee-avatar {
+  margin-right: 6px;
+  vertical-align: -3px;
+}
 .sheet-unassigned {
   color: var(--muted);
   font-weight: 500;
@@ -275,6 +284,16 @@
   color: var(--accent-text);
   font-size: 13px;
   font-weight: 500;
+}
+.sheet-usage {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.sheet-usage small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
 }
 .sheet-muted {
   margin: 0;

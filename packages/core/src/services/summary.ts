@@ -1,4 +1,5 @@
 import type { Context } from "../context";
+import { usageTotals } from "./usage";
 
 const DAY = 86400000;
 const MAX_POINTS = 180;
@@ -96,6 +97,8 @@ export function createSummary({ project, all, str, now }: Context) {
         (item) => item.status === "done" && recent.has(str(item.id)),
       ).length,
       burn_up,
+      // Cancelled items count too: their tokens were spent all the same.
+      usage: usageTotals(history.filter((entry) => entry.kind === "usage")),
     };
   };
 }

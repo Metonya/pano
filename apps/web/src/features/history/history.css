@@ -127,6 +127,11 @@
   background: var(--field);
   white-space: pre-wrap;
 }
+.history-entry .history-usage {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 .history-check {
   border-radius: 13px;
   padding: 3px 10px;
@@ -217,4 +222,8 @@
   .history-more {
     min-height: 44px;
   }
+}
+.history-line .assignee-avatar {
+  margin-right: 6px;
+  vertical-align: -3px;
 }

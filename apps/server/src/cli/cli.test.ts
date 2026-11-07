@@ -63,6 +63,7 @@ test("every CLI command supports JSON without opening a port", async () => {
     ["task", "assign", "PANO-3", "codex"],
     ["task", "check", "PANO-3", "criterion-id"],
     ["task", "note", "PANO-3", "Not"],
+    ["task", "usage", "PANO-3", "--model", "x"],
     ["board", "PANO"],
     ["mcp-config", "claude"],
     ["mcp-config", "codex"],

@@ -1,10 +1,11 @@
 import { ulid } from "ulid";
 import type { z } from "zod";
 import type { Context } from "../context";
+import { HUMAN_ALIAS, isAiActor, isAwaitingHuman } from "../identity";
 import { itemCreate, itemPatch, statusSchema } from "../schemas";
 import type { Row, Values } from "../types";
 import type { createActivity } from "./activity";
-import { isAiActor, isAwaitingHuman } from "./waiting";
+import { usageDetail, usageTotals } from "./usage";
 export function createItems(
   context: Context,
   activity: ReturnType<typeof createActivity>["activity"],
@@ -23,7 +24,11 @@ export function createItems(
     event,
     str,
     changed,
+    userName,
   } = context;
+  /** Agents can hand work to the person without knowing their name. */
+  const resolveAssignee = (assignee: string | null | undefined) =>
+    assignee?.toLowerCase() === HUMAN_ALIAS ? userName() : assignee;
   const items = {
     list(
       projectKey: string,
@@ -44,28 +49,42 @@ export function createItems(
             "SELECT * FROM items WHERE project_id = ? AND status != 'cancelled' ORDER BY position, number",
             str(p.id),
           );
-      return rows.map(
-        (row): Row & { criteria_total: number; criteria_done: number } => ({
-          ...row,
-          criteria_total: Number(
-            get(
-              "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL",
-              str(row.id),
-            )?.n ?? 0,
-          ),
-          criteria_done: Number(
-            get(
-              "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL AND done = 1",
-              str(row.id),
-            )?.n ?? 0,
-          ),
-          last_activity:
-            get(
-              "SELECT MAX(created_at) AS time FROM activity WHERE item_id = ?",
-              str(row.id),
-            )?.time ?? row.updated_at,
-        }),
-      );
+      // One query for the whole project, so a large board stays a single read.
+      const usage = new Map<unknown, Row[]>();
+      for (const record of all(
+        "SELECT item_id, after_json FROM activity WHERE project_id = ? AND kind = 'usage' ORDER BY rowid",
+        str(p.id),
+      ))
+        usage.set(record.item_id, [
+          ...(usage.get(record.item_id) ?? []),
+          record,
+        ]);
+      return rows.map((row) => {
+        const counts: Row & { criteria_total: number; criteria_done: number } =
+          {
+            ...row,
+            criteria_total: Number(
+              get(
+                "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL",
+                str(row.id),
+              )?.n ?? 0,
+            ),
+            criteria_done: Number(
+              get(
+                "SELECT COUNT(*) AS n FROM criteria WHERE item_id = ? AND removed_at IS NULL AND done = 1",
+                str(row.id),
+              )?.n ?? 0,
+            ),
+            last_activity:
+              get(
+                "SELECT MAX(created_at) AS time FROM activity WHERE item_id = ?",
+                str(row.id),
+              )?.time ?? row.updated_at,
+          };
+        return Object.assign(counts, {
+          usage: usageTotals(usage.get(row.id) ?? []),
+        });
+      });
     },
     board(projectKey: string) {
       const project = context.project(projectKey);
@@ -79,13 +98,16 @@ export function createItems(
       return {
         project,
         columns,
-        waiting: project.test_column ? items.filter(isAwaitingHuman) : [],
+        waiting: project.test_column
+          ? items.filter((item) => isAwaitingHuman(item, userName()))
+          : [],
       };
     },
     get(key: string, options: { history?: boolean } = {}) {
       const row = item(key);
       const id = str(row.id);
-      const sentBack = activity.list(key).find((entry) => {
+      const history = activity.list(key);
+      const sentBack = history.find((entry) => {
         if (entry.kind === "sent_back" || entry.kind === "reassigned")
           return true;
         if (
@@ -118,6 +140,9 @@ export function createItems(
           id,
         ),
         attachments: all("SELECT * FROM attachments WHERE item_id = ?", id),
+        usage: usageDetail(
+          history.filter((entry) => entry.kind === "usage").reverse(),
+        ),
         activity: activity.list(key, {
           limit: options.history ? undefined : 5,
         }),
@@ -150,7 +175,7 @@ export function createItems(
           body_md: data.body_md ?? "",
           status: "backlog",
           priority: data.priority ?? "medium",
-          assignee: data.assignee ?? null,
+          assignee: resolveAssignee(data.assignee) ?? null,
           position: Number(last?.pos ?? 0) + 1,
           seen_at: null,
           created_at: timestamp,
@@ -173,7 +198,7 @@ export function createItems(
           actor,
           "created",
           null,
-          { ...result, activity: undefined },
+          { ...result, activity: undefined, usage: undefined },
           "Item created",
         );
         return {
@@ -183,7 +208,8 @@ export function createItems(
       });
     },
     update(key: string, input: z.input<typeof itemPatch>, actor: string) {
-      const data = itemPatch.parse(input);
+      const parsed = itemPatch.parse(input);
+      const data = { ...parsed, assignee: resolveAssignee(parsed.assignee) };
       return write(actor, () => {
         const row = item(key);
         const id = str(row.id);
@@ -197,7 +223,11 @@ export function createItems(
           throw new Error("Cancellation requires a reason");
         if (data.status === "test" && !p.test_column)
           throw new Error("Test column is disabled for this project");
-        if (data.status === "done" && !p.ai_can_close && isAiActor(actor))
+        if (
+          data.status === "done" &&
+          !p.ai_can_close &&
+          isAiActor(actor, userName())
+        )
           throw new Error("AI cannot close items in this project");
         if (
           data.status === "done" &&
@@ -365,14 +395,15 @@ export function createItems(
           );
       }
       const history = activity.list(key);
-      let assignee = "claude:po";
+      // Back to whoever worked on it last; nobody yet leaves it unassigned.
+      let assignee: string | null = null;
       for (const entry of history) {
         const candidates = [entry.actor];
         for (const value of [entry.after_json, entry.before_json]) {
           if (typeof value === "string")
             candidates.push(JSON.parse(value).assignee);
         }
-        const found = candidates.find(isAiActor);
+        const found = candidates.find((value) => isAiActor(value, userName()));
         if (typeof found === "string") {
           assignee = found;
           break;

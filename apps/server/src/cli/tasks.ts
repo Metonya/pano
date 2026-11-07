@@ -17,7 +17,17 @@ export async function tasks(args: string[], api: Client) {
           ? { history: { type: "boolean" } }
           : command === "check"
             ? { undo: { type: "boolean" } }
-            : {};
+            : command === "usage"
+              ? {
+                  model: { type: "string" },
+                  effort: { type: "string" },
+                  input: { type: "string" },
+                  output: { type: "string" },
+                  cache: { type: "string" },
+                  duration: { type: "string" },
+                  note: { type: "string" },
+                }
+              : {};
   const { values, positionals: p } = parse(
     rest,
     options as Record<
@@ -82,9 +92,35 @@ export async function tasks(args: string[], api: Client) {
     case "note":
       requireArgs(p, 2, 'task note <KEY> "Not"');
       return api(`${path}/records`, "POST", { kind: "note", message: p[1] });
+    case "usage": {
+      requireArgs(
+        p,
+        1,
+        'task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--duration ms] [--note "Not"]',
+      );
+      const count = (flag: "input" | "output" | "cache" | "duration") => {
+        const value = values[flag];
+        if (value === undefined) return undefined;
+        if (!/^\d+$/.test(String(value)))
+          throw new Error(`--${flag} negatif olmayan bir tam sayı olmalı.`);
+        return Number(value);
+      };
+      const usage = {
+        model: values.model,
+        effort: values.effort,
+        input_tokens: count("input"),
+        output_tokens: count("output"),
+        cache_tokens: count("cache"),
+        duration_ms: count("duration"),
+        note: values.note,
+      };
+      if (Object.values(usage).every((value) => value === undefined))
+        throw new Error("En az bir kullanım alanı gerekli.");
+      return api(`${path}/usage`, "POST", usage);
+    }
     default:
       throw new Error(
-        "Kullanım: pano task create|show|move|assign|check|note|approve|send-back --help",
+        "Kullanım: pano task create|show|move|assign|check|note|usage|approve|send-back --help",
       );
   }
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Context } from "../context";
-import { text } from "../schemas";
+import { text, usageCreate } from "../schemas";
 export function createActivity(context: Context) {
   const { all, item, str, write, log, event, get } = context;
   const activity = {
@@ -59,6 +59,27 @@ export function createActivity(context: Context) {
         return {
           value: get("SELECT * FROM activity WHERE id = ?", recordId),
           event: event(pid, id, data.kind, actor),
+        };
+      });
+    },
+    usage(key: string, input: z.input<typeof usageCreate>, actor: string) {
+      const data = usageCreate.parse(input);
+      return write(actor, () => {
+        const row = item(key);
+        const id = str(row.id);
+        const pid = str(row.project_id);
+        const recordId = log(
+          pid,
+          id,
+          actor,
+          "usage",
+          null,
+          data,
+          "Usage recorded",
+        );
+        return {
+          value: get("SELECT * FROM activity WHERE id = ?", recordId),
+          event: event(pid, id, "usage", actor),
         };
       });
     },

@@ -1,15 +1,16 @@
-import { agentName, type BoardItem } from "@/features/board/types";
+import { agentInfo, isAiActor } from "@/features/agents/agentInfo";
+import type { BoardItem } from "@/features/board/types";
 
 const SILENT_MS = 30 * 60000;
 
-/** One row per agent: the display name decides, so `claude:po` and `Claude:PO` are one agent. */
+/** One row per tool: `claude:po` and `claude:design` are one Claude. The person is no agent. */
 export function latestPerAgent<T extends { item: BoardItem }>(
   work: T[],
 ): (T & { name: string })[] {
   const latest = new Map<string, T>();
   for (const entry of work) {
-    if (!entry.item.assignee) continue;
-    const name = agentName(entry.item.assignee);
+    if (!isAiActor(entry.item.assignee)) continue;
+    const name = agentInfo(entry.item.assignee as string).name;
     const current = latest.get(name);
     if (
       !current ||

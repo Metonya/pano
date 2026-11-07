@@ -47,7 +47,9 @@ Backlog → In Progress → (Test) → Done
 ## Agent'lar
 
 - **Orkestratör (ana agent)** iş yapmaz; PBI açar, agent'lara dağıtır, sonucu doğrular, kartları günceller.
-- **Alt agent'lar** (`claude:<ad>`, `codex`) işi yapar; atama alanında görünür.
+- **Agent'lar** kendini `araç:rol` ile tanıtır (`claude:po`, `codex`, `cursor:review`), kayıt adımı yoktur. Atama araç düzeyindedir (`Claude`, `Codex`); rol detayda ve geçmişte görünür.
+- **İnsan** `userName` ayarıyla tanımlıdır; agent ona `assignee: "human"` ile atar. Test kartı, atanan boşsa veya atanan `userName` ise insanı bekler.
+- **Kullanım:** Agent model, düşünme seviyesi, token ve süreyi kendi bildirir. Pano ölçmez ve maliyet tahmini yapmaz; arayüz değerlerin bildirim olduğunu söyler.
 - Kullanıcının UI'dan yaptığı atama ("codex'e ver") sadece bir **talep kaydı**dır; orkestratör bir sonraki kontrolünde görür ve uygular.
 
 ## Açık konular (bilerek sonraya bırakıldı)

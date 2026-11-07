@@ -185,6 +185,47 @@ test("senaryo ve kriter kayıtları ne değiştiğini metniyle söyler", async (
   await expect(history).not.toContainText("Neden");
 });
 
+test("kullanım kaydı Tümü'nde görünür, Önemli ve Testler'de görünmez", async ({
+  page,
+  request,
+}) => {
+  await request.post("/api/v1/projects", {
+    data: { key: "HISTUSE", name: "Kullanım" },
+  });
+  await request.post("/api/v1/projects/HISTUSE/items", {
+    data: { title: "Kullanımlı iş" },
+  });
+  await request.post("/api/v1/items/HISTUSE-1/usage", {
+    data: {
+      model: "gpt-6.1-sol",
+      effort: "high",
+      input_tokens: 12000,
+      output_tokens: 3000,
+      duration_ms: 120000,
+      note: "İlk tur",
+    },
+    headers: { "X-Pano-Actor": "codex" },
+  });
+  await page.goto("/projects/HISTUSE");
+  await page
+    .locator(".board-card")
+    .filter({ hasText: "Kullanımlı iş" })
+    .click();
+  await page.getByRole("tab", { name: "Geçmiş" }).click();
+  const history = page.getByRole("tabpanel", { name: "Geçmiş" });
+  await expect(history).not.toContainText("çalışmayı kaydetti");
+  await history.getByRole("button", { name: "Testler", exact: true }).click();
+  await expect(history).not.toContainText("çalışmayı kaydetti");
+  await history.getByRole("button", { name: "Tümü", exact: true }).click();
+  const row = history
+    .locator(".history-timeline > li")
+    .filter({ hasText: "Codex çalışmayı kaydetti" });
+  await expect(row.locator(".history-usage")).toHaveText(
+    /^gpt-6\.1-sol · high · 12\sB giriş · 3\sB çıkış · 2 dk\.?$/,
+  );
+  await expect(row).toContainText("İlk tur");
+});
+
 test("205 kayıtta ilk 50 kayıt açılır ve daha fazla yüklenir", async ({
   page,
   request,
