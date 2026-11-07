@@ -655,7 +655,8 @@ test("atanan listesi araç düzeyinde: üç Claude rolü tek satır", async ({
     .locator(".board-card")
     .filter({ hasText: "İş claude:kimlik" });
   // The card shows the tool; the full identity stays in its title.
-  await expect(card.locator(".assignee")).toHaveText("CClaude");
+  await expect(card.locator(".assignee")).toHaveText("Claude");
+  await expect(card.locator(".assignee svg")).toHaveCount(1);
   await expect(card.locator(".assignee")).toHaveAttribute(
     "title",
     "claude:kimlik",
@@ -688,6 +689,12 @@ test("atanan listesi araç düzeyinde: üç Claude rolü tek satır", async ({
   await expect(
     page.getByRole("menuitemradio", { name: "Claude" }),
   ).toBeChecked();
+  // The menu sizes its icons, but a logo stays inside the avatar circle.
+  await expect(
+    page
+      .getByRole("menuitemradio", { name: "Claude" })
+      .locator(".assignee-avatar svg"),
+  ).toHaveCSS("width", "11px");
   await expect(page.getByRole("menuitemradio", { name: "Mert" })).toHaveCount(
     1,
   );

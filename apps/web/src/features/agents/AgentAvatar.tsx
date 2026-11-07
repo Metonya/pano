@@ -1,24 +1,18 @@
+import type { CSSProperties } from "react";
 import { agentInfo } from "./agentInfo";
 import "./agents.css";
 
 /** The one avatar for people and agents. Decorative: the name sits beside it. */
 export function AgentAvatar({ id }: { id: string }) {
-  const { color, initial, logo, name } = agentInfo(id);
+  const { color, darkColor, initial, logo } = agentInfo(id);
+  const style = {
+    ...(color && { "--avatar-bg": color }),
+    ...(darkColor && { "--avatar-bg-dark": darkColor }),
+  } as CSSProperties;
   return (
-    <span
-      className="assignee-avatar"
-      aria-hidden="true"
-      style={color ? { background: color } : undefined}
-    >
+    <span className="assignee-avatar" aria-hidden="true" style={style}>
       {logo ? (
-        <svg
-          role="img"
-          aria-label={name}
-          viewBox="0 0 24 24"
-          width="10"
-          height="10"
-          fill="currentColor"
-        >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
           <path d={logo} />
         </svg>
       ) : (

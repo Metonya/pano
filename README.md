@@ -206,6 +206,12 @@ The seed creates the starred Driftwood project with 14 English PBIs and a smalle
 
 The screenshot script uses Chromium from `@playwright/test`, an English locale, and a 1440×900 viewport. It reads the seeded installation and blocks API writes. It saves `board.png`, `board-dark.png`, `detail.png`, `test.png`, `history.png`, `projects.png`, `waiting.png` and `summary.png` under `docs/images/`. A project opened today shows the summary's opening-day message until there are at least two days of chart data. These are fictional demo records; their AI check messages do not describe checks run on Pano itself.
 
+## Trademarks
+
+Product names and logos belong to their owners. Pano uses them only to identify which tool an agent runs on and is not affiliated with or endorsed by them.
+
+Logo paths come from [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0; its GitHub Copilot icon is MIT). Simple Icons no longer includes the OpenAI mark, so that path comes from [OpenAI's own repository](https://github.com/openai/build-hours/blob/main/25-realtime-2/public/openai.svg) (MIT).
+
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). The MIT license covers the code, not the third-party names and logos listed under Trademarks.

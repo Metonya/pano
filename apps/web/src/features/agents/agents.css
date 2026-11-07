@@ -6,10 +6,23 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--avatar-bg, var(--primary));
   color: #fff;
   font-size: 9px;
   font-weight: 700;
+}
+/* Menus size every icon inside them; a logo must stay inside its circle. */
+.assignee-avatar svg {
+  width: 11px;
+  height: 11px;
+}
+:root[data-theme="dark"] .assignee-avatar {
+  background: var(--avatar-bg-dark, var(--avatar-bg, var(--primary)));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .assignee-avatar {
+    background: var(--avatar-bg-dark, var(--avatar-bg, var(--primary)));
+  }
 }
 .agent-option {
   display: inline-flex;

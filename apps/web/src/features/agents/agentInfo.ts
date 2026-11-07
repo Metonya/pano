@@ -13,6 +13,7 @@ const TOOLS: Record<string, string> = {
   cursor: "Cursor",
   gemini: "Gemini",
   copilot: "Copilot",
+  opencode: "OpenCode",
 };
 
 /** Each carries white initials at AA or better (4.5:1); see agentInfo.test.ts. */
@@ -26,6 +27,10 @@ export const AVATAR_COLORS = [
   "#4b5563",
 ];
 
+/** Actor names are free text: `constructor` must not find Object.prototype. */
+const own = <T>(map: Record<string, T>, key: string): T | undefined =>
+  Object.hasOwn(map, key) ? map[key] : undefined;
+
 const capitalized = (text: string) =>
   text === text.toLowerCase()
     ? text.charAt(0).toUpperCase() + text.slice(1)
@@ -37,7 +42,7 @@ function roleLabel(role: string) {
     design: t("designRole"),
     tasarim: t("designRole"),
   };
-  return roles[role.toLowerCase()] ?? capitalized(role);
+  return own(roles, role.toLowerCase()) ?? capitalized(role);
 }
 
 function colorOf(tool: string) {
@@ -57,8 +62,9 @@ export function agentInfo(id: string) {
   const raw = colon < 0 ? id : id.slice(0, colon);
   const rawRole = colon < 0 ? "" : id.slice(colon + 1);
   const tool = raw.toLowerCase();
-  const name = TOOLS[tool] ?? capitalized(raw);
+  const name = own(TOOLS, tool) ?? capitalized(raw);
   const role = rawRole ? roleLabel(rawRole) : null;
+  const logo = human ? null : (own(toolLogos, tool) ?? null);
   return {
     id,
     tool,
@@ -69,8 +75,10 @@ export function agentInfo(id: string) {
     initial: name.charAt(0).toUpperCase(),
     human,
     /** Null means the person, who keeps the primary colour. */
-    color: human ? null : colorOf(tool),
-    logo: human ? null : (toolLogos[tool] ?? null),
+    color: human ? null : (logo?.background ?? colorOf(tool)),
+    /** Set only when the dark theme needs another background. */
+    darkColor: logo?.darkBackground ?? null,
+    logo: logo?.path ?? null,
   };
 }
 
