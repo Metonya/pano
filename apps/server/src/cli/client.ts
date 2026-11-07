@@ -22,7 +22,7 @@ export function client(env: NodeJS.ProcessEnv, fetcher: Fetch) {
       });
     } catch {
       throw new Error(
-        `Sunucuya bağlanılamadı (${base}); pano serve ile başlat.`,
+        `Could not connect to the server (${base}); start it with pano serve.`,
       );
     }
     const data = await response.json().catch(() => null);

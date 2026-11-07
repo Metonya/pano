@@ -69,7 +69,7 @@ export const usage = z
     "At least one usage field is required",
   );
 
-/** Headers carry Latin-1 only, so the web app percent-encodes names like Şükrü. */
+/** Headers carry Latin-1 only, so the web app percent-encodes Unicode names. */
 export function decodeActor(value: string) {
   try {
     return decodeURIComponent(value);

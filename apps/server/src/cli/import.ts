@@ -119,7 +119,7 @@ function closingFrontmatter(source: string, openingLineEnd: number) {
     }
     closingStart = source.indexOf("\n---", markerStart + 3);
   }
-  if (closingEnd === -1) throw new Error("PBI frontmatter bulunamadı.");
+  if (closingEnd === -1) throw new Error("PBI frontmatter not found.");
   return { closingStart, closingEnd };
 }
 
@@ -127,14 +127,14 @@ function splitFrontmatter(source: string) {
   const bomOffset = source.startsWith("\uFEFF") ? 1 : 0;
   const openingEnd = bomOffset + 3;
   if (!source.startsWith("---", bomOffset))
-    throw new Error("PBI frontmatter bulunamadı.");
+    throw new Error("PBI frontmatter not found.");
   const openingLineEnd =
     source[openingEnd] === "\r" ? openingEnd + 2 : openingEnd + 1;
   if (
     source[openingEnd] !== "\n" &&
     !(source[openingEnd] === "\r" && source[openingEnd + 1] === "\n")
   )
-    throw new Error("PBI frontmatter bulunamadı.");
+    throw new Error("PBI frontmatter not found.");
   const { closingStart, closingEnd } = closingFrontmatter(
     source,
     openingLineEnd,
@@ -174,7 +174,7 @@ export function parseBacklog(source: string) {
 
 export async function importBacklog(args: string[], api: Client) {
   const { values, positionals } = parse(args, { project: { type: "string" } });
-  requireArgs(positionals, 1, "import <backlog-klasörü> --project KEY");
+  requireArgs(positionals, 1, "import <backlog-folder> --project KEY");
   const project = projectKeySchema.parse(values.project);
   const cwd = await realpath(process.cwd());
   const withinCwd = (path: string) => {
@@ -248,7 +248,7 @@ export async function importBacklog(args: string[], api: Client) {
     if (entry.status !== "backlog")
       await api(`${itemPath}/move`, "POST", {
         status: entry.status,
-        reason: `Markdown içe aktarımı: ${entry.id}`,
+        reason: `Markdown import: ${entry.id}`,
       });
     imported.add(entry.id);
     added++;

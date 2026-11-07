@@ -9,24 +9,24 @@ import { tasks } from "./tasks";
 import { update } from "./update";
 
 const help = `Pano CLI
-pano serve                            Sunucuyu başlat
+pano serve                            Start the server
 pano project list [--all]
-pano project create <KEY> "Ad" [--description "Metin"]
+pano project create <KEY> "Name" [--description "Text"]
 pano project star|archive <KEY> [--off]
 pano board <KEY>                       Backlog / In Progress / Test / Done
-pano import <backlog-klasörü> --project KEY
-pano task create <PROJECT> "Başlık" [--criteria "A"] [--criteria "B"] [--priority high|medium|low] [--body "Metin"] [--assignee actor]
+pano import <backlog-folder> --project KEY
+pano task create <PROJECT> "Title" [--criteria "A"] [--criteria "B"] [--priority high|medium|low] [--body "Text"] [--assignee actor]
 pano task show <KEY> [--history]
-pano task move <KEY> <backlog|in_progress|test|done|cancelled> [--reason "Neden"]
+pano task move <KEY> <backlog|in_progress|test|done|cancelled> [--reason "Reason"]
 pano task assign <KEY> <actor|none>
 pano task check <KEY> <criterion-id> [--undo]
-pano task note <KEY> "Not"
-pano task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Not"]
+pano task note <KEY> "Note"
+pano task usage <KEY> [--model name] [--effort level] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Note"]
 pano mcp-config <claude|codex|cursor>
---help (-h) yardım; --json JSON çıktı (hatalar stderr).
-PANO_URL=http://127.0.0.1:7777; PANO_TOKEN=Bearer token; PANO_ACTOR=işlemi yapan.
-İptalde --reason zorunlu; in-progress de kabul edilir.
-serve --json: başlangıç bilgisi JSON; sunucu çalışmaya devam eder.`;
+--help (-h) show help; --json JSON output (errors go to stderr).
+PANO_URL=http://127.0.0.1:7777; PANO_TOKEN=Bearer token; PANO_ACTOR=actor performing the action.
+Cancellation requires --reason; in-progress is also accepted.
+serve --json: startup information as JSON; the server keeps running.`;
 
 export async function runCli(
   args: string[],
@@ -152,7 +152,7 @@ export async function runCli(
           };
           break;
         default:
-          throw new Error("Bilinmeyen komut. pano --help ile komutları gör.");
+          throw new Error("Unknown command. See pano --help for commands.");
       }
     }
     stdout(`${json ? JSON.stringify(data, null, 2) : readable(data)}\n`);
@@ -162,7 +162,7 @@ export async function runCli(
     const output =
       json || args.includes("--json")
         ? JSON.stringify({ error: { message } })
-        : `Hata: ${message}`;
+        : `Error: ${message}`;
     stderr(`${output}\n`);
     return 1;
   }

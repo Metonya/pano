@@ -21,7 +21,7 @@ export async function projects(args: string[], api: Client) {
       requireArgs(
         positionals,
         2,
-        'project create <KEY> "Ad" [--description "Metin"]',
+        'project create <KEY> "Name" [--description "Text"]',
       );
       return api("/projects", "POST", {
         key: positionals[0],
@@ -35,6 +35,6 @@ export async function projects(args: string[], api: Client) {
         [command === "star" ? "starred" : "archived"]: !values.off,
       });
     default:
-      throw new Error("Kullanım: pano project list|create|star|archive --help");
+      throw new Error("Usage: pano project list|create|star|archive --help");
   }
 }

@@ -4,7 +4,7 @@ const line = (value: unknown) =>
     .replace(/[\r\n\t]/g, " ")
     .replaceAll(String.fromCodePoint(27), " ");
 export function table(rows: Row[], fields: string[]) {
-  if (!rows.length) return "(boş)";
+  if (!rows.length) return "(empty)";
   const cells = [
     fields,
     ...rows.map((row) => fields.map((field) => line(row[field]))),
@@ -29,7 +29,7 @@ export function readable(data: unknown): string {
     return table(data, ["key", "name", "starred", "archived_at"]);
   const row = data as Row;
   if (typeof row.added === "number" && typeof row.skipped === "number")
-    return `${line(row.project)}: ${row.added} eklendi, ${row.skipped} atlandı.`;
+    return `${line(row.project)}: ${row.added} added, ${row.skipped} skipped.`;
   if (row.columns) {
     const columns = row.columns as Record<string, Row[]>;
     return Object.entries(columns)

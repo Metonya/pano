@@ -37,7 +37,7 @@ test("frontmatter closing separators require a complete line and may end at EOF"
   ).toBe("Kaynak: PBI-012\n\n## Body\nKept.");
 
   const malformed = `${prefix}${"---not a separator\n".repeat(10_000)}`;
-  expect(() => parseBacklog(malformed)).toThrow("PBI frontmatter bulunamadı.");
+  expect(() => parseBacklog(malformed)).toThrow("PBI frontmatter not found.");
 });
 
 test("acceptance heading handles closing hashes and long whitespace safely", () => {
@@ -231,14 +231,14 @@ Kontrol et.
         method: "POST",
         body: {
           status: "in_progress",
-          reason: "Markdown içe aktarımı: PBI-012",
+          reason: "Markdown import: PBI-012",
         },
       },
     ]);
     calls.length = 0;
     expect(await execute(false)).toEqual({
       code: 0,
-      out: "DEMO: 0 eklendi, 1 atlandı.\n",
+      out: "DEMO: 0 added, 1 skipped.\n",
       err: "",
     });
     expect(calls.every((call) => call.method === "GET")).toBe(true);

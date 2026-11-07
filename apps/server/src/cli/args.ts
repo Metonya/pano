@@ -30,5 +30,5 @@ export function parse(
 
 export function requireArgs(args: string[], count: number, usage: string) {
   if (args.length !== count || args.some((arg) => !arg.trim()))
-    throw new Error(`Kullanım: pano ${usage}`);
+    throw new Error(`Usage: pano ${usage}`);
 }

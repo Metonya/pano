@@ -4,6 +4,21 @@ import { existsSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+test("server TypeScript outside tests contains no Turkish characters", () => {
+  const root = fileURLToPath(new URL("../../../", import.meta.url));
+  const source = resolve(root, "apps/server/src");
+  const violations: string[] = [];
+  for (const path of new Bun.Glob("**/*.ts").scanSync(source)) {
+    if (/\.(test|spec)\.ts$/.test(path)) continue;
+    const text = readFileSync(resolve(source, path), "utf8");
+    if (/[çğıöşüÇĞİÖŞÜ]/.test(text)) violations.push(path);
+  }
+  expect(
+    violations,
+    `Turkish characters found in server source: ${violations.join(", ")}`,
+  ).toEqual([]);
+});
+
 test("tracked text files contain no U+2014", () => {
   const root = fileURLToPath(new URL("../../../", import.meta.url));
   const paths = execFileSync(

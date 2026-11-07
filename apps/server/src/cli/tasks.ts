@@ -42,7 +42,7 @@ function usageCount(
   const value = values[flag];
   if (value === undefined) return undefined;
   if (!/^\d+$/.test(String(value)))
-    throw new Error(`--${flag} negatif olmayan bir tam say? olmal?.`);
+    throw new Error(`--${flag} must be a non-negative integer.`);
   return Number(value);
 }
 
@@ -52,14 +52,14 @@ function moveTask(
   path: string,
   api: Client,
 ) {
-  requireArgs(p, 2, 'task move <KEY> <status> [--reason "Neden"]');
+  requireArgs(p, 2, 'task move <KEY> <status> [--reason "Reason"]');
   const status = p[1] === "in-progress" ? "in_progress" : p[1];
   if (!["backlog", "in_progress", "test", "done", "cancelled"].includes(status))
     throw new Error(
-      "Durum: backlog, in_progress (in-progress), test, done, cancelled.",
+      "Status: backlog, in_progress (in-progress), test, done, cancelled.",
     );
   if (status === "cancelled" && !String(values.reason ?? "").trim())
-    throw new Error("İptal için --reason zorunlu.");
+    throw new Error("Cancellation requires --reason.");
   return api(`${path}/move`, "POST", { status, reason: values.reason });
 }
 
@@ -79,19 +79,19 @@ export async function tasks(args: string[], api: Client) {
       requireArgs(p, 1, "task approve <KEY>");
       return api(`${path}/approve`, "POST", {});
     case "send-back":
-      requireArgs(p, 2, 'task send-back <KEY> "Not"');
+      requireArgs(p, 2, 'task send-back <KEY> "Note"');
       return api(`${path}/send-back`, "POST", { note: p[1] });
     case "create":
       requireArgs(
         p,
         2,
-        'task create <PROJECT> "Başlık" [--criteria "A"] [--priority high|medium|low] [--body "Metin"] [--assignee actor]',
+        'task create <PROJECT> "Title" [--criteria "A"] [--priority high|medium|low] [--body "Text"] [--assignee actor]',
       );
       if (
         values.priority &&
         !["high", "medium", "low"].includes(String(values.priority))
       )
-        throw new Error("Öncelik high, medium veya low olmalı.");
+        throw new Error("Priority must be high, medium or low.");
       return api(`/projects/${segment(p[0])}/items`, "POST", {
         title: p[1],
         criteria: values.criteria,
@@ -115,13 +115,13 @@ export async function tasks(args: string[], api: Client) {
         done: !values.undo,
       });
     case "note":
-      requireArgs(p, 2, 'task note <KEY> "Not"');
+      requireArgs(p, 2, 'task note <KEY> "Note"');
       return api(`${path}/records`, "POST", { kind: "note", message: p[1] });
     case "usage": {
       requireArgs(
         p,
         1,
-        'task usage <KEY> [--model ad] [--effort seviye] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Not"]',
+        'task usage <KEY> [--model name] [--effort level] [--input n] [--output n] [--cache n] [--total n] [--context n] [--duration ms] [--note "Note"]',
       );
       const usage = {
         model: values.model,
@@ -135,12 +135,12 @@ export async function tasks(args: string[], api: Client) {
         note: values.note,
       };
       if (Object.values(usage).every((value) => value === undefined))
-        throw new Error("En az bir kullanım alanı gerekli.");
+        throw new Error("At least one usage field is required.");
       return api(`${path}/usage`, "POST", usage);
     }
     default:
       throw new Error(
-        "Kullanım: pano task create|show|move|assign|check|note|usage|approve|send-back --help",
+        "Usage: pano task create|show|move|assign|check|note|usage|approve|send-back --help",
       );
   }
 }

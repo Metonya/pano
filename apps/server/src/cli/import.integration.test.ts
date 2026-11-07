@@ -162,7 +162,7 @@ test("import uses authenticated REST for project, status, assignee, priority and
       expect(second).toEqual({
         code: 0,
         err: "",
-        out: "DEMO: 0 eklendi, 5 atlandı.\n",
+        out: "DEMO: 0 added, 5 skipped.\n",
       });
       expect(core.db.query("SELECT COUNT(*) AS n FROM activity").get()).toEqual(
         activityCount,

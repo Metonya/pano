@@ -28,6 +28,6 @@ export function mcpConfig(target: string, env: NodeJS.ProcessEnv) {
         2,
       );
     default:
-      throw new Error("Kullanım: pano mcp-config <claude|codex|cursor>");
+      throw new Error("Usage: pano mcp-config <claude|codex|cursor>");
   }
 }

@@ -51,6 +51,82 @@ test("create sends criteria, auth and actor through REST and prints Turkish key/
   expect(result.out).toContain("PANO-3  Başlık");
 });
 
+test("help and empty lists use English while JSON preserves API data", async () => {
+  const help = await run(["--help"]);
+  expect(help.code).toBe(0);
+  expect(help.err).toBe("");
+  for (const text of [
+    "Start the server",
+    'project create <KEY> "Name" [--description "Text"]',
+    "import <backlog-folder> --project KEY",
+    'task create <PROJECT> "Title"',
+    '[--reason "Reason"]',
+    "--model name] [--effort level]",
+    'task note <KEY> "Note"',
+    "errors go to stderr",
+  ])
+    expect(help.out).toContain(text);
+  expect(help.out).not.toMatch(/[çğıöşüÇĞİÖŞÜ]/);
+  expect(await run(["project", "list"], async () => Response.json([]))).toEqual(
+    {
+      code: 0,
+      out: "(empty)\n",
+      err: "",
+    },
+  );
+  expect(
+    await run(["project", "list", "--json"], async () => Response.json([])),
+  ).toEqual({ code: 0, out: "[]\n", err: "" });
+});
+
+test("CLI errors use English with the same exit code and JSON shape", async () => {
+  const cases: [string[], string][] = [
+    [["unknown"], "Unknown command. See pano --help for commands."],
+    [["board"], "Usage: pano board <KEY>"],
+    [["import"], "Usage: pano import <backlog-folder> --project KEY"],
+    [["mcp-config", "other"], "Usage: pano mcp-config <claude|codex|cursor>"],
+    [
+      ["task", "move", "PANO-3", "cancelled"],
+      "Cancellation requires --reason.",
+    ],
+    [
+      ["task", "create", "PANO", "Title", "--priority", "urgent"],
+      "Priority must be high, medium or low.",
+    ],
+    [["task", "usage", "PANO-3"], "At least one usage field is required."],
+    [
+      ["task", "usage", "PANO-3", "--input=-1"],
+      "--input must be a non-negative integer.",
+    ],
+    [
+      ["task", "move", "PANO-3", "invalid"],
+      "Status: backlog, in_progress (in-progress), test, done, cancelled.",
+    ],
+  ];
+  for (const [args, message] of cases) {
+    expect(await run(args)).toEqual({
+      code: 1,
+      out: "",
+      err: `Error: ${message}\n`,
+    });
+    const json = await run([...args, "--json"]);
+    expect(json.code).toBe(1);
+    expect(json.out).toBe("");
+    expect(JSON.parse(json.err)).toEqual({ error: { message } });
+  }
+  let err = "";
+  const code = await runCli(["serve"], {
+    serve: async () => {
+      throw new Error("Startup failed");
+    },
+    stderr: (text) => {
+      err += text;
+    },
+  });
+  expect(code).toBe(1);
+  expect(err).toBe("Error: Startup failed\n");
+});
+
 test("every CLI command supports JSON without opening a port", async () => {
   const commands = [
     ["project", "list"],
@@ -160,7 +236,7 @@ test("validation prevents requests; offline and API errors are concise stderr JS
   expect(offline.code).toBe(1);
   expect(offline.out).toBe("");
   expect(JSON.parse(offline.err).error.message).toContain(
-    "pano serve ile başlat",
+    "start it with pano serve",
   );
   expect(offline.err).not.toContain("stack trace");
   const rejected = await run(["task", "show", "PANO-3", "--json"], async () =>

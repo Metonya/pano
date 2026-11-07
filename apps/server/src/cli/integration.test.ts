@@ -287,7 +287,9 @@ test("validation, offline and API errors go to stderr with code 1 and no trace",
   });
   expect(result.code).toBe(1);
   expect(result.out).toBe("");
-  expect(result.err).toContain("pano serve ile başlat");
+  expect(result.err).toBe(
+    "Error: Could not connect to the server (http://pano.test); start it with pano serve.\n",
+  );
   expect(result.err).not.toContain("stack");
   const unauthorized = await run(["project", "list", "--json"], async () =>
     Response.json({ error: { message: "Unauthorized" } }, { status: 401 }),
