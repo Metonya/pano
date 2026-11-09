@@ -14,7 +14,19 @@ test("board respects reduced motion and remains keyboard draggable", async ({
   await page.goto("/projects/MOTION");
   const card = page.locator(".board-card").filter({ hasText: "Motion item" });
   await expect(card).toBeVisible();
-  await expect(card).toHaveCSS("transition-duration", "0.12s, 0.12s");
+  // dnd-kit writes a temporary inline "transform 0ms" transition on the card when the
+  // board re-renders, which hides the stylesheet value. Read the stylesheet rule from
+  // a fresh element with the same class so the check does not depend on that timing.
+  const stylesheetDuration = await card.evaluate((element) => {
+    const probe = document.createElement("button");
+    probe.className = "board-card";
+    probe.hidden = true;
+    element.parentElement?.append(probe);
+    const duration = getComputedStyle(probe).transitionDuration;
+    probe.remove();
+    return duration;
+  });
+  expect(stylesheetDuration).toBe("0.12s, 0.12s");
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(card).toHaveCSS("transition-property", "none");
