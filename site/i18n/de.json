@@ -21,8 +21,6 @@
   "progressText": "Agenten setzen die Arbeit um und der PO prüft sie.",
   "testText": "Probiere die Szenarien aus, dann bestätige oder schicke die Arbeit zurück.",
   "doneText": "Bestätigte Arbeit endet hier. Die Karte behält ihren Verlauf.",
-  "release": "Diese Befehle funktionieren nach der ersten Veröffentlichung. Bis dahin:",
-  "source": "Aus dem Quellcode bauen",
   "copy": "Kopieren",
   "serve": "Führe pano serve aus und öffne http://localhost:7777. Bei Docker öffnest du einfach die Adresse.",
   "connect": "Deine AI verbinden",

@@ -21,8 +21,6 @@
   "progressText": "智能体负责实现，PO 检查它们的工作。",
   "testText": "尝试各个场景，然后批准或退回。",
   "doneText": "已批准的工作到此结束。卡片会保留历史记录。",
-  "release": "这些命令在首次发布后可用。在此之前：",
-  "source": "从源代码构建",
   "copy": "复制",
   "serve": "运行 pano serve，然后打开 http://localhost:7777。使用 Docker 时，直接打开该地址即可。",
   "connect": "连接您的 AI",

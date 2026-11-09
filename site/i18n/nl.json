@@ -21,8 +21,6 @@
   "progressText": "Agenten bouwen en de PO controleert hun werk.",
   "testText": "Probeer de scenario’s en keur het werk goed of stuur het terug.",
   "doneText": "Goedgekeurd werk eindigt hier. De kaart bewaart de geschiedenis.",
-  "release": "Deze opdrachten werken na de eerste release. Tot die tijd:",
-  "source": "Bouwen vanuit de broncode",
   "copy": "Kopiëren",
   "serve": "Voer pano serve uit en open http://localhost:7777. Open voor Docker alleen het adres.",
   "connect": "Verbind je AI",

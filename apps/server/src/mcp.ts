@@ -15,7 +15,7 @@ import { z } from "zod";
 import { decodeActor } from "./routes/shared";
 
 export async function handleMcp(request: Request, core: Core) {
-  const server = new McpServer({ name: "pano", version: "0.1.0" });
+  const server = new McpServer({ name: "pano", version: "0.1.1" });
   const headerActor = request.headers.get("X-Pano-Actor");
   const actor = (value?: string) =>
     (headerActor === null ? null : decodeActor(headerActor)) ??

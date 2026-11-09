@@ -363,7 +363,6 @@ section.wrap {
 .video-play svg { width: 28px; height: 28px; fill: currentColor; }
 .split { display: grid; grid-template-columns: 1fr 2fr; gap: 48px; }
 .split > div { min-width: 0; }
-#release-note { font-size: 13px; color: var(--muted); }
 .command pre { color: var(--text); font-size: 14px; }
 .mcp-setup .command pre { color: var(--text); }
 .mcp-setup .copy { min-height: 32px; padding: 4px 8px; }

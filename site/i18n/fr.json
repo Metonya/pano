@@ -21,8 +21,6 @@
   "progressText": "Les agents réalisent le travail et le PO le vérifie.",
   "testText": "Essayez les scénarios, puis approuvez ou renvoyez le travail.",
   "doneText": "Le travail approuvé s’arrête ici. La carte garde son historique.",
-  "release": "Ces commandes fonctionnent après la première version. En attendant :",
-  "source": "Compiler à partir du code source",
   "copy": "Copier",
   "serve": "Exécutez pano serve et ouvrez http://localhost:7777. Pour Docker, ouvrez simplement l’adresse.",
   "connect": "Connecter votre AI",

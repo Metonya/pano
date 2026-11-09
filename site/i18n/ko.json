@@ -21,8 +21,6 @@
   "progressText": "에이전트가 구현하고 PO가 그 작업을 점검합니다.",
   "testText": "시나리오를 실행해 보고 승인하거나 돌려보내세요.",
   "doneText": "승인된 작업은 여기서 끝납니다. 카드에는 기록이 남습니다.",
-  "release": "이 명령은 첫 릴리스 후에 작동합니다. 그전에는:",
-  "source": "소스에서 빌드",
   "copy": "복사",
   "serve": "pano serve를 실행하고 http://localhost:7777을 여세요. Docker는 주소만 열면 됩니다.",
   "connect": "AI 연결",

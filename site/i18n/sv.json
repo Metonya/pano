@@ -21,8 +21,6 @@
   "progressText": "Agenter bygger och PO kontrollerar deras arbete.",
   "testText": "Prova scenarierna och godkänn eller skicka tillbaka arbetet.",
   "doneText": "Godkänt arbete slutar här. Kortet behåller sin historik.",
-  "release": "Kommandona fungerar efter den första utgåvan. Tills dess:",
-  "source": "Bygg från källkod",
   "copy": "Kopiera",
   "serve": "Kör pano serve och öppna http://localhost:7777. För Docker öppnar du bara adressen.",
   "connect": "Anslut din AI",
