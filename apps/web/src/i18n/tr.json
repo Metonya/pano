@@ -294,5 +294,9 @@
   "cancelled": "İptal",
   "designRole": "Tasarım",
   "summaryOpenedOn": "{date}'ta açıldı, {count} iş tamamlandı",
-  "summaryOpenedOnZero": "{date}'ta açıldı, henüz tamamlanan iş yok"
+  "summaryOpenedOnZero": "{date}'ta açıldı, henüz tamamlanan iş yok",
+  "testResults": "Test sonuçları",
+  "testResultsPassed": "{passed} / {total} geçti",
+  "scenarioNotRun": "Test edilmedi",
+  "testResultsLastApproval": "Son onay"
 }

@@ -294,5 +294,9 @@
   "cancelled": "Geannuleerd",
   "designRole": "Ontwerp",
   "summaryOpenedOn": "Aangemaakt op {date}, {count} taken afgerond",
-  "summaryOpenedOnZero": "Aangemaakt op {date}, nog geen taken afgerond"
+  "summaryOpenedOnZero": "Aangemaakt op {date}, nog geen taken afgerond",
+  "testResults": "Testresultaten",
+  "testResultsPassed": "{passed} / {total} geslaagd",
+  "scenarioNotRun": "Niet getest",
+  "testResultsLastApproval": "Laatste goedkeuring"
 }

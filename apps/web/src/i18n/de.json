@@ -294,5 +294,9 @@
   "cancelled": "Abgebrochen",
   "designRole": "Design",
   "summaryOpenedOn": "Am {date} erstellt, {count} Aufgaben abgeschlossen",
-  "summaryOpenedOnZero": "Am {date} erstellt, noch keine Aufgaben abgeschlossen"
+  "summaryOpenedOnZero": "Am {date} erstellt, noch keine Aufgaben abgeschlossen",
+  "testResults": "Testergebnisse",
+  "testResultsPassed": "{passed} / {total} bestanden",
+  "scenarioNotRun": "Nicht getestet",
+  "testResultsLastApproval": "Letzte Freigabe"
 }

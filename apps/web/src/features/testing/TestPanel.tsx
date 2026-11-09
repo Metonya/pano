@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, CircleAlert, Ellipsis, Pencil, Plus, X } from "lucide-react";
 import {
   type ReactNode,
@@ -17,13 +17,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Detail } from "@/features/board/types";
-import { checkResult } from "@/features/history/checkResult";
-import { isLegacyCheck } from "@/features/history/entry";
 import { actorHeaders, authHeaders, ensureUser, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
+import { AiCheckList, useAiChecks } from "./AiChecks";
 import "./testing.css";
 
-function Markdown({ children }: Readonly<{ children: string }>) {
+export function Markdown({ children }: Readonly<{ children: string }>) {
   return (
     <div className="markdown">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
@@ -122,12 +121,7 @@ export function TestPanel({
   const uploaded = useRef(new Map<number, string>());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  // The detail response only carries the latest few records.
-  const checkRecords = useQuery<Detail["activity"]>({
-    queryKey: ["item", itemKey, "activity", "ai-checks"],
-    queryFn: () => request(`/items/${itemKey}/activity?kind=check&limit=50`),
-    enabled: detail.status === "test",
-  });
+  const checks = useAiChecks(itemKey, detail.status === "test");
   const failedScenarios = detail.scenarios.flatMap((scenario, index) =>
     scenario.result === "failed"
       ? [
@@ -288,9 +282,6 @@ export function TestPanel({
   }
   const failed = failedScenarios.length > 0;
   const pending = detail.scenarios.some((s) => s.result === "pending");
-  const checks = (checkRecords.data ?? []).filter(
-    (a) => a.message.trim() && !isLegacyCheck(a),
-  );
   const scenarioFormView = (
     <form
       onSubmit={(e) => {
@@ -613,33 +604,7 @@ export function TestPanel({
         {!!checks.length && (
           <section className="test-section">
             <h3>{t("aiChecks")}</h3>
-            <ul className="test-checks">
-              {checks.map((a) => {
-                let data = {};
-                try {
-                  data = JSON.parse(a.after_json ?? "{}") ?? {};
-                } catch {
-                  /* Legacy records may not contain JSON. */
-                }
-                const result = checkResult(a.message, data);
-                return (
-                  <li key={a.id} className={`test-check-${result}`}>
-                    {result === "passed" && (
-                      <Check size={14} aria-hidden="true" />
-                    )}
-                    {result === "failed" && <X size={14} aria-hidden="true" />}
-                    {result === "unknown" && (
-                      <CircleAlert size={14} aria-hidden="true" />
-                    )}
-                    <span>
-                      {result !== "unknown" &&
-                        `${t(result === "passed" ? "scenarioPassed" : "scenarioFailed")}: `}
-                      {a.message}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+            <AiCheckList checks={checks} />
           </section>
         )}
       </section>

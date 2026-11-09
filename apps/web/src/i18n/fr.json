@@ -294,5 +294,9 @@
   "cancelled": "Annulé",
   "designRole": "Design",
   "summaryOpenedOn": "Créé le {date}, {count} tâches terminées",
-  "summaryOpenedOnZero": "Créé le {date}, aucune tâche terminée pour le moment"
+  "summaryOpenedOnZero": "Créé le {date}, aucune tâche terminée pour le moment",
+  "testResults": "Résultats des tests",
+  "testResultsPassed": "{passed} / {total} réussis",
+  "scenarioNotRun": "Non testé",
+  "testResultsLastApproval": "Dernière approbation"
 }
