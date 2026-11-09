@@ -16,6 +16,7 @@ import { assigneeKey, assigneeKeys } from "@/features/agents/agentInfo";
 import { ActivityTimeline } from "@/features/history/ActivityTimeline";
 import { isImportant, StatusFlow, statusFlow } from "@/features/history/entry";
 import { InlineConfirm, TestPanel } from "@/features/testing/TestPanel";
+import { TestResults } from "@/features/testing/TestResults";
 import { date, request } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { activityText } from "./format";
@@ -801,6 +802,15 @@ export function ItemDialog({
                   )}
                 </form>
               </section>
+              <TestResults
+                itemKey={key}
+                detail={d}
+                onShowHistory={() => {
+                  setTab("history");
+                  // The pressed button is about to be hidden with its tab.
+                  document.getElementById(`${tabsId}-tab-history`)?.focus();
+                }}
+              />
               {!!recent.length && (
                 <section className="sheet-section">
                   <h3>{t("recentRecords")}</h3>

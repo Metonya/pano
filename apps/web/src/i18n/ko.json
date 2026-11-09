@@ -294,5 +294,9 @@
   "cancelled": "취소됨",
   "designRole": "디자인",
   "summaryOpenedOn": "{date} 생성, 작업 {count}개 완료",
-  "summaryOpenedOnZero": "{date} 생성, 아직 완료한 작업이 없어"
+  "summaryOpenedOnZero": "{date} 생성, 아직 완료한 작업이 없어",
+  "testResults": "테스트 결과",
+  "testResultsPassed": "{passed} / {total} 통과",
+  "scenarioNotRun": "테스트 안 함",
+  "testResultsLastApproval": "최근 승인"
 }

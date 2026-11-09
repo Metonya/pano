@@ -294,5 +294,9 @@
   "cancelled": "キャンセル済み",
   "designRole": "デザイン",
   "summaryOpenedOn": "{date}に作成、{count} 件完了",
-  "summaryOpenedOnZero": "{date}に作成、完了した作業はまだないよ"
+  "summaryOpenedOnZero": "{date}に作成、完了した作業はまだないよ",
+  "testResults": "テスト結果",
+  "testResultsPassed": "{passed} / {total} 成功",
+  "scenarioNotRun": "未実施",
+  "testResultsLastApproval": "最新の承認"
 }

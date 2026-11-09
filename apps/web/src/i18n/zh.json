@@ -294,5 +294,9 @@
   "cancelled": "已取消",
   "designRole": "设计",
   "summaryOpenedOn": "创建于 {date}，已完成 {count} 项任务",
-  "summaryOpenedOnZero": "创建于 {date}，还没有完成的任务"
+  "summaryOpenedOnZero": "创建于 {date}，还没有完成的任务",
+  "testResults": "测试结果",
+  "testResultsPassed": "通过 {passed} / {total}",
+  "scenarioNotRun": "未测试",
+  "testResultsLastApproval": "最近一次批准"
 }

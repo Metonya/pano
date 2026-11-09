@@ -294,5 +294,9 @@
   "cancelled": "Avbrutet",
   "designRole": "Design",
   "summaryOpenedOn": "Skapat {date}, {count} uppgifter klara",
-  "summaryOpenedOnZero": "Skapat {date}, inga klara uppgifter än"
+  "summaryOpenedOnZero": "Skapat {date}, inga klara uppgifter än",
+  "testResults": "Testresultat",
+  "testResultsPassed": "{passed} / {total} godkända",
+  "scenarioNotRun": "Inte testat",
+  "testResultsLastApproval": "Senaste godkännande"
 }

@@ -294,5 +294,9 @@
   "cancelled": "रद्द",
   "designRole": "डिज़ाइन",
   "summaryOpenedOn": "{date} को बना, {count} काम पूरे",
-  "summaryOpenedOnZero": "{date} को बना, अभी कोई काम पूरा नहीं हुआ"
+  "summaryOpenedOnZero": "{date} को बना, अभी कोई काम पूरा नहीं हुआ",
+  "testResults": "टेस्ट के नतीजे",
+  "testResultsPassed": "{passed} / {total} सफल",
+  "scenarioNotRun": "टेस्ट नहीं हुआ",
+  "testResultsLastApproval": "आख़िरी मंज़ूरी"
 }

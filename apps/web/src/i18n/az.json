@@ -294,5 +294,9 @@
   "cancelled": "Ləğv edilib",
   "designRole": "Dizayn",
   "summaryOpenedOn": "{date} tarixində açılıb, {count} iş tamamlanıb",
-  "summaryOpenedOnZero": "{date} tarixində açılıb, hələ tamamlanan iş yoxdur"
+  "summaryOpenedOnZero": "{date} tarixində açılıb, hələ tamamlanan iş yoxdur",
+  "testResults": "Test nəticələri",
+  "testResultsPassed": "{passed} / {total} keçdi",
+  "scenarioNotRun": "Test edilməyib",
+  "testResultsLastApproval": "Son təsdiq"
 }
