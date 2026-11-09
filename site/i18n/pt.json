@@ -21,8 +21,6 @@
   "progressText": "Os agentes constroem e o PO verifica o trabalho deles.",
   "testText": "Experimente os cenários e depois aprove ou devolva o trabalho.",
   "doneText": "O trabalho aprovado termina aqui. O cartão mantém seu histórico.",
-  "release": "Estes comandos funcionam após o primeiro lançamento. Até lá:",
-  "source": "Compilar a partir do código-fonte",
   "copy": "Copiar",
   "serve": "Execute pano serve e abra http://localhost:7777. Para Docker, basta abrir o endereço.",
   "connect": "Conecte sua AI",

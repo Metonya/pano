@@ -21,8 +21,6 @@
   "progressText": "Agentlər işi görür, PO isə onların işini yoxlayır.",
   "testText": "Ssenariləri sınayın, sonra təsdiqləyin və ya geri göndərin.",
   "doneText": "Təsdiqlənmiş iş burada bitir. Kart tarixçəsini saxlayır.",
-  "release": "Bu əmrlər ilk buraxılışdan sonra işləyir. O vaxta qədər:",
-  "source": "Mənbə kodundan yığ",
   "copy": "Kopyala",
   "serve": "pano serve əmrini işə salın və http://localhost:7777 ünvanını açın. Docker üçün sadəcə ünvanı açın.",
   "connect": "AI alətinizi qoşun",

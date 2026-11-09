@@ -21,8 +21,6 @@
   "progressText": "Agenci realizują pracę, a PO sprawdza wyniki.",
   "testText": "Wypróbuj scenariusze, a potem zatwierdź lub odeślij pracę.",
   "doneText": "Zatwierdzona praca kończy się tutaj. Karta zachowuje historię.",
-  "release": "Te polecenia działają po pierwszym wydaniu. Do tego czasu:",
-  "source": "Zbuduj z kodu źródłowego",
   "copy": "Kopiuj",
   "serve": "Uruchom pano serve i otwórz http://localhost:7777. W przypadku Docker wystarczy otworzyć adres.",
   "connect": "Połącz swoje AI",

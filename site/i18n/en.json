@@ -21,8 +21,6 @@
   "progressText": "Agents build and the PO checks their work.",
   "testText": "Try the scenarios, then approve or send back.",
   "doneText": "Approved work ends here. The card keeps its history.",
-  "release": "These commands work once the first release is published. Until then:",
-  "source": "Build from source",
   "copy": "Copy",
   "serve": "Run pano serve and open http://localhost:7777. For Docker, just open the address.",
   "connect": "Connect your AI",

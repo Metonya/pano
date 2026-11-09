@@ -37,8 +37,6 @@ Run `pano serve` and open `http://localhost:7777`; for Docker, just open the URL
 
 The installer selects the build for your system, verifies its SHA-256 checksum, and needs no Bun or admin rights; Pano is one file and stores data in `~/.pano` by default.
 
-These commands work once the first release is published; until then, [build from source](#build-from-source).
-
 ## Connect your AI
 
 With Pano running, print the MCP setup for your tool:
